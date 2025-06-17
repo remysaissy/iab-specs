@@ -1,0 +1,19 @@
+[package]
+name = "iab-specs"
+version = "0.0.2"
+edition = "2024"
+description = "Unofficial Rust implementaton of various IAB specifications."
+license = "Apache-2.0"
+license-file = "LICENSE"
+homepage = "https://github.com/remysaissy/iab-specs"
+repository = "https://github.com/remysaissy/iab-specs"
+readme = "README.md"
+
+[dependencies]
+serde = { version = "1.0.219", features = ["serde_derive", "std"] }
+serde_json = { version = "1.0.140", features = ["std"] }
+serde_with = { version = "3.12.0", features = ["std"] }
+serde_plain = { version = "1.0.2" }
+derive_builder = { version = "0.20.2", features = ["std"] }
+isosphere = { version = "0.2.3" }
+thiserror = { version = "2.0.12", features = ["std"] }
