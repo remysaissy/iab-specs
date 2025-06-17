@@ -6,7 +6,7 @@ use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
-/// A simplified version of the ads.txt from the official specification
+/// An implementation of the ads.txt from the official specification
 /// https://iabtechlab.com/wp-content/uploads/2022/04/Ads.txt-1.1.pdf
 #[serde_as]
 #[derive(Builder, DeserializeFromStr, SerializeDisplay, Clone, Debug)]
