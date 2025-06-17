@@ -1,13 +1,19 @@
 [package]
 name = "iab-specs"
-version = "0.0.2"
+version = "0.0.3"
 edition = "2024"
 description = "Unofficial Rust implementaton of various IAB specifications."
 license = "Apache-2.0"
 license-file = "LICENSE"
 homepage = "https://github.com/remysaissy/iab-specs"
 repository = "https://github.com/remysaissy/iab-specs"
+authors = ["Rémy Saissy <remy.saissy@gmail.com>"]
 readme = "README.md"
+keywords = [
+    "iab",
+    "adstxt",
+    "sellersjson"
+]
 
 [dependencies]
 serde = { version = "1.0.219", features = ["serde_derive", "std"] }
