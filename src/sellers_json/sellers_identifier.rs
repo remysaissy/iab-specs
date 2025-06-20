@@ -46,7 +46,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn serialize_with_invalid_sellers_identifier_serde() {
+    fn deserialize_with_invalid_sellers_identifier_serde() {
         let res = serde_json::from_str::<SellersIdentifier>(r#"{"name":"tag-id"}"#);
         assert!(res.is_err());
 
@@ -65,7 +65,7 @@ mod tests {
     }
 
     #[test]
-    fn serialize_with_valid_seller_identifier_serde() {
+    fn deserialize_with_valid_seller_identifier_serde() {
         let res =
             serde_json::from_str::<SellersIdentifier>(r#"{"name":"tag-id","value":"432432432"}"#);
         assert!(res.is_ok_and(|v| v.value == "432432432"));
@@ -76,7 +76,7 @@ mod tests {
     }
 
     #[test]
-    fn deserialize_from_valid_seller_identifier_serde() {
+    fn serialize_from_valid_seller_identifier_serde() {
         let res = serde_json::to_string(
             &SellersIdentifier::builder()
                 .name(SellersIdentifierName::TagId)
@@ -84,7 +84,6 @@ mod tests {
                 .build()
                 .unwrap(),
         );
-        println!("{:?}", res);
         assert!(res.is_ok_and(|v| v == r#"{"name":"tag-id","value":"424242"}"#));
 
         let res = serde_json::to_string(

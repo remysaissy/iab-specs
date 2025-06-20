@@ -46,7 +46,7 @@ mod tests {
     use std::str::FromStr;
 
     #[test]
-    fn serialize_with_invalid_sellers_identifier_name_serde() {
+    fn deserialize_with_invalid_sellers_identifier_name_serde() {
         let res = SellersIdentifierName::from_str("tagid");
         assert!(res.is_err());
 
@@ -55,7 +55,7 @@ mod tests {
     }
 
     #[test]
-    fn serialize_with_valid_seller_identifier_name_serde() {
+    fn deserialize_with_valid_seller_identifier_name_serde() {
         let res = SellersIdentifierName::from_str("tag-id");
         assert!(res.is_ok_and(|v| v == SellersIdentifierName::TagId));
 
@@ -70,7 +70,7 @@ mod tests {
     }
 
     #[test]
-    fn deserialize_from_valid_seller_identifier_name_serde() {
+    fn serialize_from_valid_seller_identifier_name_serde() {
         let res = SellersIdentifierName::TagId.to_string();
         assert_eq!(res, "tag-id");
 

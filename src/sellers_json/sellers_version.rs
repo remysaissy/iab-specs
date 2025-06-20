@@ -21,7 +21,8 @@ impl FromStr for SellersVersion {
     type Err = crate::Error;
 
     fn from_str(content: &str) -> Result<Self, Self::Err> {
-        if content.eq_ignore_ascii_case("1.0") {
+        // Deserialization is a bit lossy for this specific case as some websites are using 1 instead of 1.0.
+        if content.eq_ignore_ascii_case("1.0") || content.eq_ignore_ascii_case("1") {
             Ok(SellersVersion::OneZero)
         } else {
             Err(serde_plain::Error::unknown_field(slice_up_to!(content, 100), &["1.0"]).into())
@@ -35,22 +36,25 @@ mod tests {
     use std::str::FromStr;
 
     #[test]
-    fn serialize_with_invalid_sellers_version_serde() {
+    fn deserialize_with_invalid_sellers_version_serde() {
         let res = SellersVersion::from_str("1.1");
         assert!(res.is_err());
 
-        let res = SellersVersion::from_str("1");
+        let res = SellersVersion::from_str("1.");
         assert!(res.is_err());
     }
 
     #[test]
-    fn serialize_with_valid_seller_version_serde() {
+    fn deserialize_with_valid_seller_version_serde() {
         let res = SellersVersion::from_str("1.0");
+        assert!(res.is_ok_and(|v| v == SellersVersion::OneZero));
+
+        let res = SellersVersion::from_str("1");
         assert!(res.is_ok_and(|v| v == SellersVersion::OneZero));
     }
 
     #[test]
-    fn deserialize_from_valid_seller_version_serde() {
+    fn serialize_from_valid_seller_version_serde() {
         let res = SellersVersion::OneZero.to_string();
         assert_eq!(res, "1.0");
     }
