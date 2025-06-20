@@ -1,6 +1,6 @@
 [package]
 name = "iab-specs"
-version = "0.0.4"
+version = "0.0.6"
 edition = "2024"
 description = "Unofficial Rust implementaton of various IAB specifications."
 license = "Apache-2.0"
