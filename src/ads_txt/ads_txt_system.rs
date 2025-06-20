@@ -147,7 +147,12 @@ impl FromStr for AdsTxtSystem {
             if idx + 1 == content.len() {
                 let field_value = content[s..].trim().to_lowercase();
                 if !field_value.is_empty() {
-                    cert_id = Some(field_value);
+                    if field_index == 2 {
+                        let rel = SellerRelationType::from_str(&field_value)?;
+                        relation = Some(rel)
+                    } else {
+                        cert_id = Some(field_value);
+                    }
                 }
                 break;
             }
@@ -201,6 +206,15 @@ mod tests {
         assert_eq!(res.relation, SellerRelationType::Direct);
         assert_eq!(res.cert_id, Some("5jyxf8k54".to_string()));
         assert_eq!(res.comment, None);
+
+        let res = AdsTxtSystem::from_str("greenadexchange.com, XF7342, DIRECT");
+        assert!(res.is_ok());
+        let res = res.unwrap();
+        assert_eq!(&res.domain, "greenadexchange.com");
+        assert_eq!(&res.publisher_id, "xf7342");
+        assert_eq!(res.relation, SellerRelationType::Direct);
+        assert_eq!(res.cert_id, None);
+        assert_eq!(res.comment, None);
     }
 
     #[test]
@@ -214,6 +228,20 @@ mod tests {
         assert_eq!(&res.publisher_id, "xf7342");
         assert_eq!(res.relation, SellerRelationType::Direct);
         assert_eq!(res.cert_id, Some("5jyxf8k54".to_string()));
+        assert_eq!(
+            res.comment,
+            Some("comment at the end of the #line".to_string())
+        );
+
+        let res = AdsTxtSystem::from_str(
+            "greenadexchange.com, XF7342, DIRECT # comment at the end of the #line",
+        );
+        assert!(res.is_ok());
+        let res = res.unwrap();
+        assert_eq!(&res.domain, "greenadexchange.com");
+        assert_eq!(&res.publisher_id, "xf7342");
+        assert_eq!(res.relation, SellerRelationType::Direct);
+        assert_eq!(res.cert_id, None);
         assert_eq!(
             res.comment,
             Some("comment at the end of the #line".to_string())
