@@ -1,3 +1,4 @@
+use crate::slice_up_to;
 use serde::de::Error;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 use std::fmt;
@@ -23,7 +24,7 @@ impl FromStr for SellersVersion {
         if content.eq_ignore_ascii_case("1.0") {
             Ok(SellersVersion::OneZero)
         } else {
-            Err(serde_plain::Error::unknown_field(content, &["1.0"]).into())
+            Err(serde_plain::Error::unknown_field(slice_up_to!(content, 100), &["1.0"]).into())
         }
     }
 }
