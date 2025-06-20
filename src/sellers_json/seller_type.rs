@@ -55,7 +55,7 @@ mod tests {
     use std::str::FromStr;
 
     #[test]
-    fn serialize_with_invalid_seller_type_serde() {
+    fn deserialize_with_invalid_seller_type_serde() {
         let res = SellerType::from_str("publisherr");
         assert!(res.is_err());
 
@@ -67,7 +67,7 @@ mod tests {
     }
 
     #[test]
-    fn serialize_with_valid_seller_type_serde() {
+    fn deserialize_with_valid_seller_type_serde() {
         let res = SellerType::from_str("publisher");
         assert!(res.is_ok_and(|v| v == SellerType::Publisher));
 
@@ -88,7 +88,7 @@ mod tests {
     }
 
     #[test]
-    fn deserialize_from_valid_seller_type_serde() {
+    fn serialize_from_valid_seller_type_serde() {
         let res = SellerType::Publisher.to_string();
         assert_eq!(res, "publisher");
 
