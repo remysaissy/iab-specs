@@ -1,3 +1,4 @@
+use crate::slice_up_to;
 use serde::de::Error;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 use std::fmt::{Display, Formatter};
@@ -31,7 +32,10 @@ impl FromStr for SellersIdentifierName {
         } else if content.eq_ignore_ascii_case("duns") {
             Ok(SellersIdentifierName::Duns)
         } else {
-            Err(serde_plain::Error::unknown_field(content, &["tag-id", "duns"]).into())
+            Err(
+                serde_plain::Error::unknown_field(slice_up_to!(content, 100), &["tag-id", "duns"])
+                    .into(),
+            )
         }
     }
 }

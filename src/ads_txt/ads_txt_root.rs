@@ -1,4 +1,5 @@
 use crate::ads_txt::{AdsTxtSystem, ManagerDomain};
+use crate::slice_up_to;
 use derive_builder::Builder;
 use serde::de::Error;
 use serde_with::{DeserializeFromStr, SerializeDisplay, serde_as};
@@ -15,8 +16,7 @@ pub struct AdsTxt {
     /// Contact information
     ///
     /// Some human readable contact information for the owner of the file. This may be
-    /// the contact o
-    /// f the advertising operations team for the website. This may be an email
+    /// the contact of the advertising operations team for the website. This may be an email
     /// address, phone number, link to a contact form, or other suitable means of communication.
     #[builder(default)]
     pub contact: Option<String>,
@@ -145,7 +145,7 @@ impl FromStr for AdsTxt {
                 if line.contains('=') {
                     let (key, value) = line
                         .split_once("=")
-                        .ok_or_else(|| serde_plain::Error::unknown_field(line, FIELDS))?;
+                        .ok_or_else(|| serde_plain::Error::unknown_field(&line[..100], FIELDS))?;
                     let value = match value.contains("#") {
                         true => {
                             let (v, _) = value
@@ -170,7 +170,11 @@ impl FromStr for AdsTxt {
                             manager_domains.push(manager_domain);
                         }
                         &_ => {
-                            return Err(serde_plain::Error::unknown_field(line, FIELDS).into());
+                            return Err(serde_plain::Error::unknown_field(
+                                slice_up_to!(line, 100),
+                                FIELDS,
+                            )
+                            .into());
                         }
                     }
                 } else {
