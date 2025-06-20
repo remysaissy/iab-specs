@@ -1,3 +1,4 @@
+use crate::slice_up_to;
 use derive_builder::Builder;
 use isosphere::CountryCode;
 use serde::de::{Error, Unexpected};
@@ -40,13 +41,13 @@ impl FromStr for ManagerDomain {
             true => {
                 let (domain, country_code) = content.split_once(",").ok_or_else(|| {
                     serde_plain::Error::invalid_value(
-                        Unexpected::Str(content),
+                        Unexpected::Str(slice_up_to!(content, 100)),
                         &"domain[,iso 3166-1 alpha-2 country_code]",
                     )
                 })?;
                 let country_code = CountryCode::from_str(country_code.trim()).map_err(|_| {
                     serde_plain::Error::invalid_value(
-                        Unexpected::Str(country_code),
+                        Unexpected::Str(slice_up_to!(content, 100)),
                         &"iso 3166-1 alpha-2 country_code",
                     )
                 })?;

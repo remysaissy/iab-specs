@@ -1,3 +1,4 @@
+use crate::slice_up_to;
 use serde::de::{Error, Unexpected};
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 use std::fmt;
@@ -41,7 +42,7 @@ impl FromStr for SellerRelationType {
             Ok(SellerRelationType::Reseller)
         } else {
             Err(serde_plain::Error::invalid_value(
-                Unexpected::Str(content),
+                Unexpected::Str(slice_up_to!(content, 100)),
                 &"'direct' or 'indirect'",
             )
             .into())

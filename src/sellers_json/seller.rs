@@ -136,7 +136,10 @@ impl<'de> Deserialize<'de> for Seller {
             type Value = Seller;
 
             fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
-                formatter.write_str("Required fields: `seller_id`, `is_confidential`, `seller_type`, `is_passthrough`, `name`, `domain`, `comment` or `ext`.")
+                formatter.write_str(
+                    "Required fields: `seller_id`, `is_confidential`, `seller_type`, \
+                `is_passthrough`, `name`, `domain`, `comment` or `ext`.",
+                )
             }
 
             fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>

@@ -1,3 +1,4 @@
+use crate::slice_up_to;
 use serde::de::Error;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 use std::fmt::{Display, Formatter};
@@ -39,10 +40,11 @@ impl FromStr for SellerType {
         } else if content.eq_ignore_ascii_case("both") {
             Ok(SellerType::Both)
         } else {
-            Err(
-                serde_plain::Error::unknown_field(content, &["publisher", "intermediary", "both"])
-                    .into(),
+            Err(serde_plain::Error::unknown_field(
+                slice_up_to!(content, 100),
+                &["publisher", "intermediary", "both"],
             )
+            .into())
         }
     }
 }

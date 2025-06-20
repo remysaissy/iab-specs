@@ -1,4 +1,5 @@
 use crate::ads_txt::SellerRelationType;
+use crate::slice_up_to;
 use derive_builder::Builder;
 use serde::de::{Error, Unexpected};
 use serde_with::{DeserializeFromStr, SerializeDisplay, serde_as};
@@ -100,7 +101,7 @@ impl FromStr for AdsTxtSystem {
                 let field_value = content[s..idx].trim().to_lowercase();
                 if field_value.is_empty() {
                     return Err(serde_plain::Error::invalid_value(
-                        Unexpected::Str(content),
+                        Unexpected::Str(slice_up_to!(content, 100)),
                         &"'domain','publisher_id','relation'[,'cert_id'>][# comments]",
                     )
                     .into());
@@ -115,7 +116,7 @@ impl FromStr for AdsTxtSystem {
                     }
                     _ => {
                         return Err(serde_plain::Error::invalid_value(
-                            Unexpected::Str(&field_value),
+                            Unexpected::Str(slice_up_to!(field_value, 100)),
                             &"'domain','publisher_id','relation'[,'cert_id'>][# comments]",
                         )
                         .into());
