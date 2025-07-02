@@ -96,8 +96,8 @@ impl FromStr for AdsTxtSystem {
         let mut comment = None;
         let mut s = 0;
         let mut field_index = 0;
-        for (idx, c) in content.chars().enumerate() {
-            if c == ',' {
+        for (idx, c) in content.bytes().enumerate() {
+            if c == b',' {
                 let field_value = content[s..idx].trim().to_lowercase();
                 if field_value.is_empty() {
                     return Err(serde_plain::Error::invalid_value(
@@ -124,7 +124,7 @@ impl FromStr for AdsTxtSystem {
                 }
                 field_index += 1;
                 s = idx + 1;
-            } else if c == '#' {
+            } else if c == b'#' {
                 if field_index == 2 {
                     let field_value = content[s..idx].trim().to_lowercase();
                     let rel = SellerRelationType::from_str(&field_value)?;
@@ -273,6 +273,23 @@ mod tests {
         assert!(res.is_ok());
         let res = res.unwrap();
         assert_eq!(&res.domain, "greenadexchange.com");
+        assert_eq!(&res.publisher_id, "xf7342");
+        assert_eq!(res.relation, SellerRelationType::Direct);
+        assert_eq!(res.cert_id, None);
+        assert_eq!(
+            res.comment,
+            Some("comment at the end of the #line".to_string())
+        );
+    }
+
+    #[test]
+    fn deserialize_with_invalid_characters() {
+        let res = AdsTxtSystem::from_str(
+            "Ã¯Â»Â¿greenadexchange.com, XF7342, DIRECT # comment at the end of the #line",
+        );
+        assert!(res.is_ok());
+        let res = res.unwrap();
+        assert_eq!(&res.domain, "ã¯â»â¿greenadexchange.com");
         assert_eq!(&res.publisher_id, "xf7342");
         assert_eq!(res.relation, SellerRelationType::Direct);
         assert_eq!(res.cert_id, None);
