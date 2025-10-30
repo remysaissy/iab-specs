@@ -11,7 +11,7 @@ You can use this document to figure out how and where to start.
 - If you need to create an issue:
     - Make sure to clearly describe it.
     - Including steps to reproduce when it is a bug.
-    - Include the version of iab-specs used.
+    - Include the version of LOrm used.
 
 ## Making changes
 
@@ -35,7 +35,136 @@ To start with, check out:
 
 Additionally, it's always good to work on improving/adding examples and documentation.
 
+## Development Setup
+
+### Prerequisites
+- Rust 1.75 or later (Edition 2024)
+- SQLite (for running tests)
+- cargo-expand (optional, for inspecting generated code): `cargo install cargo-expand`
+- act (optional, for running CI tests locally): `brew install act` (macOS) or see [act installation](https://github.com/nektos/act)
+- Docker (required if using act)
+
+### Building the Project
+```bash
+# Clone the repository
+git clone https://github.com/remysaissy/iab-specs.git
+cd iab-specs
+
+# Build all workspace members
+cargo build
+
+# Run tests
+cargo test
+
+# Build documentation
+cargo doc --open
+```
+
+### Running CI Tests Locally
+
+Before committing, you can run all GitHub Actions CI tests locally using `act`:
+
+```bash
+# Install act (one-time setup)
+brew install act  # macOS
+# or follow instructions at https://github.com/nektos/act
+
+# Ensure Docker is running
+# Then run all CI jobs
+./test.sh
+
+# Run specific jobs only
+./test.sh --format      # Run format check
+./test.sh --check       # Run clippy
+./test.sh --test        # Run unit tests
+./test.sh --examples    # Run examples
+./test.sh --coverage    # Run coverage check
+
+# List all available jobs
+./test.sh --list
+
+# Run a specific job by name
+./test.sh --job coverage
+```
+
+This allows you to catch CI failures before pushing, saving time and ensuring your PR is ready for review.
+
+**Note**: Running all jobs locally can take several minutes. Consider running specific jobs during development and run all jobs before committing.
+
+### Code Coverage
+
+Iab-Specs uses `cargo-llvm-cov` for code coverage reporting:
+
+```bash
+# Install cargo-llvm-cov
+cargo install cargo-llvm-cov
+
+# Generate HTML coverage report (opens in browser)
+./coverage.sh
+
+# Generate lcov report for CI
+./coverage.sh --lcov
+
+# Show coverage summary in terminal
+./coverage.sh --text
+
+# Generate all formats
+./coverage.sh --all
+
+# Check coverage meets thresholds (80% minimum)
+./coverage.sh --check-thresholds
+
+# Combine flags
+./coverage.sh --clean --html --check-thresholds
+```
+
+#### Coverage Requirements
+
+Iab-Specs enforces minimum coverage thresholds in CI:
+- **Line Coverage**: ≥ 80%
+- **Region Coverage**: ≥ 80%
+- **Function Coverage**: ≥ 80%
+
+Pull requests that reduce coverage below these thresholds will fail CI. Coverage reports are automatically generated and uploaded to codecov.io. When contributing, aim to maintain or improve coverage for modified code.
+
+### Inspecting Generated Code
+
+To see what code Iab-Specs generates, use `cargo-expand`:
+
+```bash
+# Install cargo-expand
+cargo install cargo-expand
+
+# Expand macros in tests
+cd iab-specs
+cargo expand --test main
+```
+
+This is helpful for:
+- Understanding how the macro works
+- Debugging macro issues
+- Verifying generated code correctness
+
+### Code Style
+
+- Follow standard Rust formatting: `cargo fmt`
+- Ensure code passes clippy: `cargo clippy -- -D warnings`
+- Add documentation comments for public APIs
+- Keep generated code clean and readable
+
+### Documentation
+
+When contributing:
+- Update README.md if adding user-facing features
+- Add rustdoc comments for public APIs
+- Create examples for significant features
+- Update CHANGELOG.md following [Keep a Changelog](https://keepachangelog.com/) format
+
 ## Communication
 
 If you're unsure about your contribution or simply want to ask a question about anything, you can:
 - Discuss something directly in the [Github issue](https://github.com/remysaissy/iab-specs/issues).
+
+## Code of Conduct
+
+Be respectful, constructive, and welcoming to all contributors.
