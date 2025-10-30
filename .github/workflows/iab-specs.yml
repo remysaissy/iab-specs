@@ -40,3 +40,20 @@ jobs:
       - name: Test iab-specs
         run: >
           cargo test
+
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - run: rustup toolchain install stable --profile minimal
+      - uses: Swatinem/rust-cache@v2
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+      - name: Generate coverage and check thresholds
+        run: |
+          cargo llvm-cov --workspace --lcov --output-path lcov.info \
+            --fail-under-lines 80 \
+            --fail-under-regions 80 \
+            --fail-under-functions 80
