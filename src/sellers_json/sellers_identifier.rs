@@ -95,4 +95,67 @@ mod tests {
         );
         assert!(res.is_ok_and(|v| v == r#"{"name":"duns","value":"424242"}"#));
     }
+
+    #[test]
+    fn test_from_str() {
+        let json = r#"{"name":"tag-id","value":"12345"}"#;
+        let result = SellersIdentifier::from_str(json);
+        assert!(result.is_ok());
+        let identifier = result.unwrap();
+        assert_eq!(identifier.name, SellersIdentifierName::TagId);
+        assert_eq!(identifier.value, "12345");
+    }
+
+    #[test]
+    fn test_from_str_invalid() {
+        let json = r#"{"invalid":"json"}"#;
+        let result = SellersIdentifier::from_str(json);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_display() {
+        let identifier = SellersIdentifier::builder()
+            .name(SellersIdentifierName::TagId)
+            .value("12345")
+            .build()
+            .unwrap();
+        let display_str = identifier.to_string();
+        assert!(display_str.contains("tag-id"));
+        assert!(display_str.contains("12345"));
+    }
+
+    #[test]
+    fn test_clone() {
+        let original = SellersIdentifier::builder()
+            .name(SellersIdentifierName::Duns)
+            .value("98765")
+            .build()
+            .unwrap();
+        let cloned = original.clone();
+        assert_eq!(cloned.name, original.name);
+        assert_eq!(cloned.value, original.value);
+    }
+
+    #[test]
+    fn test_debug() {
+        let identifier = SellersIdentifier::builder()
+            .name(SellersIdentifierName::TagId)
+            .value("debug-test")
+            .build()
+            .unwrap();
+        let debug_str = format!("{:?}", identifier);
+        assert!(debug_str.contains("SellersIdentifier"));
+        assert!(debug_str.contains("debug-test"));
+    }
+
+    #[test]
+    fn test_builder_with_string() {
+        let identifier = SellersIdentifier::builder()
+            .name(SellersIdentifierName::TagId)
+            .value(String::from("owned-string"))
+            .build()
+            .unwrap();
+        assert_eq!(identifier.value, "owned-string");
+    }
 }
