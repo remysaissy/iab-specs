@@ -12,7 +12,8 @@ An unofficial Rust implementation of various IAB (Interactive Advertising Bureau
 
 ### Currently Supported Specifications
 
-- **[Ads.txt 1.1](https://iabtechlab.com/wp-content/uploads/2022/04/Ads.txt-1.1.pdf)** - Authorized Digital Sellers declaration
+- **[Ads.txt 1.1](https://iabtechlab.com/wp-content/uploads/2022/04/Ads.txt-1.1.pdf)** - Authorized Digital Sellers declaration for websites
+- **[App-ads.txt 1.0](https://iabtechlab.com/wp-content/uploads/2019/03/app-ads.txt-v1.0-final-.pdf)** - Authorized Digital Sellers declaration for mobile and CTV apps
 - **[Sellers.json 1.0](https://iabtechlab.com/wp-content/uploads/2019/07/Sellers.json_Final.pdf)** - Supply chain transparency
 
 ## Installation
@@ -35,13 +36,18 @@ cargo add iab-specs
 The library uses cargo features to enable/disable specifications:
 
 - `ads_txt` - Ads.txt 1.1 support (enabled by default)
+- `app_ads_txt` - App-ads.txt 1.0 support (enabled by default, requires `ads_txt`)
 - `sellers_json` - Sellers.json 1.0 support (enabled by default)
 
 To use only specific specifications:
 
 ```toml
 [dependencies]
+# Only ads.txt support
 iab-specs = { version = "0.0.7", default-features = false, features = ["ads_txt"] }
+
+# Only app-ads.txt support (automatically includes ads_txt)
+iab-specs = { version = "0.0.7", default-features = false, features = ["app_ads_txt"] }
 ```
 
 ## Usage Examples
@@ -75,6 +81,52 @@ let ads_txt = AdsTxt::builder()
 // Serialize to string
 let output = ads_txt.to_string();
 ```
+
+### App-ads.txt
+
+Parse and generate app-ads.txt files for mobile and CTV applications:
+
+```rust
+use iab_specs::app_ads_txt::{AppAdsTxt, AdsTxtSystem, SellerRelationType};
+use std::str::FromStr;
+
+// Parse an app-ads.txt file
+let app_ads_content = r#"
+contact=monetization@mygame.com
+subdomain=games.mygame.com
+
+# Primary ad network
+google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0
+# Reseller partners
+silverssp.com, 9876, RESELLER, f6578439
+"#;
+let app_ads = AppAdsTxt::from_str(app_ads_content)?;
+
+// Create an app-ads.txt programmatically
+let app_ads = AppAdsTxt::builder()
+    .contact(Some("monetization@mygame.com".to_string()))
+    .subdomain(Some("games.mygame.com".to_string()))
+    .systems(vec![
+        AdsTxtSystem::builder()
+            .domain("google.com".to_string())
+            .publisher_account_id("pub-1234567890123456".to_string())
+            .account_type(SellerRelationType::Direct)
+            .certification_authority_id(Some("f08c47fec0942fa0".to_string()))
+            .build()?,
+    ])
+    .build()?;
+
+// Serialize to string
+let output = app_ads.to_string();
+```
+
+**Note on ads.txt 1.1 vs app-ads.txt 1.0:**
+
+App-ads.txt v1.0 is based on an earlier ads.txt specification and does **not** support the ads.txt 1.1 features:
+- `OWNERDOMAIN` (not in app-ads.txt v1.0)
+- `MANAGERDOMAIN` (not in app-ads.txt v1.0)
+
+Attempting to parse an app-ads.txt file containing these directives will result in an error.
 
 ### Sellers.json
 
@@ -126,7 +178,7 @@ For usage examples, please refer to the unit tests in the source code. Each modu
 ## Roadmap
 
 - [x] Ads.txt 1.1
-- [ ] App-ads.txt
+- [x] App-ads.txt 1.0
 - [x] Sellers.json 1.0
 - [ ] OpenRTB 2.5
 - [ ] OpenRTB 2.6
