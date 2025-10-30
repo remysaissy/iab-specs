@@ -336,4 +336,248 @@ mod tests {
             r#"{"seller_id":"1234","is_confidential":1,"seller_type":"publisher","name":"ssp"}"#
         );
     }
+
+    #[test]
+    fn deserialize_with_duplicate_field() {
+        // Duplicate seller_id
+        let res = Seller::from_str(
+            r#"{
+ "seller_id": "123",
+ "seller_id": "456",
+ "seller_type": "PUBLISHER",
+ "name": "company"
+ }"#,
+        );
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn deserialize_with_invalid_is_confidential() {
+        let res = Seller::from_str(
+            r#"{
+ "seller_id": "1942009976",
+ "seller_type": "PUBLISHER",
+ "name": "company",
+ "is_confidential": 2
+ }"#,
+        );
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn deserialize_with_invalid_is_passthrough() {
+        let res = Seller::from_str(
+            r#"{
+ "seller_id": "1942009976",
+ "seller_type": "PUBLISHER",
+ "name": "company",
+ "is_passthrough": 5
+ }"#,
+        );
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn serialize_with_all_fields() {
+        let v = Seller::builder()
+            .seller_id("1234")
+            .seller_type(SellerType::Publisher)
+            .is_confidential(false)
+            .is_passthrough(true)
+            .name(Some("ssp".to_string()))
+            .domain(Some("example.com".to_string()))
+            .comment(Some("test comment".to_string()))
+            .ext(Some("extension data".to_string()))
+            .build()
+            .unwrap();
+        let res = serde_json::to_string(&v);
+        assert!(res.is_ok());
+        let json_value: serde_json::Value = serde_json::from_str(&res.unwrap()).unwrap();
+        assert_eq!(json_value["seller_id"], "1234");
+        assert_eq!(json_value["is_passthrough"], 1);
+        assert_eq!(json_value["name"], "ssp");
+        assert_eq!(json_value["domain"], "example.com");
+        assert_eq!(json_value["comment"], "test comment");
+        assert_eq!(json_value["ext"], "extension data");
+    }
+
+    #[test]
+    fn deserialize_with_is_passthrough() {
+        let res = Seller::from_str(
+            r#"{
+ "seller_id": "1942009976",
+ "seller_type": "PUBLISHER",
+ "name": "company",
+ "is_passthrough": 1
+ }"#,
+        );
+        assert!(res.is_ok());
+        let seller = res.unwrap();
+        assert!(seller.is_passthrough);
+    }
+
+    #[test]
+    fn test_builder() {
+        let result = Seller::builder()
+            .seller_id("test123")
+            .seller_type(SellerType::Intermediary)
+            .name(Some("Test Company".to_string()))
+            .build();
+        assert!(result.is_ok());
+        let seller = result.unwrap();
+        assert_eq!(seller.seller_id, "test123");
+        assert_eq!(seller.seller_type, SellerType::Intermediary);
+    }
+
+    #[test]
+    fn deserialize_with_duplicate_seller_type() {
+        let res = Seller::from_str(
+            r#"{
+ "seller_id": "123",
+ "seller_type": "PUBLISHER",
+ "seller_type": "INTERMEDIARY",
+ "name": "company"
+ }"#,
+        );
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn deserialize_with_duplicate_name() {
+        let res = Seller::from_str(
+            r#"{
+ "seller_id": "123",
+ "seller_type": "PUBLISHER",
+ "name": "company1",
+ "name": "company2"
+ }"#,
+        );
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn deserialize_with_duplicate_domain() {
+        let res = Seller::from_str(
+            r#"{
+ "seller_id": "123",
+ "seller_type": "PUBLISHER",
+ "name": "company",
+ "domain": "example1.com",
+ "domain": "example2.com"
+ }"#,
+        );
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn deserialize_with_duplicate_comment() {
+        let res = Seller::from_str(
+            r#"{
+ "seller_id": "123",
+ "seller_type": "PUBLISHER",
+ "name": "company",
+ "comment": "comment1",
+ "comment": "comment2"
+ }"#,
+        );
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn deserialize_with_duplicate_ext() {
+        let res = Seller::from_str(
+            r#"{
+ "seller_id": "123",
+ "seller_type": "PUBLISHER",
+ "name": "company",
+ "ext": "ext1",
+ "ext": "ext2"
+ }"#,
+        );
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn deserialize_with_duplicate_is_confidential() {
+        let res = Seller::from_str(
+            r#"{
+ "seller_id": "123",
+ "seller_type": "PUBLISHER",
+ "name": "company",
+ "is_confidential": 0,
+ "is_confidential": 1
+ }"#,
+        );
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn deserialize_with_duplicate_is_passthrough() {
+        let res = Seller::from_str(
+            r#"{
+ "seller_id": "123",
+ "seller_type": "PUBLISHER",
+ "name": "company",
+ "is_passthrough": 0,
+ "is_passthrough": 1
+ }"#,
+        );
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn deserialize_with_is_confidential_zero() {
+        let res = Seller::from_str(
+            r#"{
+ "seller_id": "123",
+ "seller_type": "PUBLISHER",
+ "name": "company",
+ "is_confidential": 0
+ }"#,
+        );
+        assert!(res.is_ok());
+        let seller = res.unwrap();
+        assert!(!seller.is_confidential);
+    }
+
+    #[test]
+    fn deserialize_with_is_passthrough_zero() {
+        let res = Seller::from_str(
+            r#"{
+ "seller_id": "123",
+ "seller_type": "PUBLISHER",
+ "name": "company",
+ "is_passthrough": 0
+ }"#,
+        );
+        assert!(res.is_ok());
+        let seller = res.unwrap();
+        assert!(!seller.is_passthrough);
+    }
+
+    #[test]
+    fn test_clone() {
+        let original = Seller::builder()
+            .seller_id("clone-test")
+            .seller_type(SellerType::Both)
+            .name(Some("Clone Test Co".to_string()))
+            .build()
+            .unwrap();
+        let cloned = original.clone();
+        assert_eq!(cloned.seller_id, original.seller_id);
+        assert_eq!(cloned.seller_type, original.seller_type);
+    }
+
+    #[test]
+    fn test_debug() {
+        let seller = Seller::builder()
+            .seller_id("debug-123")
+            .seller_type(SellerType::Publisher)
+            .name(Some("Debug Test".to_string()))
+            .build()
+            .unwrap();
+        let debug_str = format!("{:?}", seller);
+        assert!(debug_str.contains("Seller"));
+        assert!(debug_str.contains("debug-123"));
+    }
 }

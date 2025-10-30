@@ -361,4 +361,76 @@ mod tests {
             "contact=mycontact\nsubdomain=sub.domain.com\ninventorypartnerdomain=inv.domain.com\nownerdomain=owner.domain.com\nmanagerdomain=manager.domain.com\ngreenadexchange.com,xf7342,direct,5jyxf8k54 # comment 1\nredssp.com,xf7342,direct,5jyxf8k54 # comment 2\ngreenssp.com,xf7342,direct,5jyxf8k54 # comment 3"
         );
     }
+
+    #[test]
+    fn test_builder() {
+        let result = AdsTxt::builder().build();
+        assert!(result.is_ok());
+        let ads_txt = result.unwrap();
+        assert!(ads_txt.contact.is_none());
+        assert!(ads_txt.subdomain.is_none());
+        assert!(ads_txt.systems.is_empty());
+    }
+
+    #[test]
+    fn test_clone() {
+        let original = AdsTxt::builder()
+            .contact(Some("test@example.com".to_string()))
+            .subdomain(Some("sub.example.com".to_string()))
+            .build()
+            .unwrap();
+        let cloned = original.clone();
+        assert_eq!(cloned.contact, original.contact);
+        assert_eq!(cloned.subdomain, original.subdomain);
+    }
+
+    #[test]
+    fn test_debug() {
+        let ads_txt = AdsTxt::builder()
+            .contact(Some("debug@test.com".to_string()))
+            .build()
+            .unwrap();
+        let debug_str = format!("{:?}", ads_txt);
+        assert!(debug_str.contains("AdsTxt"));
+        assert!(debug_str.contains("debug@test.com"));
+    }
+
+    #[test]
+    fn deserialize_with_unknown_variable() {
+        let ads_txt = r#"
+        unknownvariable=somevalue
+        greenadexchange.com, XF7342, DIRECT
+        "#;
+        let res = AdsTxt::from_str(ads_txt);
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn deserialize_with_variable_without_value() {
+        let ads_txt = r#"
+        contact
+        greenadexchange.com, XF7342, DIRECT
+        "#;
+        let res = AdsTxt::from_str(ads_txt);
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn roundtrip_serialization() {
+        let original = r#"
+contact=adops@example.com
+subdomain=mobile.example.com
+ownerdomain=example.com
+greenadexchange.com, 12345, DIRECT, f08c47fec0942fa0
+silverssp.com, 9876, RESELLER
+"#;
+        let ads_txt = AdsTxt::from_str(original).unwrap();
+        let serialized = ads_txt.to_string();
+        let reparsed = AdsTxt::from_str(&serialized).unwrap();
+
+        assert_eq!(ads_txt.contact, reparsed.contact);
+        assert_eq!(ads_txt.subdomain, reparsed.subdomain);
+        assert_eq!(ads_txt.owner_domain, reparsed.owner_domain);
+        assert_eq!(ads_txt.systems.len(), reparsed.systems.len());
+    }
 }

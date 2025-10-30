@@ -114,4 +114,49 @@ mod tests {
         let res = manager_domain.to_string();
         assert_eq!(res, "managerdomain.com, fr");
     }
+
+    #[test]
+    fn test_clone() {
+        let original = ManagerDomain::builder()
+            .domain("test.com")
+            .country_code(Some(CountryCode::from_str("US").unwrap()))
+            .build()
+            .unwrap();
+        let cloned = original.clone();
+        assert_eq!(cloned.domain, original.domain);
+        assert_eq!(cloned.country_code, original.country_code);
+    }
+
+    #[test]
+    fn test_debug() {
+        let manager_domain = ManagerDomain::builder()
+            .domain("debug.com")
+            .build()
+            .unwrap();
+        let debug_str = format!("{:?}", manager_domain);
+        assert!(debug_str.contains("ManagerDomain"));
+        assert!(debug_str.contains("debug.com"));
+    }
+
+    #[test]
+    fn serialize_with_country_code() {
+        let manager_domain = ManagerDomain::builder()
+            .domain("example.com")
+            .country_code(Some(CountryCode::from_str("US").unwrap()))
+            .build()
+            .unwrap();
+        let res = manager_domain.to_string();
+        assert_eq!(res, "example.com,US");
+    }
+
+    #[test]
+    fn test_builder() {
+        let result = ManagerDomain::builder()
+            .domain("builder-test.com")
+            .build();
+        assert!(result.is_ok());
+        let manager = result.unwrap();
+        assert_eq!(manager.domain, "builder-test.com");
+        assert!(manager.country_code.is_none());
+    }
 }
