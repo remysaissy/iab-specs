@@ -87,4 +87,37 @@ mod tests {
         let res = SellerRelationType::Reseller.to_string();
         assert_eq!(res, "reseller");
     }
+
+    #[test]
+    fn test_clone() {
+        let original = SellerRelationType::Direct;
+        let cloned = original.clone();
+        assert_eq!(original, cloned);
+    }
+
+    #[test]
+    fn test_debug() {
+        let direct = SellerRelationType::Direct;
+        let debug_str = format!("{:?}", direct);
+        assert!(debug_str.contains("Direct"));
+
+        let reseller = SellerRelationType::Reseller;
+        let debug_str = format!("{:?}", reseller);
+        assert!(debug_str.contains("Reseller"));
+    }
+
+    #[test]
+    fn test_equality() {
+        assert_eq!(SellerRelationType::Direct, SellerRelationType::Direct);
+        assert_eq!(SellerRelationType::Reseller, SellerRelationType::Reseller);
+        assert_ne!(SellerRelationType::Direct, SellerRelationType::Reseller);
+    }
+
+    #[test]
+    fn test_ordering() {
+        assert!(SellerRelationType::Direct < SellerRelationType::Reseller);
+        assert!(SellerRelationType::Reseller > SellerRelationType::Direct);
+        assert!(SellerRelationType::Direct <= SellerRelationType::Direct);
+        assert!(SellerRelationType::Reseller >= SellerRelationType::Reseller);
+    }
 }
