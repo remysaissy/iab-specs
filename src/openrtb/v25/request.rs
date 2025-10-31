@@ -5,6 +5,8 @@
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
+use super::imp::Imp;
+
 /// Default auction type for bid requests (Second Price Plus per OpenRTB 2.5 spec)
 fn default_auction_type() -> i32 {
     2
@@ -22,20 +24,26 @@ fn default_auction_type() -> i32 {
 /// # Example
 ///
 /// ```
-/// use iab_specs::openrtb::v25::BidRequest;
+/// use iab_specs::openrtb::v25::{BidRequest, Imp, Banner};
+///
+/// let imp = Imp {
+///     id: "imp1".to_string(),
+///     banner: Some(Banner { w: Some(300), h: Some(250), ..Default::default() }),
+///     ..Default::default()
+/// };
 ///
 /// let request = BidRequest {
 ///     id: "request123".to_string(),
-///     imp: vec![serde_json::json!({"id": "imp1"})],  // Placeholder until Imp is implemented
+///     imp: vec![imp],
 ///     at: 2,  // Second price auction
 ///     tmax: Some(120),
 ///     ..Default::default()
 /// };
 /// ```
 ///
-/// **Note**: The `imp`, `site`, `app`, `device`, `user`, `source`, and `regs` fields
+/// **Note**: The `site`, `app`, `device`, `user`, `source`, and `regs` fields
 /// currently use `serde_json::Value` as placeholders. These will be replaced with
-/// proper typed objects in subsequent commits (Phase 2, Commits 4-7).
+/// proper typed objects in subsequent commits (Phase 2, Commits 5-7).
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"))]
 pub struct BidRequest {
@@ -46,11 +54,8 @@ pub struct BidRequest {
 
     /// Array of Imp objects representing the impressions offered.
     /// **Required field** - must contain at least one impression.
-    ///
-    /// Currently uses `serde_json::Value` as a placeholder.
-    /// Will be replaced with `Vec<Imp>` in Commit 4.
     #[builder(setter(into))]
-    pub imp: Vec<serde_json::Value>,
+    pub imp: Vec<Imp>,
 
     /// Details via a Site object about the publisher's website.
     /// Only applicable and recommended for websites.
@@ -196,9 +201,14 @@ mod tests {
 
     #[test]
     fn test_bid_request_creation() {
+        let imp = Imp {
+            id: "imp1".to_string(),
+            ..Default::default()
+        };
+
         let request = BidRequest {
             id: "req123".to_string(),
-            imp: vec![serde_json::json!({"id": "imp1"})],
+            imp: vec![imp],
             test: 0,
             at: 2,
             ..Default::default()
@@ -206,6 +216,7 @@ mod tests {
 
         assert_eq!(request.id, "req123");
         assert_eq!(request.imp.len(), 1);
+        assert_eq!(request.imp[0].id, "imp1");
         assert_eq!(request.at, 2);
         assert_eq!(request.test, 0);
         assert_eq!(request.allimps, 0);
@@ -213,15 +224,21 @@ mod tests {
 
     #[test]
     fn test_bid_request_serialization() {
+        let imp = Imp {
+            id: "imp1".to_string(),
+            ..Default::default()
+        };
+
         let request = BidRequest {
             id: "req123".to_string(),
-            imp: vec![serde_json::json!({"id": "imp1"})],
+            imp: vec![imp],
             ..Default::default()
         };
 
         let json = serde_json::to_string(&request).unwrap();
         assert!(json.contains("\"id\":\"req123\""));
         assert!(json.contains("\"imp\":["));
+        assert!(json.contains("\"id\":\"imp1\""));
     }
 }
 
