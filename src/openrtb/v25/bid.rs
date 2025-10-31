@@ -11,7 +11,6 @@
 /// These objects represent the fundamental transaction protocol for real-time
 /// bidding. The request flows from publisher to exchange to bidder, and the
 /// response flows back with bid prices and creative information.
-
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
@@ -239,5 +238,214 @@ mod tests {
         assert_eq!(seatbid.bid.len(), 1);
         assert_eq!(seatbid.seat, Some("seat1".to_string()));
         assert_eq!(seatbid.group, 0);
+    }
+
+    #[test]
+    fn test_bid_with_win_notice() {
+        let bid = Bid {
+            id: "bid1".to_string(),
+            impid: "imp1".to_string(),
+            price: 2.5,
+            nurl: Some("https://win.example.com?price=${AUCTION_PRICE}".to_string()),
+            ..Default::default()
+        };
+
+        assert_eq!(
+            bid.nurl,
+            Some("https://win.example.com?price=${AUCTION_PRICE}".to_string())
+        );
+    }
+
+    #[test]
+    fn test_bid_with_billing_loss_notice() {
+        let bid = Bid {
+            id: "bid1".to_string(),
+            impid: "imp1".to_string(),
+            price: 2.5,
+            burl: Some("https://billing.example.com".to_string()),
+            lurl: Some("https://loss.example.com?reason=${AUCTION_LOSS}".to_string()),
+            ..Default::default()
+        };
+
+        assert_eq!(bid.burl, Some("https://billing.example.com".to_string()));
+        assert_eq!(
+            bid.lurl,
+            Some("https://loss.example.com?reason=${AUCTION_LOSS}".to_string())
+        );
+    }
+
+    #[test]
+    fn test_bid_with_adm() {
+        let bid = Bid {
+            id: "bid1".to_string(),
+            impid: "imp1".to_string(),
+            price: 3.0,
+            adm: Some("<html><body>Ad Content</body></html>".to_string()),
+            ..Default::default()
+        };
+
+        assert!(bid.adm.is_some());
+        assert!(bid.adm.unwrap().contains("Ad Content"));
+    }
+
+    #[test]
+    fn test_bid_with_adomain() {
+        let bid = Bid {
+            id: "bid1".to_string(),
+            impid: "imp1".to_string(),
+            price: 1.5,
+            adomain: Some(vec!["advertiser.com".to_string(), "brand.com".to_string()]),
+            ..Default::default()
+        };
+
+        assert_eq!(bid.adomain.as_ref().unwrap().len(), 2);
+        assert_eq!(bid.adomain.as_ref().unwrap()[0], "advertiser.com");
+    }
+
+    #[test]
+    fn test_bid_with_creative_info() {
+        let bid = Bid {
+            id: "bid1".to_string(),
+            impid: "imp1".to_string(),
+            price: 2.0,
+            cid: Some("campaign123".to_string()),
+            crid: Some("creative456".to_string()),
+            iurl: Some("https://sample.example.com/creative.jpg".to_string()),
+            ..Default::default()
+        };
+
+        assert_eq!(bid.cid, Some("campaign123".to_string()));
+        assert_eq!(bid.crid, Some("creative456".to_string()));
+        assert!(bid.iurl.is_some());
+    }
+
+    #[test]
+    fn test_bid_with_dimensions() {
+        let bid = Bid {
+            id: "bid1".to_string(),
+            impid: "imp1".to_string(),
+            price: 1.75,
+            w: Some(300),
+            h: Some(250),
+            ..Default::default()
+        };
+
+        assert_eq!(bid.w, Some(300));
+        assert_eq!(bid.h, Some(250));
+    }
+
+    #[test]
+    fn test_bid_with_dealid() {
+        let bid = Bid {
+            id: "bid1".to_string(),
+            impid: "imp1".to_string(),
+            price: 5.0,
+            dealid: Some("deal789".to_string()),
+            ..Default::default()
+        };
+
+        assert_eq!(bid.dealid, Some("deal789".to_string()));
+    }
+
+    #[test]
+    fn test_bid_with_categories_and_attributes() {
+        let bid = Bid {
+            id: "bid1".to_string(),
+            impid: "imp1".to_string(),
+            price: 2.0,
+            cat: Some(vec!["IAB1".to_string(), "IAB2".to_string()]),
+            attr: Some(vec![1, 2, 3]),
+            ..Default::default()
+        };
+
+        assert_eq!(bid.cat.as_ref().unwrap().len(), 2);
+        assert_eq!(bid.attr.as_ref().unwrap().len(), 3);
+    }
+
+    #[test]
+    fn test_bid_builder() {
+        let bid = BidBuilder::default()
+            .id("bid123")
+            .impid("imp1")
+            .price(3.5)
+            .adid(Some("ad789".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(bid.id, "bid123");
+        assert_eq!(bid.impid, "imp1");
+        assert_eq!(bid.price, 3.5);
+        assert_eq!(bid.adid, Some("ad789".to_string()));
+    }
+
+    #[test]
+    fn test_seatbid_with_multiple_bids() {
+        let bid1 = Bid {
+            id: "bid1".to_string(),
+            impid: "imp1".to_string(),
+            price: 1.0,
+            ..Default::default()
+        };
+
+        let bid2 = Bid {
+            id: "bid2".to_string(),
+            impid: "imp2".to_string(),
+            price: 2.0,
+            ..Default::default()
+        };
+
+        let seatbid = SeatBid {
+            bid: vec![bid1, bid2],
+            seat: Some("seat1".to_string()),
+            group: 0,
+            ext: None,
+        };
+
+        assert_eq!(seatbid.bid.len(), 2);
+        assert_eq!(seatbid.bid[0].id, "bid1");
+        assert_eq!(seatbid.bid[1].id, "bid2");
+    }
+
+    #[test]
+    fn test_seatbid_serialization() {
+        let bid = Bid {
+            id: "bid1".to_string(),
+            impid: "imp1".to_string(),
+            price: 2.5,
+            ..Default::default()
+        };
+
+        let seatbid = SeatBid {
+            bid: vec![bid],
+            seat: Some("seat123".to_string()),
+            group: 0,
+            ext: None,
+        };
+
+        let json = serde_json::to_string(&seatbid).unwrap();
+        assert!(json.contains("\"bid\":["));
+        assert!(json.contains("\"seat\":\"seat123\""));
+        assert!(json.contains("\"group\":0"));
+    }
+
+    #[test]
+    fn test_seatbid_with_ext() {
+        let bid = Bid {
+            id: "bid1".to_string(),
+            impid: "imp1".to_string(),
+            price: 1.0,
+            ..Default::default()
+        };
+
+        let ext_value = serde_json::json!({"custom": "value"});
+
+        let seatbid = SeatBid {
+            bid: vec![bid],
+            seat: Some("seat1".to_string()),
+            group: 0,
+            ext: Some(ext_value.clone()),
+        };
+
+        assert_eq!(seatbid.ext, Some(ext_value));
     }
 }

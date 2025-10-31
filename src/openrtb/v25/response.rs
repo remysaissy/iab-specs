@@ -1,7 +1,6 @@
 /// OpenRTB 2.5 Response Objects
 ///
 /// This module contains the BidResponse and BidRequest objects for OpenRTB 2.5.
-
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
@@ -122,5 +121,182 @@ mod tests {
         assert!(response.seatbid.is_some());
         assert_eq!(response.cur, "USD");
     }
-}
 
+    #[test]
+    fn test_bid_response_builder() {
+        let bid = Bid {
+            id: "bid1".to_string(),
+            impid: "imp1".to_string(),
+            price: 1.5,
+            ..Default::default()
+        };
+
+        let seatbid = SeatBid {
+            bid: vec![bid],
+            seat: Some("seat1".to_string()),
+            ..Default::default()
+        };
+
+        let response = BidResponseBuilder::default()
+            .id("req456")
+            .seatbid(Some(vec![seatbid]))
+            .bidid(Some("bidder_resp_123".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(response.id, "req456");
+        assert_eq!(response.bidid, Some("bidder_resp_123".to_string()));
+        assert_eq!(response.cur, "USD"); // Default value
+    }
+
+    #[test]
+    fn test_bid_response_no_bid() {
+        // Test no-bid response (empty seatbid array)
+        let response = BidResponse {
+            id: "req789".to_string(),
+            seatbid: Some(vec![]),
+            nbr: Some(2), // No-bid reason: timeout
+            ..Default::default()
+        };
+
+        assert_eq!(response.id, "req789");
+        assert!(response.seatbid.is_some());
+        assert_eq!(response.seatbid.as_ref().unwrap().len(), 0);
+        assert_eq!(response.nbr, Some(2));
+    }
+
+    #[test]
+    fn test_bid_response_no_bid_omitted() {
+        // Test no-bid response (omitted seatbid)
+        let response = BidResponse {
+            id: "req999".to_string(),
+            seatbid: None,
+            nbr: Some(1), // No-bid reason: technical error
+            ..Default::default()
+        };
+
+        assert_eq!(response.id, "req999");
+        assert!(response.seatbid.is_none());
+        assert_eq!(response.nbr, Some(1));
+    }
+
+    #[test]
+    fn test_bid_response_serialization() {
+        let bid = Bid {
+            id: "bid1".to_string(),
+            impid: "imp1".to_string(),
+            price: 2.5,
+            ..Default::default()
+        };
+
+        let seatbid = SeatBid {
+            bid: vec![bid],
+            seat: Some("seat123".to_string()),
+            ..Default::default()
+        };
+
+        let response = BidResponse {
+            id: "req123".to_string(),
+            seatbid: Some(vec![seatbid]),
+            bidid: Some("bidder_response_456".to_string()),
+            cur: "EUR".to_string(),
+            ..Default::default()
+        };
+
+        let json = serde_json::to_string(&response).unwrap();
+        assert!(json.contains("\"id\":\"req123\""));
+        assert!(json.contains("\"bidid\":\"bidder_response_456\""));
+        assert!(json.contains("\"cur\":\"EUR\""));
+        assert!(json.contains("\"seatbid\":["));
+    }
+
+    #[test]
+    fn test_bid_response_deserialization() {
+        let json = r#"{"id":"req123","seatbid":[{"bid":[{"id":"bid1","impid":"imp1","price":2.5}]}],"cur":"USD"}"#;
+        let response: BidResponse = serde_json::from_str(json).unwrap();
+
+        assert_eq!(response.id, "req123");
+        assert!(response.seatbid.is_some());
+        assert_eq!(response.cur, "USD");
+        assert_eq!(response.seatbid.as_ref().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn test_bid_response_default_currency() {
+        // Test that deserialization uses default currency when not specified
+        let json = r#"{"id":"req123"}"#;
+        let response: BidResponse = serde_json::from_str(json).unwrap();
+
+        // Should default to "USD" per OpenRTB 2.5 spec when deserialized
+        assert_eq!(response.cur, "USD");
+    }
+
+    #[test]
+    fn test_bid_response_multiple_seatbids() {
+        let bid1 = Bid {
+            id: "bid1".to_string(),
+            impid: "imp1".to_string(),
+            price: 1.0,
+            ..Default::default()
+        };
+
+        let bid2 = Bid {
+            id: "bid2".to_string(),
+            impid: "imp2".to_string(),
+            price: 2.0,
+            ..Default::default()
+        };
+
+        let seatbid1 = SeatBid {
+            bid: vec![bid1],
+            seat: Some("seat1".to_string()),
+            ..Default::default()
+        };
+
+        let seatbid2 = SeatBid {
+            bid: vec![bid2],
+            seat: Some("seat2".to_string()),
+            ..Default::default()
+        };
+
+        let response = BidResponse {
+            id: "req123".to_string(),
+            seatbid: Some(vec![seatbid1, seatbid2]),
+            ..Default::default()
+        };
+
+        assert_eq!(response.seatbid.as_ref().unwrap().len(), 2);
+        assert_eq!(
+            response.seatbid.as_ref().unwrap()[0].seat,
+            Some("seat1".to_string())
+        );
+        assert_eq!(
+            response.seatbid.as_ref().unwrap()[1].seat,
+            Some("seat2".to_string())
+        );
+    }
+
+    #[test]
+    fn test_bid_response_with_customdata() {
+        let response = BidResponse {
+            id: "req123".to_string(),
+            customdata: Some("custom_bidder_data".to_string()),
+            ..Default::default()
+        };
+
+        assert_eq!(response.customdata, Some("custom_bidder_data".to_string()));
+    }
+
+    #[test]
+    fn test_bid_response_with_ext() {
+        let ext_value = serde_json::json!({"custom_field": "custom_value"});
+
+        let response = BidResponse {
+            id: "req123".to_string(),
+            ext: Some(ext_value.clone()),
+            ..Default::default()
+        };
+
+        assert_eq!(response.ext, Some(ext_value));
+    }
+}

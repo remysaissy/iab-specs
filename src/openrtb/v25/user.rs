@@ -1,7 +1,6 @@
 /// OpenRTB 2.5 User Object
 ///
 /// This module implements the User object for user information.
-
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
@@ -142,10 +141,7 @@ mod tests {
         };
 
         assert!(user.geo.is_some());
-        assert_eq!(
-            user.geo.as_ref().unwrap().country,
-            Some("USA".to_string())
-        );
+        assert_eq!(user.geo.as_ref().unwrap().country, Some("USA".to_string()));
     }
 
     #[test]
@@ -201,10 +197,7 @@ mod tests {
             ..Default::default()
         };
 
-        assert_eq!(
-            user.keywords,
-            Some("sports,technology,travel".to_string())
-        );
+        assert_eq!(user.keywords, Some("sports,technology,travel".to_string()));
     }
 
     #[test]

@@ -1,7 +1,6 @@
 /// OpenRTB 2.5 Data Objects
 ///
 /// This module implements Data and Segment objects for user targeting data.
-
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
@@ -160,5 +159,90 @@ mod tests {
 
         assert_eq!(data.id, Some("provider1".to_string()));
         assert_eq!(data.name, Some("DataProvider Inc".to_string()));
+    }
+
+    #[test]
+    fn test_segment_deserialization() {
+        let json = r#"{"id":"seg123","name":"Auto Enthusiasts","value":"high"}"#;
+        let segment: Segment = serde_json::from_str(json).unwrap();
+
+        assert_eq!(segment.id, Some("seg123".to_string()));
+        assert_eq!(segment.name, Some("Auto Enthusiasts".to_string()));
+        assert_eq!(segment.value, Some("high".to_string()));
+    }
+
+    #[test]
+    fn test_data_builder() {
+        let segment = Segment {
+            id: Some("seg1".to_string()),
+            name: Some("Sports".to_string()),
+            ..Default::default()
+        };
+
+        let data = DataBuilder::default()
+            .id(Some("provider1".to_string()))
+            .name(Some("Provider Inc".to_string()))
+            .segment(Some(vec![segment]))
+            .build()
+            .unwrap();
+
+        assert_eq!(data.id, Some("provider1".to_string()));
+        assert!(data.segment.is_some());
+        assert_eq!(data.segment.as_ref().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn test_segment_builder() {
+        let segment = SegmentBuilder::default()
+            .id(Some("seg1".to_string()))
+            .name(Some("Tech Enthusiasts".to_string()))
+            .value(Some("medium".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(segment.id, Some("seg1".to_string()));
+        assert_eq!(segment.name, Some("Tech Enthusiasts".to_string()));
+        assert_eq!(segment.value, Some("medium".to_string()));
+    }
+
+    #[test]
+    fn test_data_with_multiple_segments() {
+        let segment1 = Segment {
+            id: Some("seg1".to_string()),
+            name: Some("Sports".to_string()),
+            ..Default::default()
+        };
+
+        let segment2 = Segment {
+            id: Some("seg2".to_string()),
+            name: Some("Tech".to_string()),
+            ..Default::default()
+        };
+
+        let data = Data {
+            id: Some("provider1".to_string()),
+            name: Some("Provider Inc".to_string()),
+            segment: Some(vec![segment1, segment2]),
+            ..Default::default()
+        };
+
+        assert_eq!(data.segment.as_ref().unwrap().len(), 2);
+        assert_eq!(
+            data.segment.as_ref().unwrap()[0].id,
+            Some("seg1".to_string())
+        );
+    }
+
+    #[test]
+    fn test_segment_with_ext() {
+        let ext_value = serde_json::json!({"custom": "data"});
+
+        let segment = Segment {
+            id: Some("seg1".to_string()),
+            ext: Some(ext_value.clone()),
+            ..Default::default()
+        };
+
+        assert_eq!(segment.ext, Some(ext_value));
     }
 }

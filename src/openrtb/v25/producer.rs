@@ -1,7 +1,6 @@
 /// OpenRTB 2.5 Producer Object
 ///
 /// This module implements the Producer object for content origination.
-
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

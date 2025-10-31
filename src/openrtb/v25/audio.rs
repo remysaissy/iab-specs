@@ -1,7 +1,6 @@
 /// OpenRTB 2.5 Audio Ad Object
 ///
 /// This module implements the Audio object for OpenRTB 2.5.
-
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

@@ -1,7 +1,6 @@
 /// OpenRTB 2.5 Content Object
 ///
 /// This module implements the Content object for content metadata.
-
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

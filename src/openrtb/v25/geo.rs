@@ -1,7 +1,6 @@
 /// OpenRTB 2.5 Geo Object
 ///
 /// This module implements the Geo object for geographic location data.
-
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

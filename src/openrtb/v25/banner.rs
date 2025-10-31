@@ -1,7 +1,6 @@
 /// OpenRTB 2.5 Banner Ad Objects
 ///
 /// This module implements Banner and Format objects for OpenRTB 2.5.
-
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
@@ -240,5 +239,76 @@ mod tests {
 
         assert_eq!(banner.w, Some(300));
         assert_eq!(banner.h, Some(250));
+    }
+
+    #[test]
+    fn test_banner_builder() {
+        let banner = BannerBuilder::default()
+            .w(Some(728))
+            .h(Some(90))
+            .pos(Some(1))
+            .build()
+            .unwrap();
+
+        assert_eq!(banner.w, Some(728));
+        assert_eq!(banner.h, Some(90));
+        assert_eq!(banner.pos, Some(1));
+    }
+
+    #[test]
+    fn test_banner_with_blocked_types_and_attrs() {
+        let banner = Banner {
+            w: Some(300),
+            h: Some(250),
+            btype: Some(vec![1, 4]),
+            battr: Some(vec![1, 2, 3]),
+            ..Default::default()
+        };
+
+        assert_eq!(banner.btype.as_ref().unwrap().len(), 2);
+        assert_eq!(banner.battr.as_ref().unwrap().len(), 3);
+    }
+
+    #[test]
+    fn test_banner_with_api_frameworks() {
+        let banner = Banner {
+            w: Some(300),
+            h: Some(250),
+            api: Some(vec![3, 5, 6]),
+            ..Default::default()
+        };
+
+        assert_eq!(banner.api.as_ref().unwrap().len(), 3);
+    }
+
+    #[test]
+    fn test_format_builder() {
+        let format = FormatBuilder::default()
+            .w(Some(300))
+            .h(Some(250))
+            .build()
+            .unwrap();
+
+        assert_eq!(format.w, Some(300));
+        assert_eq!(format.h, Some(250));
+    }
+
+    #[test]
+    fn test_banner_with_mimes() {
+        let banner = Banner {
+            w: Some(300),
+            h: Some(250),
+            mimes: Some(vec!["image/jpeg".to_string(), "image/png".to_string()]),
+            ..Default::default()
+        };
+
+        assert_eq!(banner.mimes.as_ref().unwrap().len(), 2);
+        assert!(
+            banner
+                .mimes
+                .as_ref()
+                .unwrap()
+                .contains(&"image/jpeg".to_string())
+        );
     }
 }

@@ -1,7 +1,6 @@
 /// OpenRTB 2.5 Site Object
 ///
 /// This module implements the Site object for website context.
-
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

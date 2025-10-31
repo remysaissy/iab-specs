@@ -26,7 +26,6 @@
 /// ## Implementation Status
 ///
 /// This module is under development. Extensions to OpenRTB 2.5 will be added in Phase 4.
-
 // Re-export common types (includes AdCOM)
 pub use crate::openrtb::common::*;
 
