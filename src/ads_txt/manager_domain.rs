@@ -151,9 +151,7 @@ mod tests {
 
     #[test]
     fn test_builder() {
-        let result = ManagerDomain::builder()
-            .domain("builder-test.com")
-            .build();
+        let result = ManagerDomain::builder().domain("builder-test.com").build();
         assert!(result.is_ok());
         let manager = result.unwrap();
         assert_eq!(manager.domain, "builder-test.com");
