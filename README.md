@@ -22,7 +22,7 @@ Add `iab-specs` to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-iab-specs = "0.0.7"
+iab-specs = "0.1"
 ```
 
 Or use cargo:
@@ -44,10 +44,10 @@ To use only specific specifications:
 ```toml
 [dependencies]
 # Only ads.txt support
-iab-specs = { version = "0.0.7", default-features = false, features = ["ads_txt"] }
+iab-specs = { version = "0.1", default-features = false, features = ["ads_txt"] }
 
 # Only app-ads.txt support (automatically includes ads_txt)
-iab-specs = { version = "0.0.7", default-features = false, features = ["app_ads_txt"] }
+iab-specs = { version = "0.1", default-features = false, features = ["app_ads_txt"] }
 ```
 
 ## Usage Examples
