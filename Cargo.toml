@@ -25,7 +25,7 @@ isosphere = { version = "0.2", optional = true }
 thiserror = { version = "2", features = ["std"] }
 
 [features]
-default = ["ads_txt", "app_ads_txt", "sellers_json"]
+default = []
 ads_txt = ["dep:isosphere"]
 app_ads_txt = ["ads_txt"]
 sellers_json = []
