@@ -13,8 +13,8 @@ An unofficial Rust implementation of various IAB (Interactive Advertising Bureau
 ### Currently Supported Specifications
 
 - **[AdCOM 1.0](https://github.com/InteractiveAdvertisingBureau/AdCOM)** - Advertising Common Object Model (enumerations)
-- **[OpenRTB 2.5](https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf)** - Real-Time Bidding protocol (in progress)
-- **[OpenRTB 2.6](https://github.com/InteractiveAdvertisingBureau/openrtb2.x/blob/main/2.6.md)** - Real-Time Bidding protocol with AdCOM integration (in progress)
+- **[OpenRTB 2.5](https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf)** - Real-Time Bidding protocol
+- **[OpenRTB 2.6](https://github.com/InteractiveAdvertisingBureau/openrtb2.x/blob/main/2.6.md)** - Real-Time Bidding protocol with CTV/DOOH support
 - **[Ads.txt 1.1](https://iabtechlab.com/wp-content/uploads/2022/04/Ads.txt-1.1.pdf)** - Authorized Digital Sellers declaration for websites
 - **[App-ads.txt 1.0](https://iabtechlab.com/wp-content/uploads/2019/03/app-ads.txt-v1.0-final-.pdf)** - Authorized Digital Sellers declaration for mobile and CTV apps
 - **[Sellers.json 1.0](https://iabtechlab.com/wp-content/uploads/2019/07/Sellers.json_Final.pdf)** - Supply chain transparency
@@ -142,8 +142,9 @@ let supply_chain = SupplyChain::builder()
 let json = serde_json::to_string(&supply_chain)?;
 ```
 
-**Note**: OpenRTB 2.5 and 2.6 infrastructure is currently in place with common objects
-like `SupplyChain`. Full bid request/response objects will be added in future releases.
+OpenRTB 2.5 and 2.6 are fully implemented with complete bid request/response objects,
+including support for CTV ad pods, DOOH multipliers, duration-based floor pricing, and
+structured user-agent information.
 
 ### Ads.txt
 
@@ -275,7 +276,7 @@ For usage examples, please refer to the unit tests in the source code. Each modu
 - [x] App-ads.txt 1.0
 - [x] Sellers.json 1.0
 - [x] OpenRTB 2.5
-- [ ] OpenRTB 2.6
+- [x] OpenRTB 2.6
 - [ ] OpenRTB 3.0
 - [ ] Additional IAB specifications (contributions welcome!)
 

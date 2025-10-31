@@ -96,6 +96,7 @@ pub struct User {
     /// GDPR applicability indicator where:
     /// - 0 = GDPR does not apply
     /// - 1 = GDPR applies
+    ///
     /// OpenRTB 2.6+ field (added retroactively to 2.5 via ext in practice).
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]

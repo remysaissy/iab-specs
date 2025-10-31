@@ -1,3 +1,6 @@
+// Allow ambiguous glob re-exports since openrtb_26 intentionally extends openrtb_25
+#![allow(ambiguous_glob_reexports)]
+
 #[cfg(feature = "adcom")]
 pub use crate::adcom::*;
 #[cfg(feature = "ads_txt")]
