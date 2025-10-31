@@ -12,7 +12,8 @@ keywords = [
     "iab",
     "adstxt",
     "app-ads-txt",
-    "sellersjson"
+    "sellersjson",
+    "openrtb"
 ]
 
 [dependencies]
@@ -31,3 +32,5 @@ ads_txt = ["dep:isosphere"]
 app_ads_txt = ["ads_txt"]
 sellers_json = []
 adcom = []
+openrtb_25 = ["adcom"]
+openrtb_26 = ["openrtb_25"]

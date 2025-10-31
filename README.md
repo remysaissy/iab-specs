@@ -13,6 +13,8 @@ An unofficial Rust implementation of various IAB (Interactive Advertising Bureau
 ### Currently Supported Specifications
 
 - **[AdCOM 1.0](https://github.com/InteractiveAdvertisingBureau/AdCOM)** - Advertising Common Object Model (enumerations)
+- **[OpenRTB 2.5](https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf)** - Real-Time Bidding protocol (in progress)
+- **[OpenRTB 2.6](https://github.com/InteractiveAdvertisingBureau/openrtb2.x/blob/main/2.6.md)** - Real-Time Bidding protocol with AdCOM integration (in progress)
 - **[Ads.txt 1.1](https://iabtechlab.com/wp-content/uploads/2022/04/Ads.txt-1.1.pdf)** - Authorized Digital Sellers declaration for websites
 - **[App-ads.txt 1.0](https://iabtechlab.com/wp-content/uploads/2019/03/app-ads.txt-v1.0-final-.pdf)** - Authorized Digital Sellers declaration for mobile and CTV apps
 - **[Sellers.json 1.0](https://iabtechlab.com/wp-content/uploads/2019/07/Sellers.json_Final.pdf)** - Supply chain transparency
@@ -24,20 +26,20 @@ Add `iab-specs` to your `Cargo.toml` with the features you need:
 ```toml
 [dependencies]
 # Enable all specifications
-iab-specs = { version = "0.1", features = ["adcom", "ads_txt", "app_ads_txt", "sellers_json"] }
+iab-specs = { version = "0.1", features = ["adcom", "openrtb_25", "openrtb_26", "ads_txt", "app_ads_txt", "sellers_json"] }
 
 # Or enable only what you need
-iab-specs = { version = "0.1", features = ["ads_txt"] }
+iab-specs = { version = "0.1", features = ["openrtb_25"] }
 ```
 
 Or use cargo:
 
 ```bash
 # Enable all specifications
-cargo add iab-specs --features adcom,ads_txt,app_ads_txt,sellers_json
+cargo add iab-specs --features adcom,openrtb_25,openrtb_26,ads_txt,app_ads_txt,sellers_json
 
 # Or enable only what you need
-cargo add iab-specs --features ads_txt
+cargo add iab-specs --features openrtb_25
 ```
 
 ## Features
@@ -47,6 +49,8 @@ cargo add iab-specs --features ads_txt
 The library uses cargo features to enable/disable specifications:
 
 - `adcom` - AdCOM 1.0 support (Advertising Common Object Model enumerations)
+- `openrtb_25` - OpenRTB 2.5 support (automatically includes `adcom`)
+- `openrtb_26` - OpenRTB 2.6 support (automatically includes `openrtb_25` and `adcom`)
 - `ads_txt` - Ads.txt 1.1 support
 - `app_ads_txt` - App-ads.txt 1.0 support (automatically includes `ads_txt`)
 - `sellers_json` - Sellers.json 1.0 support
@@ -58,6 +62,12 @@ The library uses cargo features to enable/disable specifications:
 # Only AdCOM support
 iab-specs = { version = "0.1", features = ["adcom"] }
 
+# Only OpenRTB 2.5 support (automatically includes adcom)
+iab-specs = { version = "0.1", features = ["openrtb_25"] }
+
+# Only OpenRTB 2.6 support (automatically includes openrtb_25 and adcom)
+iab-specs = { version = "0.1", features = ["openrtb_26"] }
+
 # Only ads.txt support
 iab-specs = { version = "0.1", features = ["ads_txt"] }
 
@@ -67,11 +77,11 @@ iab-specs = { version = "0.1", features = ["app_ads_txt"] }
 # Only sellers.json support
 iab-specs = { version = "0.1", features = ["sellers_json"] }
 
-# Ads.txt and sellers.json (no app-ads.txt)
-iab-specs = { version = "0.1", features = ["ads_txt", "sellers_json"] }
+# OpenRTB 2.5 with ads.txt and sellers.json
+iab-specs = { version = "0.1", features = ["openrtb_25", "ads_txt", "sellers_json"] }
 
 # All specifications
-iab-specs = { version = "0.1", features = ["adcom", "ads_txt", "app_ads_txt", "sellers_json"] }
+iab-specs = { version = "0.1", features = ["adcom", "openrtb_25", "openrtb_26", "ads_txt", "app_ads_txt", "sellers_json"] }
 ```
 
 **Why no default features?**
@@ -107,6 +117,33 @@ assert_eq!(serde_json::to_string(&api).unwrap(), "6");
 let protocol = Protocol::Vast4;
 assert_eq!(serde_json::to_string(&protocol).unwrap(), "7");
 ```
+
+### OpenRTB
+
+Work with OpenRTB 2.5 and 2.6 real-time bidding protocol objects:
+
+```rust
+use iab_specs::openrtb::common::{SupplyChain, SupplyChainNode};
+
+// Create a supply chain for ads.txt/sellers.json transparency
+let supply_chain = SupplyChain::builder()
+    .complete(Some(1))
+    .ver(Some("1.0".to_string()))
+    .nodes(vec![
+        SupplyChainNode::builder()
+            .asi("example.com".to_string())
+            .sid("12345".to_string())
+            .hp(1)
+            .build()?,
+    ])
+    .build()?;
+
+// Serialize to JSON
+let json = serde_json::to_string(&supply_chain)?;
+```
+
+**Note**: OpenRTB 2.5 and 2.6 infrastructure is currently in place with common objects
+like `SupplyChain`. Full bid request/response objects will be added in future releases.
 
 ### Ads.txt
 
@@ -233,14 +270,13 @@ For usage examples, please refer to the unit tests in the source code. Each modu
 
 ## Roadmap
 
-- [x] AdCOM 1.0 (Enumerations)
+- [x] AdCOM 1.0
 - [x] Ads.txt 1.1
 - [x] App-ads.txt 1.0
 - [x] Sellers.json 1.0
 - [ ] OpenRTB 2.5
 - [ ] OpenRTB 2.6
 - [ ] OpenRTB 3.0
-- [ ] AdCOM 1.0 (Media, Placement, Context objects)
 - [ ] Additional IAB specifications (contributions welcome!)
 
 ## Contributing
