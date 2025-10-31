@@ -6,8 +6,10 @@ use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
 use super::app::App;
+use super::device::Device;
 use super::imp::Imp;
 use super::site::Site;
+use super::user::User;
 
 /// Default auction type for bid requests (Second Price Plus per OpenRTB 2.5 spec)
 fn default_auction_type() -> i32 {
@@ -43,9 +45,9 @@ fn default_auction_type() -> i32 {
 /// };
 /// ```
 ///
-/// **Note**: The `device`, `user`, `source`, and `regs` fields
-/// currently use `serde_json::Value` as placeholders. These will be replaced with
-/// proper typed objects in subsequent commits (Phase 2, Commits 6-7).
+/// **Note**: The `source` and `regs` fields currently use `serde_json::Value`
+/// as placeholders. These will be replaced with proper typed objects in
+/// Phase 2, Commit 7.
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"))]
 pub struct BidRequest {
@@ -75,21 +77,15 @@ pub struct BidRequest {
 
     /// Details via a Device object about the user's device.
     /// Recommended by the OpenRTB specification.
-    ///
-    /// Currently uses `serde_json::Value` as a placeholder.
-    /// Will be replaced with `Device` in Commit 6.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub device: Option<serde_json::Value>,
+    pub device: Option<Device>,
 
     /// Details via a User object about the human user of the device.
     /// Recommended by the OpenRTB specification.
-    ///
-    /// Currently uses `serde_json::Value` as a placeholder.
-    /// Will be replaced with `User` in Commit 6.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub user: Option<serde_json::Value>,
+    pub user: Option<User>,
 
     /// Indicator of test mode in which auctions are not billable:
     /// - 0 = live mode (default)
