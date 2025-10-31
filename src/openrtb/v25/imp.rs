@@ -1,6 +1,7 @@
-/// OpenRTB 2.5 Impression Object
+/// OpenRTB 2.5/2.6 Impression Object
 ///
-/// This module implements the Imp (Impression) object for OpenRTB 2.5.
+/// This module implements the Imp (Impression) object for OpenRTB 2.5 and 2.6.
+/// OpenRTB 2.6 fields (qty, dt, refresh) are included.
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
@@ -8,6 +9,10 @@ use super::audio::Audio;
 use super::banner::Banner;
 use super::native::Native;
 use super::video::Video;
+
+// Import Qty and Refresh from v26 when openrtb_26 feature is enabled
+#[cfg(feature = "openrtb_26")]
+use crate::openrtb::v26::{Qty, Refresh};
 
 /// Default currency for bid floor (USD per OpenRTB 2.5 spec)
 fn default_bidfloorcur() -> String {
@@ -152,8 +157,16 @@ pub struct Imp {
     #[builder(default)]
     pub exp: Option<i32>,
 
-    /// Qty object containing impression multiplier information.
-    /// Uses placeholder until Qty is implemented.
+    /// Qty object containing impression multiplier information (OpenRTB 2.6+).
+    /// Used for DOOH multi-viewer impression counting.
+    #[cfg(feature = "openrtb_26")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub qty: Option<Qty>,
+
+    /// Qty object containing impression multiplier information (placeholder for v2.5).
+    /// When using openrtb_26 feature, use the typed Qty version instead.
+    #[cfg(not(feature = "openrtb_26"))]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
     pub qty: Option<serde_json::Value>,
@@ -163,8 +176,16 @@ pub struct Imp {
     #[builder(default)]
     pub dt: Option<f64>,
 
-    /// Refresh object containing auto-refresh details.
-    /// Uses placeholder until Refresh is implemented.
+    /// Refresh object containing auto-refresh details (OpenRTB 2.6+).
+    /// Used for rotating ad slots in continuous display contexts.
+    #[cfg(feature = "openrtb_26")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub refresh: Option<Refresh>,
+
+    /// Refresh object containing auto-refresh details (placeholder for v2.5).
+    /// When using openrtb_26 feature, use the typed Refresh version instead.
+    #[cfg(not(feature = "openrtb_26"))]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
     pub refresh: Option<serde_json::Value>,

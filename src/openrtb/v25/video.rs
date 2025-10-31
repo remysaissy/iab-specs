@@ -1,10 +1,15 @@
-/// OpenRTB 2.5 Video Ad Object
+/// OpenRTB 2.5/2.6 Video Ad Object
 ///
-/// This module implements the Video object for OpenRTB 2.5.
+/// This module implements the Video object for OpenRTB 2.5 and 2.6.
+/// OpenRTB 2.6 fields (podid, podseq, slotinpod, durfloors) are included.
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
 use super::banner::Banner;
+
+// Import DurFloors from v26 when openrtb_26 feature is enabled
+#[cfg(feature = "openrtb_26")]
+use crate::openrtb::v26::DurFloors;
 
 /// Default value for boxingallowed field (1 = allowed)
 fn default_boxingallowed() -> i32 {
@@ -135,6 +140,7 @@ pub struct Video {
     /// For ad pods, indicates the impression's position guarantee:
     /// - 0 = no guarantee
     /// - >0 = guaranteed position
+    ///
     /// Default is 0.
     #[serde(default)]
     #[builder(default)]
@@ -223,8 +229,16 @@ pub struct Video {
     #[builder(default)]
     pub poddedupe: Option<Vec<i32>>,
 
-    /// Array of DurFloors objects defining duration-based floor prices.
-    /// Uses placeholder until DurFloors is implemented.
+    /// Array of DurFloors objects defining duration-based floor prices (OpenRTB 2.6+).
+    /// Enables different floor prices based on creative duration ranges.
+    #[cfg(feature = "openrtb_26")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub durfloors: Option<Vec<DurFloors>>,
+
+    /// Array of DurFloors objects defining duration-based floor prices (placeholder for v2.5).
+    /// When using openrtb_26 feature, use the typed DurFloors version instead.
+    #[cfg(not(feature = "openrtb_26"))]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
     pub durfloors: Option<Vec<serde_json::Value>>,

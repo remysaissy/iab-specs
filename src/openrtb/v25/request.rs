@@ -1,6 +1,7 @@
-/// OpenRTB 2.5 Request Objects
+/// OpenRTB 2.5/2.6 Request Objects
 ///
-/// This module contains the BidRequest object for OpenRTB 2.5.
+/// This module contains the BidRequest object for OpenRTB 2.5 and 2.6.
+/// OpenRTB 2.6 adds support for the dooh field.
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
@@ -11,6 +12,10 @@ use super::regs::Regs;
 use super::site::Site;
 use super::source::Source;
 use super::user::User;
+
+// Import Dooh from AdCOM when openrtb_26 feature is enabled
+#[cfg(feature = "openrtb_26")]
+use crate::adcom::Dooh;
 
 /// Default auction type for bid requests (Second Price Plus per OpenRTB 2.5 spec)
 fn default_auction_type() -> i32 {
@@ -69,10 +74,18 @@ pub struct BidRequest {
 
     /// Details via an App object about the publisher's app.
     /// Only applicable and recommended for apps.
-    /// Exactly one of Site or App should be included.
+    /// Exactly one of Site, App, or Dooh should be included.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
     pub app: Option<App>,
+
+    /// Details via a Dooh object about the digital out-of-home ad placement (OpenRTB 2.6+).
+    /// Only applicable for DOOH inventory (billboards, transit displays, etc.).
+    /// Exactly one of Site, App, or Dooh should be included.
+    #[cfg(feature = "openrtb_26")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub dooh: Option<Dooh>,
 
     /// Details via a Device object about the user's device.
     /// Recommended by the OpenRTB specification.
@@ -97,6 +110,7 @@ pub struct BidRequest {
     /// - 1 = First Price
     /// - 2 = Second Price Plus (default)
     /// - 3 = Fixed Price (for deals)
+    ///
     /// Exchange-specific auction types can be defined using values > 500.
     #[serde(default = "default_auction_type")]
     #[builder(default = "default_auction_type()")]
