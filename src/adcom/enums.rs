@@ -18,32 +18,28 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 /// bidfloor is the agreed upon deal price.
 ///
 /// Additional auction types can be defined by the exchange.
-#[derive(Serialize_repr, Deserialize_repr, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Serialize_repr, Deserialize_repr, Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
 #[repr(u8)]
 pub enum AuctionType {
     /// First price auction
     FirstPrice = 1,
 
     /// Second price plus auction (default)
+    #[default]
     SecondPricePlus = 2,
 
     /// Fixed price specified in bidfloor attribute
     FixedPrice = 3,
 }
 
-impl Default for AuctionType {
-    fn default() -> Self {
-        AuctionType::SecondPricePlus
-    }
-}
-
 /// The position of the ad as a relative measure of visibility or prominence.
 ///
 /// This OpenRTB list has values derived from the Inventory Quality Guidelines (IQG).
-#[derive(Serialize_repr, Deserialize_repr, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Serialize_repr, Deserialize_repr, Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
 #[repr(u8)]
 pub enum AdPosition {
     /// Unknown position
+    #[default]
     Unknown = 0,
 
     /// Above the fold
@@ -67,12 +63,6 @@ pub enum AdPosition {
 
     /// Full screen
     FullScreen = 7,
-}
-
-impl Default for AdPosition {
-    fn default() -> Self {
-        AdPosition::Unknown
-    }
 }
 
 /// API frameworks supported by the publisher.
@@ -1153,20 +1143,15 @@ pub enum UserAgentSource {
 /// Device interface orientation.
 ///
 /// The orientation of the device when the ad is shown.
-#[derive(Serialize_repr, Deserialize_repr, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Serialize_repr, Deserialize_repr, Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
 #[repr(u8)]
 pub enum DeviceOrientation {
     /// Portrait orientation
+    #[default]
     Portrait = 0,
 
     /// Landscape orientation
     Landscape = 1,
-}
-
-impl Default for DeviceOrientation {
-    fn default() -> Self {
-        DeviceOrientation::Portrait
-    }
 }
 
 /// Local market identifier types.

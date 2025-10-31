@@ -1,10 +1,15 @@
-/// OpenRTB 2.5 Device Object
+/// OpenRTB 2.5/2.6 Device Object
 ///
 /// This module implements the Device object for device information.
+/// OpenRTB 2.6 adds the sua (structured user-agent) field.
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
 use super::geo::Geo;
+
+// Import UserAgent from AdCOM when openrtb_26 feature is enabled
+#[cfg(feature = "openrtb_26")]
+use crate::adcom::UserAgent;
 
 /// Device object representing user's device (OpenRTB 2.5 Section 3.2.18)
 ///
@@ -42,6 +47,14 @@ pub struct Device {
     #[builder(default)]
     pub ua: Option<String>,
 
+    /// Structured user agent information (OpenRTB 2.6+).
+    /// Provides parsed browser, OS, and device details from User-Agent Client Hints.
+    /// Complements or replaces the ua string field.
+    #[cfg(feature = "openrtb_26")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub sua: Option<UserAgent>,
+
     /// Location of the device assumed to be the user's current location.
     /// Recommended if IP address is not supplied.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -51,6 +64,7 @@ pub struct Device {
     /// Standard "Do Not Track" flag as set in the header by the browser:
     /// - 0 = tracking is unrestricted
     /// - 1 = do not track
+    ///
     /// Recommended by the OpenRTB specification.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
@@ -59,6 +73,7 @@ pub struct Device {
     /// "Limit Ad Tracking" signal commercially endorsed (e.g., iOS, Android):
     /// - 0 = tracking is unrestricted
     /// - 1 = tracking must be limited per commercial guidelines
+    ///
     /// Recommended by the OpenRTB specification.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
