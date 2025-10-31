@@ -1,3 +1,5 @@
+#[cfg(feature = "adcom")]
+pub use crate::adcom::*;
 #[cfg(feature = "ads_txt")]
 pub use crate::ads_txt::*;
 #[cfg(feature = "app_ads_txt")]

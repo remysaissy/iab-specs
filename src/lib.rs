@@ -1,3 +1,5 @@
+#[cfg(feature = "adcom")]
+pub mod adcom;
 #[cfg(feature = "ads_txt")]
 pub mod ads_txt;
 #[cfg(feature = "app_ads_txt")]

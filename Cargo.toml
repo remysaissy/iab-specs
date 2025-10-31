@@ -1,6 +1,6 @@
 [package]
 name = "iab-specs"
-version = "0.1.1"
+version = "0.1.0"
 edition = "2024"
 description = "Unofficial Rust implementaton of various IAB specifications."
 license = "Apache-2.0"
@@ -20,6 +20,7 @@ serde = { version = "1", features = ["serde_derive", "std"] }
 serde_json = { version = "1", features = ["std"] }
 serde_with = { version = "3", features = ["std"] }
 serde_plain = { version = "1" }
+serde_repr = { version = "0.1" }
 derive_builder = { version = "0.20", features = ["std"] }
 isosphere = { version = "0.2", optional = true }
 thiserror = { version = "2", features = ["std"] }
@@ -29,3 +30,4 @@ default = []
 ads_txt = ["dep:isosphere"]
 app_ads_txt = ["ads_txt"]
 sellers_json = []
+adcom = []
