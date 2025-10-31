@@ -24,5 +24,15 @@
 ///
 /// This module is under development. Core objects will be added in subsequent phases.
 
-// Re-export common types (includes AdCOM)
+// Core bid objects (Phase 2, Commit 3)
+pub mod bid;
+pub mod request;
+pub mod response;
+
+// Re-export core types for convenient access
+pub use bid::{Bid, SeatBid};
+pub use request::BidRequest;
+pub use response::BidResponse;
+
+// Re-export common types (includes AdCOM and SupplyChain)
 pub use crate::openrtb::common::*;
