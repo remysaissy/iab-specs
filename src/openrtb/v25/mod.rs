@@ -44,6 +44,11 @@ pub mod content;
 pub mod producer;
 pub mod data;
 
+// User and device objects (Phase 2, Commit 6)
+pub mod geo;
+pub mod device;
+pub mod user;
+
 // Re-export core bid types for convenient access
 pub use bid::{Bid, SeatBid};
 pub use request::BidRequest;
@@ -63,6 +68,11 @@ pub use publisher::Publisher;
 pub use content::Content;
 pub use producer::Producer;
 pub use data::{Data, Segment};
+
+// Re-export user and device types
+pub use geo::Geo;
+pub use device::Device;
+pub use user::User;
 
 // Re-export common types (includes AdCOM and SupplyChain)
 pub use crate::openrtb::common::*;
