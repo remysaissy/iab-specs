@@ -12,6 +12,7 @@ An unofficial Rust implementation of various IAB (Interactive Advertising Bureau
 
 ### Currently Supported Specifications
 
+- **[AdCOM 1.0](https://github.com/InteractiveAdvertisingBureau/AdCOM)** - Advertising Common Object Model (enumerations)
 - **[Ads.txt 1.1](https://iabtechlab.com/wp-content/uploads/2022/04/Ads.txt-1.1.pdf)** - Authorized Digital Sellers declaration for websites
 - **[App-ads.txt 1.0](https://iabtechlab.com/wp-content/uploads/2019/03/app-ads.txt-v1.0-final-.pdf)** - Authorized Digital Sellers declaration for mobile and CTV apps
 - **[Sellers.json 1.0](https://iabtechlab.com/wp-content/uploads/2019/07/Sellers.json_Final.pdf)** - Supply chain transparency
@@ -23,7 +24,7 @@ Add `iab-specs` to your `Cargo.toml` with the features you need:
 ```toml
 [dependencies]
 # Enable all specifications
-iab-specs = { version = "0.1", features = ["ads_txt", "app_ads_txt", "sellers_json"] }
+iab-specs = { version = "0.1", features = ["adcom", "ads_txt", "app_ads_txt", "sellers_json"] }
 
 # Or enable only what you need
 iab-specs = { version = "0.1", features = ["ads_txt"] }
@@ -33,7 +34,7 @@ Or use cargo:
 
 ```bash
 # Enable all specifications
-cargo add iab-specs --features ads_txt,app_ads_txt,sellers_json
+cargo add iab-specs --features adcom,ads_txt,app_ads_txt,sellers_json
 
 # Or enable only what you need
 cargo add iab-specs --features ads_txt
@@ -45,6 +46,7 @@ cargo add iab-specs --features ads_txt
 
 The library uses cargo features to enable/disable specifications:
 
+- `adcom` - AdCOM 1.0 support (Advertising Common Object Model enumerations)
 - `ads_txt` - Ads.txt 1.1 support
 - `app_ads_txt` - App-ads.txt 1.0 support (automatically includes `ads_txt`)
 - `sellers_json` - Sellers.json 1.0 support
@@ -53,6 +55,9 @@ The library uses cargo features to enable/disable specifications:
 
 ```toml
 [dependencies]
+# Only AdCOM support
+iab-specs = { version = "0.1", features = ["adcom"] }
+
 # Only ads.txt support
 iab-specs = { version = "0.1", features = ["ads_txt"] }
 
@@ -66,7 +71,7 @@ iab-specs = { version = "0.1", features = ["sellers_json"] }
 iab-specs = { version = "0.1", features = ["ads_txt", "sellers_json"] }
 
 # All specifications
-iab-specs = { version = "0.1", features = ["ads_txt", "app_ads_txt", "sellers_json"] }
+iab-specs = { version = "0.1", features = ["adcom", "ads_txt", "app_ads_txt", "sellers_json"] }
 ```
 
 **Why no default features?**
@@ -78,6 +83,30 @@ This design allows you to:
 - **Explicit dependencies**: Be clear about which IAB specs your project relies on
 
 ## Usage Examples
+
+### AdCOM
+
+Use standardized enumeration values from the Advertising Common Object Model:
+
+```rust
+use iab_specs::adcom::{AuctionType, DeviceType, ApiFramework, Protocol};
+
+// Auction types
+let auction = AuctionType::FirstPrice;
+assert_eq!(serde_json::to_string(&auction).unwrap(), "1");
+
+// Device types
+let device = DeviceType::Phone;
+assert_eq!(serde_json::to_string(&device).unwrap(), "4");
+
+// API frameworks
+let api = ApiFramework::Mraid3;
+assert_eq!(serde_json::to_string(&api).unwrap(), "6");
+
+// Video protocols
+let protocol = Protocol::Vast4;
+assert_eq!(serde_json::to_string(&protocol).unwrap(), "7");
+```
 
 ### Ads.txt
 
@@ -204,12 +233,14 @@ For usage examples, please refer to the unit tests in the source code. Each modu
 
 ## Roadmap
 
+- [x] AdCOM 1.0 (Enumerations)
 - [x] Ads.txt 1.1
 - [x] App-ads.txt 1.0
 - [x] Sellers.json 1.0
 - [ ] OpenRTB 2.5
 - [ ] OpenRTB 2.6
 - [ ] OpenRTB 3.0
+- [ ] AdCOM 1.0 (Media, Placement, Context objects)
 - [ ] Additional IAB specifications (contributions welcome!)
 
 ## Contributing
