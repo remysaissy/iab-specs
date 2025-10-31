@@ -41,7 +41,6 @@
 /// - OpenRTB 2.5: <https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf>
 /// - OpenRTB 2.6: <https://github.com/InteractiveAdvertisingBureau/openrtb2.x/blob/main/2.6.md>
 /// - AdCOM 1.0: <https://github.com/InteractiveAdvertisingBureau/AdCOM>
-
 pub mod common;
 
 #[cfg(feature = "openrtb_25")]

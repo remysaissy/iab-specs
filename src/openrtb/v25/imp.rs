@@ -1,7 +1,6 @@
 /// OpenRTB 2.5 Impression Object
 ///
 /// This module implements the Imp (Impression) object for OpenRTB 2.5.
-
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

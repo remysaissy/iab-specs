@@ -337,9 +337,7 @@ mod tests {
     #[test]
     fn test_supply_chain_node_builder_missing_required() {
         // Missing asi
-        let result = SupplyChainNode::builder()
-            .sid("12345".to_string())
-            .build();
+        let result = SupplyChainNode::builder().sid("12345".to_string()).build();
         assert!(result.is_err());
 
         // Missing sid
@@ -352,11 +350,13 @@ mod tests {
     #[test]
     fn test_supply_chain_display() {
         let schain = SupplyChain::builder()
-            .nodes(vec![SupplyChainNode::builder()
-                .asi("test.com".to_string())
-                .sid("123".to_string())
-                .build()
-                .unwrap()])
+            .nodes(vec![
+                SupplyChainNode::builder()
+                    .asi("test.com".to_string())
+                    .sid("123".to_string())
+                    .build()
+                    .unwrap(),
+            ])
             .build()
             .unwrap();
 
@@ -430,10 +430,7 @@ mod tests {
 
     #[test]
     fn test_supply_chain_empty_nodes() {
-        let schain = SupplyChain::builder()
-            .nodes(vec![])
-            .build()
-            .unwrap();
+        let schain = SupplyChain::builder().nodes(vec![]).build().unwrap();
 
         assert_eq!(schain.nodes.len(), 0);
 

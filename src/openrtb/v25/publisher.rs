@@ -1,7 +1,6 @@
 /// OpenRTB 2.5 Publisher Object
 ///
 /// This module implements the Publisher object for inventory suppliers.
-
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
