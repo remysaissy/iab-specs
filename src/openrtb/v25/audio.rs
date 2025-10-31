@@ -1,0 +1,230 @@
+/// OpenRTB 2.5 Audio Ad Object
+///
+/// This module implements the Audio object for OpenRTB 2.5.
+
+use derive_builder::Builder;
+use serde::{Deserialize, Serialize};
+
+use super::banner::Banner;
+
+/// Audio ad impression (OpenRTB 2.5 Section 3.2.8)
+///
+/// An `Audio` object represents an audio ad impression with VAST compliance.
+/// It describes the audio player capabilities, supported formats, and playback requirements.
+///
+/// # Example
+///
+/// ```
+/// use iab_specs::openrtb::v25::Audio;
+///
+/// let audio = Audio {
+///     mimes: vec!["audio/mp4".to_string(), "audio/mpeg".to_string()],
+///     minduration: 5,
+///     maxduration: Some(30),
+///     protocols: Some(vec![2, 3]),
+///     ..Default::default()
+/// };
+/// ```
+#[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
+#[builder(build_fn(error = "crate::Error"))]
+pub struct Audio {
+    /// Content MIME types supported (e.g., "audio/mp4", "audio/mpeg").
+    /// **Required field** - at least one MIME type must be specified.
+    #[builder(setter(into))]
+    pub mimes: Vec<String>,
+
+    /// Minimum audio ad duration in seconds.
+    /// Default is 0.
+    #[serde(default)]
+    #[builder(default)]
+    pub minduration: i32,
+
+    /// Maximum audio ad duration in seconds.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub maxduration: Option<i32>,
+
+    /// Total duration of the audio ad pod in seconds.
+    /// For dynamic pods, this represents the target duration.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub poddur: Option<i32>,
+
+    /// Array of supported audio protocols.
+    /// Refer to AdCOM `Protocol` enumeration.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub protocols: Option<Vec<i32>>,
+
+    /// Start delay in seconds for pre-roll, mid-roll, or post-roll ad placement.
+    /// Refer to AdCOM `StartDelay` enumeration.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub startdelay: Option<i32>,
+
+    /// Array of exact audio durations (in seconds) that are required.
+    /// Typically used for radio/live streaming use cases.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub rqddurs: Option<Vec<i32>>,
+
+    /// Unique identifier for the ad pod.
+    /// Used to group multiple impressions for pod-based bidding.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub podid: Option<String>,
+
+    /// Sequence number of the impression within an ad pod (0-indexed).
+    /// Default is 0.
+    #[serde(default)]
+    #[builder(default)]
+    pub podseq: i32,
+
+    /// For ad pods, indicates the impression's position guarantee:
+    /// - 0 = no guarantee
+    /// - >0 = guaranteed position
+    /// Default is 0.
+    #[serde(default)]
+    #[builder(default)]
+    pub slotinpod: i32,
+
+    /// Minimum CPM per second.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub mincpmpersec: Option<f64>,
+
+    /// Blocked creative attributes.
+    /// Refer to AdCOM `CreativeAttribute` enumeration.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub battr: Option<Vec<i32>>,
+
+    /// Maximum extended audio ad duration beyond maxduration:
+    /// - -1 = unlimited
+    /// - 0 = no extension allowed
+    /// - >0 = maximum extension in seconds
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub maxextended: Option<i32>,
+
+    /// Minimum bit rate in Kbps.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub minbitrate: Option<i32>,
+
+    /// Maximum bit rate in Kbps.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub maxbitrate: Option<i32>,
+
+    /// Supported delivery methods (e.g., streaming, progressive).
+    /// Refer to AdCOM `DeliveryMethod` enumeration.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub delivery: Option<Vec<i32>>,
+
+    /// Array of Banner objects representing companion ads available for the audio.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub companionad: Option<Vec<Banner>>,
+
+    /// List of supported API frameworks for this impression.
+    /// Refer to AdCOM `ApiFramework` enumeration.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub api: Option<Vec<i32>>,
+
+    /// Supported companion ad types.
+    /// Refer to AdCOM `CompanionType` enumeration.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub companiontype: Option<Vec<i32>>,
+
+    /// Maximum number of ads that can be played in an audio ad pod.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub maxseq: Option<i32>,
+
+    /// Type of audio feed.
+    /// Refer to AdCOM `FeedType` enumeration.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub feed: Option<i32>,
+
+    /// Indicates if the audio is stitched with the content stream:
+    /// - 0 = independent audio ad
+    /// - 1 = stitched with content
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub stitched: Option<i32>,
+
+    /// Volume normalization mode.
+    /// Refer to AdCOM `VolumeNormalizationMode` enumeration.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub nvol: Option<i32>,
+
+    /// Array of DurFloors objects defining duration-based floor prices.
+    /// Uses placeholder until DurFloors is implemented.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub durfloors: Option<Vec<serde_json::Value>>,
+
+    /// Extension object for exchange-specific extensions.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub ext: Option<serde_json::Value>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_audio_creation() {
+        let audio = Audio {
+            mimes: vec!["audio/mp4".to_string()],
+            minduration: 5,
+            maxduration: Some(30),
+            ..Default::default()
+        };
+
+        assert_eq!(audio.mimes.len(), 1);
+        assert_eq!(audio.minduration, 5);
+        assert_eq!(audio.maxduration, Some(30));
+    }
+
+    #[test]
+    fn test_audio_defaults() {
+        let audio = Audio {
+            mimes: vec!["audio/mpeg".to_string()],
+            ..Default::default()
+        };
+
+        assert_eq!(audio.minduration, 0);
+        assert_eq!(audio.podseq, 0);
+        assert_eq!(audio.slotinpod, 0);
+    }
+
+    #[test]
+    fn test_audio_serialization() {
+        let audio = Audio {
+            mimes: vec!["audio/mp4".to_string()],
+            minduration: 10,
+            ..Default::default()
+        };
+
+        let json = serde_json::to_string(&audio).unwrap();
+        assert!(json.contains("\"mimes\":[\"audio/mp4\"]"));
+        assert!(json.contains("\"minduration\":10"));
+    }
+
+    #[test]
+    fn test_audio_deserialization() {
+        let json = r#"{"mimes":["audio/mp4"],"minduration":15}"#;
+        let audio: Audio = serde_json::from_str(json).unwrap();
+
+        assert_eq!(audio.mimes, vec!["audio/mp4"]);
+        assert_eq!(audio.minduration, 15);
+    }
+}
