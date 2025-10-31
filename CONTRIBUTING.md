@@ -37,24 +37,50 @@ Additionally, it's always good to work on improving/adding examples and document
 
 ## Development Setup
 
-### Prerequisites
-- Rust 1.75 or later (Edition 2024)
-- SQLite (for running tests)
-- cargo-expand (optional, for inspecting generated code): `cargo install cargo-expand`
-- act (optional, for running CI tests locally): `brew install act` (macOS) or see [act installation](https://github.com/nektos/act)
-- Docker (required if using act)
+### Quick Start
 
-### Building the Project
+The easiest way to set up your development environment is using the provided initialization script:
+
 ```bash
 # Clone the repository
 git clone https://github.com/remysaissy/iab-specs.git
 cd iab-specs
 
-# Build all workspace members
-cargo build
+# Run the setup script (installs all required tools)
+./init-dev.sh
+
+# Or for minimal setup (essential tools only)
+./init-dev.sh --minimal
+```
+
+This script will:
+- Install Rust 1.70 (MSRV) or later (Edition 2021)
+- Install required components: rustfmt, clippy, rust-src, rust-docs, rust-analyzer
+- Install cargo-llvm-cov for code coverage
+- Install cargo-edit for dependency management (optional)
+- Verify the installation
+- Test that the project compiles
+
+### Manual Setup
+
+If you prefer to set up manually:
+
+**Prerequisites:**
+- Rust 1.70 or later (MSRV, Edition 2021)
+- rustfmt: `rustup component add rustfmt`
+- clippy: `rustup component add clippy`
+- rust-src: `rustup component add rust-src`
+- cargo-llvm-cov: `cargo install cargo-llvm-cov`
+- act (optional, for running CI tests locally): `brew install act` (macOS) or see [act installation](https://github.com/nektos/act)
+- Docker (required if using act)
+
+### Building the Project
+```bash
+# Build the library
+cargo build --all-features
 
 # Run tests
-cargo test
+cargo test --all-features
 
 # Build documentation
 cargo doc --open
