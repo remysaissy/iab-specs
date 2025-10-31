@@ -1,7 +1,6 @@
 /// OpenRTB 2.5 Native Ad Object
 ///
 /// This module implements the Native object for OpenRTB 2.5.
-
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
@@ -87,5 +86,54 @@ mod tests {
         let native: Native = serde_json::from_str(json).unwrap();
 
         assert_eq!(native.request, r#"{"ver":"1.2"}"#);
+    }
+
+    #[test]
+    fn test_native_builder() {
+        let native = NativeBuilder::default()
+            .request(r#"{"ver":"1.2","assets":[{"id":1}]}"#)
+            .ver(Some("1.2".to_string()))
+            .build()
+            .unwrap();
+
+        assert!(native.request.contains("assets"));
+        assert_eq!(native.ver, Some("1.2".to_string()));
+    }
+
+    #[test]
+    fn test_native_with_api() {
+        let native = Native {
+            request: r#"{"ver":"1.2"}"#.to_string(),
+            ver: Some("1.2".to_string()),
+            api: Some(vec![3, 5]),
+            ..Default::default()
+        };
+
+        assert_eq!(native.api.as_ref().unwrap().len(), 2);
+        assert_eq!(native.api.as_ref().unwrap()[0], 3);
+    }
+
+    #[test]
+    fn test_native_with_battr() {
+        let native = Native {
+            request: r#"{"ver":"1.2"}"#.to_string(),
+            battr: Some(vec![1, 2, 3]),
+            ..Default::default()
+        };
+
+        assert_eq!(native.battr.as_ref().unwrap().len(), 3);
+    }
+
+    #[test]
+    fn test_native_with_ext() {
+        let ext_value = serde_json::json!({"custom": "native_data"});
+
+        let native = Native {
+            request: r#"{"ver":"1.2"}"#.to_string(),
+            ext: Some(ext_value.clone()),
+            ..Default::default()
+        };
+
+        assert_eq!(native.ext, Some(ext_value));
     }
 }

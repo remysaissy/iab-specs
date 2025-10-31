@@ -29,7 +29,6 @@
 ///
 /// Some objects are specific to the OpenRTB transaction protocol and are not part of AdCOM:
 /// - `SupplyChain` / `SupplyChainNode`: Supply chain transparency objects
-
 // Re-export AdCOM types (required dependency for OpenRTB)
 pub use crate::adcom::*;
 

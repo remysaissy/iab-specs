@@ -274,7 +274,7 @@ For usage examples, please refer to the unit tests in the source code. Each modu
 - [x] Ads.txt 1.1
 - [x] App-ads.txt 1.0
 - [x] Sellers.json 1.0
-- [ ] OpenRTB 2.5
+- [x] OpenRTB 2.5
 - [ ] OpenRTB 2.6
 - [ ] OpenRTB 3.0
 - [ ] Additional IAB specifications (contributions welcome!)

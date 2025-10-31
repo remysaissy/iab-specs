@@ -1,7 +1,6 @@
 /// OpenRTB 2.5 Device Object
 ///
 /// This module implements the Device object for device information.
-
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

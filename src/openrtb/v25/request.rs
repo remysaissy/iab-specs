@@ -1,14 +1,15 @@
 /// OpenRTB 2.5 Request Objects
 ///
 /// This module contains the BidRequest object for OpenRTB 2.5.
-
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
 use super::app::App;
 use super::device::Device;
 use super::imp::Imp;
+use super::regs::Regs;
 use super::site::Site;
+use super::source::Source;
 use super::user::User;
 
 /// Default auction type for bid requests (Second Price Plus per OpenRTB 2.5 spec)
@@ -45,9 +46,7 @@ fn default_auction_type() -> i32 {
 /// };
 /// ```
 ///
-/// **Note**: The `source` and `regs` fields currently use `serde_json::Value`
-/// as placeholders. These will be replaced with proper typed objects in
-/// Phase 2, Commit 7.
+/// All objects in BidRequest are now fully typed as of Phase 2, Commit 7.
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"))]
 pub struct BidRequest {
@@ -165,21 +164,15 @@ pub struct BidRequest {
 
     /// A Source object that provides data about the inventory source and
     /// which entity makes the final decision.
-    ///
-    /// Currently uses `serde_json::Value` as a placeholder.
-    /// Will be replaced with `Source` in Commit 7.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub source: Option<serde_json::Value>,
+    pub source: Option<Source>,
 
     /// A Regs object that specifies any industry, legal, or governmental
     /// regulations in force for this request.
-    ///
-    /// Currently uses `serde_json::Value` as a placeholder.
-    /// Will be replaced with `Regs` in Commit 7.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub regs: Option<serde_json::Value>,
+    pub regs: Option<Regs>,
 
     /// Extension object for exchange-specific extensions.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -232,5 +225,235 @@ mod tests {
         assert!(json.contains("\"imp\":["));
         assert!(json.contains("\"id\":\"imp1\""));
     }
-}
 
+    #[test]
+    fn test_bid_request_deserialization() {
+        let json = r#"{"id":"req123","imp":[{"id":"imp1"}],"at":2}"#;
+        let request: BidRequest = serde_json::from_str(json).unwrap();
+
+        assert_eq!(request.id, "req123");
+        assert_eq!(request.imp.len(), 1);
+        assert_eq!(request.imp[0].id, "imp1");
+        assert_eq!(request.at, 2);
+    }
+
+    #[test]
+    fn test_bid_request_default_auction_type() {
+        // Test that deserialization uses default auction type when not specified
+        let json = r#"{"id":"req123","imp":[{"id":"imp1"}]}"#;
+        let request: BidRequest = serde_json::from_str(json).unwrap();
+
+        // Should default to 2 (Second Price Plus) per OpenRTB 2.5 spec when deserialized
+        assert_eq!(request.at, 2);
+    }
+
+    #[test]
+    fn test_bid_request_with_site() {
+        let imp = Imp {
+            id: "imp1".to_string(),
+            ..Default::default()
+        };
+
+        let site = crate::openrtb::v25::Site {
+            id: Some("site123".to_string()),
+            domain: Some("example.com".to_string()),
+            ..Default::default()
+        };
+
+        let request = BidRequest {
+            id: "req123".to_string(),
+            imp: vec![imp],
+            site: Some(site),
+            ..Default::default()
+        };
+
+        assert!(request.site.is_some());
+        assert_eq!(
+            request.site.as_ref().unwrap().domain,
+            Some("example.com".to_string())
+        );
+    }
+
+    #[test]
+    fn test_bid_request_with_app() {
+        let imp = Imp {
+            id: "imp1".to_string(),
+            ..Default::default()
+        };
+
+        let app = crate::openrtb::v25::App {
+            id: Some("app123".to_string()),
+            bundle: Some("com.example.app".to_string()),
+            ..Default::default()
+        };
+
+        let request = BidRequest {
+            id: "req123".to_string(),
+            imp: vec![imp],
+            app: Some(app),
+            ..Default::default()
+        };
+
+        assert!(request.app.is_some());
+        assert_eq!(
+            request.app.as_ref().unwrap().bundle,
+            Some("com.example.app".to_string())
+        );
+    }
+
+    #[test]
+    fn test_bid_request_with_device() {
+        let imp = Imp {
+            id: "imp1".to_string(),
+            ..Default::default()
+        };
+
+        let device = crate::openrtb::v25::Device {
+            ua: Some("Mozilla/5.0".to_string()),
+            ip: Some("192.168.1.1".to_string()),
+            ..Default::default()
+        };
+
+        let request = BidRequest {
+            id: "req123".to_string(),
+            imp: vec![imp],
+            device: Some(device),
+            ..Default::default()
+        };
+
+        assert!(request.device.is_some());
+        assert_eq!(
+            request.device.as_ref().unwrap().ip,
+            Some("192.168.1.1".to_string())
+        );
+    }
+
+    #[test]
+    fn test_bid_request_with_user() {
+        let imp = Imp {
+            id: "imp1".to_string(),
+            ..Default::default()
+        };
+
+        let user = crate::openrtb::v25::User {
+            id: Some("user123".to_string()),
+            yob: Some(1990),
+            ..Default::default()
+        };
+
+        let request = BidRequest {
+            id: "req123".to_string(),
+            imp: vec![imp],
+            user: Some(user),
+            ..Default::default()
+        };
+
+        assert!(request.user.is_some());
+        assert_eq!(
+            request.user.as_ref().unwrap().id,
+            Some("user123".to_string())
+        );
+    }
+
+    #[test]
+    fn test_bid_request_test_mode() {
+        let imp = Imp {
+            id: "imp1".to_string(),
+            ..Default::default()
+        };
+
+        let request = BidRequest {
+            id: "req123".to_string(),
+            imp: vec![imp],
+            test: 1, // Test mode
+            ..Default::default()
+        };
+
+        assert_eq!(request.test, 1);
+    }
+
+    #[test]
+    fn test_bid_request_with_blocklists() {
+        let imp = Imp {
+            id: "imp1".to_string(),
+            ..Default::default()
+        };
+
+        let request = BidRequest {
+            id: "req123".to_string(),
+            imp: vec![imp],
+            bcat: Some(vec!["IAB25".to_string(), "IAB26".to_string()]),
+            badv: Some(vec!["competitor.com".to_string()]),
+            bapp: Some(vec!["com.competitor.app".to_string()]),
+            ..Default::default()
+        };
+
+        assert_eq!(request.bcat.as_ref().unwrap().len(), 2);
+        assert_eq!(request.badv.as_ref().unwrap().len(), 1);
+        assert_eq!(request.bapp.as_ref().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn test_bid_request_with_tmax() {
+        let imp = Imp {
+            id: "imp1".to_string(),
+            ..Default::default()
+        };
+
+        let request = BidRequest {
+            id: "req123".to_string(),
+            imp: vec![imp],
+            tmax: Some(120), // 120ms timeout
+            ..Default::default()
+        };
+
+        assert_eq!(request.tmax, Some(120));
+    }
+
+    #[test]
+    fn test_bid_request_with_source() {
+        let imp = Imp {
+            id: "imp1".to_string(),
+            ..Default::default()
+        };
+
+        let source = crate::openrtb::v25::Source {
+            fd: Some(1),
+            tid: Some("transaction123".to_string()),
+            ..Default::default()
+        };
+
+        let request = BidRequest {
+            id: "req123".to_string(),
+            imp: vec![imp],
+            source: Some(source),
+            ..Default::default()
+        };
+
+        assert!(request.source.is_some());
+        assert_eq!(request.source.as_ref().unwrap().fd, Some(1));
+    }
+
+    #[test]
+    fn test_bid_request_with_regs() {
+        let imp = Imp {
+            id: "imp1".to_string(),
+            ..Default::default()
+        };
+
+        let regs = crate::openrtb::v25::Regs {
+            coppa: Some(1),
+            ..Default::default()
+        };
+
+        let request = BidRequest {
+            id: "req123".to_string(),
+            imp: vec![imp],
+            regs: Some(regs),
+            ..Default::default()
+        };
+
+        assert!(request.regs.is_some());
+        assert_eq!(request.regs.as_ref().unwrap().coppa, Some(1));
+    }
+}

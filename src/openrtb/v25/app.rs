@@ -1,7 +1,6 @@
 /// OpenRTB 2.5 App Object
 ///
 /// This module implements the App object for mobile application context.
-
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
