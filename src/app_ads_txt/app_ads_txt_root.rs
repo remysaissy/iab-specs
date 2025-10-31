@@ -103,11 +103,7 @@ impl FromStr for AppAdsTxt {
     type Err = crate::Error;
 
     fn from_str(content: &str) -> Result<Self, Self::Err> {
-        const FIELDS: &[&str] = &[
-            "contact",
-            "subdomain",
-            "inventorypartnerdomain",
-        ];
+        const FIELDS: &[&str] = &["contact", "subdomain", "inventorypartnerdomain"];
         let mut contact = None;
         let mut subdomain = None;
         let mut inventory_partner_domain = None;
@@ -125,9 +121,9 @@ impl FromStr for AppAdsTxt {
             } else {
                 // Variable
                 if line.contains('=') {
-                    let (key, value) = line
-                        .split_once("=")
-                        .ok_or_else(|| serde_plain::Error::unknown_field(&line[..line.len().min(100)], FIELDS))?;
+                    let (key, value) = line.split_once("=").ok_or_else(|| {
+                        serde_plain::Error::unknown_field(&line[..line.len().min(100)], FIELDS)
+                    })?;
                     let value = match value.contains("#") {
                         true => {
                             let (v, _) = value
@@ -185,13 +181,15 @@ impl TryFrom<crate::ads_txt::AdsTxt> for AppAdsTxt {
         // Validate that no 1.1-only fields are present
         if ads_txt.owner_domain.is_some() {
             return Err(serde_plain::Error::custom(
-                "Cannot convert ads.txt with OWNERDOMAIN to app-ads.txt v1.0"
-            ).into());
+                "Cannot convert ads.txt with OWNERDOMAIN to app-ads.txt v1.0",
+            )
+            .into());
         }
         if !ads_txt.manager_domains.is_empty() {
             return Err(serde_plain::Error::custom(
-                "Cannot convert ads.txt with MANAGERDOMAIN to app-ads.txt v1.0"
-            ).into());
+                "Cannot convert ads.txt with MANAGERDOMAIN to app-ads.txt v1.0",
+            )
+            .into());
         }
 
         Ok(AppAdsTxt {
@@ -300,7 +298,10 @@ greenadexchange.com, 12345, DIRECT
         let res = AppAdsTxt::from_str(content);
         assert!(res.is_ok());
         let app_ads = res.unwrap();
-        assert_eq!(app_ads.inventory_partner_domain, Some("partner.example.com".to_string()));
+        assert_eq!(
+            app_ads.inventory_partner_domain,
+            Some("partner.example.com".to_string())
+        );
     }
 
     #[test]
@@ -340,7 +341,10 @@ GreenAdExchange.COM, ABC123, DIRECT, TAG12345
         // Values should be lowercased
         assert_eq!(app_ads.contact, Some("adops@example.com".to_string()));
         assert_eq!(app_ads.subdomain, Some("mobile.example.com".to_string()));
-        assert_eq!(app_ads.inventory_partner_domain, Some("partner.example.com".to_string()));
+        assert_eq!(
+            app_ads.inventory_partner_domain,
+            Some("partner.example.com".to_string())
+        );
     }
 
     // NEGATIVE TEST CASES - These should FAIL
@@ -803,7 +807,10 @@ orangessp.com, 11111, DIRECT
             app_ads.contact,
             Some("monetization@awesome-game.com".to_string())
         );
-        assert_eq!(app_ads.subdomain, Some("games.awesome-game.com".to_string()));
+        assert_eq!(
+            app_ads.subdomain,
+            Some("games.awesome-game.com".to_string())
+        );
         assert_eq!(app_ads.systems.len(), 5);
 
         // Verify first system (Google)
