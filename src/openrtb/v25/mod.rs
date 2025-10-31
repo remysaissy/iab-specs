@@ -36,6 +36,14 @@ pub mod video;
 pub mod audio;
 pub mod native;
 
+// Context objects (Phase 2, Commit 5)
+pub mod site;
+pub mod app;
+pub mod publisher;
+pub mod content;
+pub mod producer;
+pub mod data;
+
 // Re-export core bid types for convenient access
 pub use bid::{Bid, SeatBid};
 pub use request::BidRequest;
@@ -47,6 +55,14 @@ pub use banner::{Banner, Format};
 pub use video::Video;
 pub use audio::Audio;
 pub use native::Native;
+
+// Re-export context types
+pub use site::Site;
+pub use app::App;
+pub use publisher::Publisher;
+pub use content::Content;
+pub use producer::Producer;
+pub use data::{Data, Segment};
 
 // Re-export common types (includes AdCOM and SupplyChain)
 pub use crate::openrtb::common::*;
