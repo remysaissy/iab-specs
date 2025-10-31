@@ -18,37 +18,64 @@ An unofficial Rust implementation of various IAB (Interactive Advertising Bureau
 
 ## Installation
 
-Add `iab-specs` to your `Cargo.toml`:
+Add `iab-specs` to your `Cargo.toml` with the features you need:
 
 ```toml
 [dependencies]
-iab-specs = "0.1"
+# Enable all specifications
+iab-specs = { version = "0.1", features = ["ads_txt", "app_ads_txt", "sellers_json"] }
+
+# Or enable only what you need
+iab-specs = { version = "0.1", features = ["ads_txt"] }
 ```
 
 Or use cargo:
 
 ```bash
-cargo add iab-specs
+# Enable all specifications
+cargo add iab-specs --features ads_txt,app_ads_txt,sellers_json
+
+# Or enable only what you need
+cargo add iab-specs --features ads_txt
 ```
 
 ## Features
 
+⚠️ **Important**: By default, **no features are enabled**. You must explicitly enable the specifications you need.
+
 The library uses cargo features to enable/disable specifications:
 
-- `ads_txt` - Ads.txt 1.1 support (enabled by default)
-- `app_ads_txt` - App-ads.txt 1.0 support (enabled by default, requires `ads_txt`)
-- `sellers_json` - Sellers.json 1.0 support (enabled by default)
+- `ads_txt` - Ads.txt 1.1 support
+- `app_ads_txt` - App-ads.txt 1.0 support (automatically includes `ads_txt`)
+- `sellers_json` - Sellers.json 1.0 support
 
-To use only specific specifications:
+### Feature Selection Examples
 
 ```toml
 [dependencies]
 # Only ads.txt support
-iab-specs = { version = "0.1", default-features = false, features = ["ads_txt"] }
+iab-specs = { version = "0.1", features = ["ads_txt"] }
 
 # Only app-ads.txt support (automatically includes ads_txt)
-iab-specs = { version = "0.1", default-features = false, features = ["app_ads_txt"] }
+iab-specs = { version = "0.1", features = ["app_ads_txt"] }
+
+# Only sellers.json support
+iab-specs = { version = "0.1", features = ["sellers_json"] }
+
+# Ads.txt and sellers.json (no app-ads.txt)
+iab-specs = { version = "0.1", features = ["ads_txt", "sellers_json"] }
+
+# All specifications
+iab-specs = { version = "0.1", features = ["ads_txt", "app_ads_txt", "sellers_json"] }
 ```
+
+**Why no default features?**
+
+This design allows you to:
+- **Minimize dependencies**: Only include what you actually use
+- **Reduce compile time**: Don't compile unused specifications
+- **Smaller binary size**: Eliminate unused code from your final binary
+- **Explicit dependencies**: Be clear about which IAB specs your project relies on
 
 ## Usage Examples
 
