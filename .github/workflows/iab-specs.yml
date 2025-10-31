@@ -27,19 +27,51 @@ jobs:
       - run: rustup toolchain install stable --profile minimal
       - run: rustup component add clippy
       - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy -- -D warnings
+      - run: cargo clippy --all-features -- -D warnings
+
+  feature-matrix:
+    name: Test Feature Combinations
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        features:
+          - name: "no features"
+            flags: "--no-default-features"
+          - name: "ads_txt"
+            flags: "--no-default-features --features ads_txt"
+          - name: "sellers_json"
+            flags: "--no-default-features --features sellers_json"
+          - name: "ads_txt + sellers_json"
+            flags: "--no-default-features --features ads_txt,sellers_json"
+          - name: "app_ads_txt"
+            flags: "--no-default-features --features app_ads_txt"
+          - name: "app_ads_txt + sellers_json"
+            flags: "--no-default-features --features app_ads_txt,sellers_json"
+          - name: "all features"
+            flags: "--all-features"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - run: rustup toolchain install stable --profile minimal
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.features.name }}
+      - name: Build with ${{ matrix.features.name }}
+        run: cargo build ${{ matrix.features.flags }}
+      - name: Test with ${{ matrix.features.name }}
+        run: cargo test ${{ matrix.features.flags }}
 
   test:
-    name: Unit Tests
+    name: Unit Tests (all features)
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - run: rustup toolchain install stable --profile minimal
       - uses: Swatinem/rust-cache@v2
-      - name: Test iab-specs
-        run: >
-          cargo test
+      - name: Test all features
+        run: cargo test --all-features
 
   coverage:
     name: Code Coverage
@@ -53,7 +85,7 @@ jobs:
         uses: taiki-e/install-action@cargo-llvm-cov
       - name: Generate coverage and check thresholds
         run: |
-          cargo llvm-cov --workspace --lcov --output-path lcov.info \
+          cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info \
             --fail-under-lines 80 \
             --fail-under-regions 80 \
             --fail-under-functions 80
