@@ -29,10 +29,24 @@ pub mod bid;
 pub mod request;
 pub mod response;
 
-// Re-export core types for convenient access
+// Impression and media objects (Phase 2, Commit 4)
+pub mod imp;
+pub mod banner;
+pub mod video;
+pub mod audio;
+pub mod native;
+
+// Re-export core bid types for convenient access
 pub use bid::{Bid, SeatBid};
 pub use request::BidRequest;
 pub use response::BidResponse;
+
+// Re-export impression and media types
+pub use imp::Imp;
+pub use banner::{Banner, Format};
+pub use video::Video;
+pub use audio::Audio;
+pub use native::Native;
 
 // Re-export common types (includes AdCOM and SupplyChain)
 pub use crate::openrtb::common::*;
