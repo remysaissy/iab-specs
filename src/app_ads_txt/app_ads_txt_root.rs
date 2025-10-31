@@ -113,7 +113,11 @@ impl FromStr for AppAdsTxt {
         let mut inventory_partner_domain = None;
         let mut systems = vec![];
 
-        for line in content.lines() {
+        // Implementer notes: "parsers should liberally interpret CR, CRLF etc as a line separator"
+        // Normalize line endings by replacing CR and CRLF with LF
+        let normalized_content = content.replace("\r\n", "\n").replace("\r", "\n");
+
+        for line in normalized_content.lines() {
             let line = line.trim();
             // Both empty lines and top of block comments are skipped.
             if line.is_empty() || line.starts_with('#') {
@@ -522,5 +526,339 @@ silverssp.com, 9876, RESELLER
         assert!(result.is_err());
         let err_msg = result.unwrap_err().to_string();
         assert!(err_msg.contains("MANAGERDOMAIN"));
+    }
+
+    // WHITESPACE HANDLING TESTS - From Implementer Notes
+
+    #[test]
+    fn deserialize_with_extra_whitespace_around_commas() {
+        // Implementer notes: "Consumer systems should ignore any sequence of whitespace or tabs"
+        let content = "greenadexchange.com  ,  12345  ,  DIRECT  ,  d75815a79";
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        assert_eq!(app_ads.systems.len(), 1);
+        let system = &app_ads.systems[0];
+        assert_eq!(system.domain, "greenadexchange.com");
+        assert_eq!(system.publisher_id, "12345");
+    }
+
+    #[test]
+    fn deserialize_with_tabs_and_spaces() {
+        // Implementer notes: whitespace and tabs should be ignored
+        let content = "greenadexchange.com,\t12345,\tDIRECT,\td75815a79";
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+    }
+
+    #[test]
+    fn deserialize_with_leading_trailing_whitespace_in_variables() {
+        let content = r#"
+contact  =  adops@example.com
+subdomain  =  mobile.example.com
+greenadexchange.com, 12345, DIRECT
+"#;
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        // Values should have whitespace trimmed and lowercased
+        assert_eq!(app_ads.contact, Some("adops@example.com".to_string()));
+        assert_eq!(app_ads.subdomain, Some("mobile.example.com".to_string()));
+    }
+
+    // LINE ENDING TESTS - From Implementer Notes
+
+    #[test]
+    fn deserialize_with_crlf_line_endings() {
+        // Implementer notes: "parsers should liberally interpret CR, CRLF etc as a line separator"
+        let content = "contact=adops@example.com\r\ngreenadexchange.com, 12345, DIRECT\r\n";
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        assert_eq!(app_ads.contact, Some("adops@example.com".to_string()));
+        assert_eq!(app_ads.systems.len(), 1);
+    }
+
+    #[test]
+    fn deserialize_with_cr_line_endings() {
+        let content = "contact=adops@example.com\rgreenadexchange.com, 12345, DIRECT\r";
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        assert_eq!(app_ads.contact, Some("adops@example.com".to_string()));
+        assert_eq!(app_ads.systems.len(), 1);
+    }
+
+    #[test]
+    fn deserialize_with_mixed_line_endings() {
+        let content = "contact=adops@example.com\r\nsubdomain=mobile.example.com\ngreenadexchange.com, 12345, DIRECT\r";
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        assert_eq!(app_ads.contact, Some("adops@example.com".to_string()));
+        assert_eq!(app_ads.subdomain, Some("mobile.example.com".to_string()));
+        assert_eq!(app_ads.systems.len(), 1);
+    }
+
+    // VARIABLE EDGE CASES - From Implementer Notes
+
+    #[test]
+    fn deserialize_with_variable_empty_value() {
+        // Variable with empty value after = sign
+        let content = r#"
+contact=
+greenadexchange.com, 12345, DIRECT
+"#;
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        // Empty value should be treated as empty string
+        assert_eq!(app_ads.contact, Some("".to_string()));
+    }
+
+    #[test]
+    fn deserialize_with_duplicate_contact_variables() {
+        // Multiple contact variables - behavior should be last one wins or first one wins
+        let content = r#"
+contact=first@example.com
+contact=second@example.com
+greenadexchange.com, 12345, DIRECT
+"#;
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        // Implementation uses last value (overwrites)
+        assert_eq!(app_ads.contact, Some("second@example.com".to_string()));
+    }
+
+    #[test]
+    fn deserialize_with_duplicate_subdomain_variables() {
+        let content = r#"
+subdomain=first.example.com
+subdomain=second.example.com
+greenadexchange.com, 12345, DIRECT
+"#;
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        // Last value wins
+        assert_eq!(app_ads.subdomain, Some("second.example.com".to_string()));
+    }
+
+    // COMMENT EDGE CASES - From Implementer Notes
+
+    #[test]
+    fn deserialize_with_only_comments() {
+        // File with only comments should be valid (empty but valid)
+        let content = r#"
+# This is a comment
+# Another comment
+# Third comment
+"#;
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        assert!(app_ads.contact.is_none());
+        assert!(app_ads.systems.is_empty());
+    }
+
+    #[test]
+    fn deserialize_with_inline_comment_on_variable() {
+        // Variable with inline comment
+        let content = r#"
+contact=adops@example.com # Primary contact
+subdomain=mobile.example.com # Mobile subdomain
+greenadexchange.com, 12345, DIRECT
+"#;
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        // Comment should be stripped from value
+        assert_eq!(app_ads.contact, Some("adops@example.com".to_string()));
+        assert_eq!(app_ads.subdomain, Some("mobile.example.com".to_string()));
+    }
+
+    #[test]
+    fn deserialize_with_empty_lines_between_entries() {
+        // Implementer notes: empty lines should be ignored
+        let content = r#"
+contact=adops@example.com
+
+
+subdomain=mobile.example.com
+
+
+greenadexchange.com, 12345, DIRECT
+
+
+silverssp.com, 9876, RESELLER
+"#;
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        assert_eq!(app_ads.systems.len(), 2);
+    }
+
+    // BUILDER, CLONE, DEBUG TESTS - For code coverage
+
+    #[test]
+    fn test_builder() {
+        let result = AppAdsTxt::builder()
+            .contact(Some("test@example.com".to_string()))
+            .build();
+        assert!(result.is_ok());
+        let app_ads = result.unwrap();
+        assert_eq!(app_ads.contact, Some("test@example.com".to_string()));
+        assert!(app_ads.subdomain.is_none());
+        assert!(app_ads.systems.is_empty());
+    }
+
+    #[test]
+    fn test_builder_with_default_values() {
+        let result = AppAdsTxt::builder().build();
+        assert!(result.is_ok());
+        let app_ads = result.unwrap();
+        assert!(app_ads.contact.is_none());
+        assert!(app_ads.subdomain.is_none());
+        assert!(app_ads.inventory_partner_domain.is_none());
+        assert!(app_ads.systems.is_empty());
+    }
+
+    #[test]
+    fn test_clone() {
+        let original = AppAdsTxt::builder()
+            .contact(Some("test@example.com".to_string()))
+            .subdomain(Some("sub.example.com".to_string()))
+            .systems(vec![
+                AdsTxtSystem::builder()
+                    .domain("greenadexchange.com")
+                    .publisher_id("12345")
+                    .relation(SellerRelationType::Direct)
+                    .build()
+                    .unwrap(),
+            ])
+            .build()
+            .unwrap();
+        let cloned = original.clone();
+        assert_eq!(cloned.contact, original.contact);
+        assert_eq!(cloned.subdomain, original.subdomain);
+        assert_eq!(cloned.systems.len(), original.systems.len());
+    }
+
+    #[test]
+    fn test_debug() {
+        let app_ads = AppAdsTxt::builder()
+            .contact(Some("debug@test.com".to_string()))
+            .build()
+            .unwrap();
+        let debug_str = format!("{:?}", app_ads);
+        assert!(debug_str.contains("AppAdsTxt"));
+        assert!(debug_str.contains("debug@test.com"));
+    }
+
+    // SPECIFICATION EXAMPLES - From IAB Tech Lab docs
+
+    #[test]
+    fn deserialize_google_admob_example() {
+        // Example from Google AdMob documentation
+        let content = r#"
+google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
+"#;
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        assert_eq!(app_ads.systems.len(), 1);
+        let system = &app_ads.systems[0];
+        assert_eq!(system.domain, "google.com");
+        assert_eq!(system.publisher_id, "pub-0000000000000000");
+        assert_eq!(system.relation, SellerRelationType::Direct);
+        assert_eq!(system.cert_id, Some("f08c47fec0942fa0".to_string()));
+    }
+
+    #[test]
+    fn deserialize_comprehensive_example() {
+        // Comprehensive example combining multiple features from implementer notes
+        let content = r#"
+# App-ads.txt for Mobile Game
+# Version 1.0
+contact=monetization@awesome-game.com # Primary monetization contact
+
+subdomain=games.awesome-game.com
+
+# Primary direct relationships
+google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0
+greenadexchange.com, 12345, DIRECT, d75815a79
+
+# Reseller relationships
+silverssp.com, 9876, RESELLER, f6578439
+bluessp.com, 54321, RESELLER
+
+# Additional networks without TAG ID
+orangessp.com, 11111, DIRECT
+"#;
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        assert_eq!(
+            app_ads.contact,
+            Some("monetization@awesome-game.com".to_string())
+        );
+        assert_eq!(app_ads.subdomain, Some("games.awesome-game.com".to_string()));
+        assert_eq!(app_ads.systems.len(), 5);
+
+        // Verify first system (Google)
+        assert_eq!(app_ads.systems[0].domain, "google.com");
+        assert_eq!(app_ads.systems[0].publisher_id, "pub-1234567890123456");
+        assert_eq!(app_ads.systems[0].relation, SellerRelationType::Direct);
+        assert_eq!(
+            app_ads.systems[0].cert_id,
+            Some("f08c47fec0942fa0".to_string())
+        );
+
+        // Verify a reseller without cert_id
+        assert_eq!(app_ads.systems[3].domain, "bluessp.com");
+        assert_eq!(app_ads.systems[3].relation, SellerRelationType::Reseller);
+        assert_eq!(app_ads.systems[3].cert_id, None);
+    }
+
+    #[test]
+    fn deserialize_with_inventorypartnerdomain_example() {
+        // Example showing inventory partner domain usage
+        let content = r#"
+contact=adops@publisher.com
+inventorypartnerdomain=partner-network.com
+# Direct relationships
+greenadexchange.com, 12345, DIRECT, d75815a79
+"#;
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        assert_eq!(
+            app_ads.inventory_partner_domain,
+            Some("partner-network.com".to_string())
+        );
+        assert_eq!(app_ads.systems.len(), 1);
+    }
+
+    // ERROR RECOVERY TESTS
+
+    #[test]
+    fn reject_malformed_variable_line() {
+        // Variable line without = sign should fail
+        let content = r#"
+contact adops@example.com
+greenadexchange.com, 12345, DIRECT
+"#;
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn reject_system_with_too_many_commas() {
+        // System line with extra commas
+        let content = "greenadexchange.com, 12345, DIRECT, cert123, extrafield";
+        let res = AppAdsTxt::from_str(content);
+        // Should be rejected by AdsTxtSystem parser
+        assert!(res.is_err());
     }
 }
