@@ -40,6 +40,8 @@ Options:
     --all                Generate all formats
     --clean              Clean coverage artifacts before running
     --check-thresholds   Enforce 80% minimum coverage for lines, regions, and functions
+    --features <name>    Enable a specific feature during coverage
+    --all-features       Enable all features during coverage
     --help               Display this help message
 
 Examples:
@@ -49,6 +51,8 @@ Examples:
     $0 --text                 # Show text summary
     $0 --all                  # Generate all formats
     $0 --check-thresholds     # Check coverage meets 80% thresholds
+    $0 --all-features         # Generate report with all features enabled
+    $0 --features ads_txt     # Generate report with ads_txt feature enabled
 
 Requirements:
   - cargo-llvm-cov must be installed (cargo install cargo-llvm-cov)
@@ -85,8 +89,9 @@ clean_coverage() {
 # Generate HTML coverage report
 generate_html() {
     local threshold_flags="$1"
+    local feature_flags="$2"
     print_info "Generating HTML coverage report..."
-    cargo llvm-cov --workspace --html $threshold_flags
+    cargo llvm-cov --workspace --html $threshold_flags $feature_flags
     print_success "HTML coverage report generated at target/llvm-cov/html/index.html"
 
     # Open in browser
@@ -103,16 +108,18 @@ generate_html() {
 # Generate lcov report
 generate_lcov() {
     local threshold_flags="$1"
+    local feature_flags="$2"
     print_info "Generating lcov report..."
-    cargo llvm-cov --workspace --lcov --output-path lcov.info $threshold_flags
+    cargo llvm-cov --workspace --lcov --output-path lcov.info $threshold_flags $feature_flags
     print_success "lcov report generated at lcov.info"
 }
 
 # Generate text summary
 generate_text() {
     local threshold_flags="$1"
+    local feature_flags="$2"
     print_info "Generating coverage summary..."
-    cargo llvm-cov --workspace $threshold_flags
+    cargo llvm-cov --workspace $threshold_flags $feature_flags
 }
 
 # Main script
@@ -121,6 +128,7 @@ main() {
     local format="html"
     local check_thresholds=false
     local threshold_flags=""
+    local feature_flags=""
 
     # Parse arguments
     if [ $# -eq 0 ]; then
@@ -152,6 +160,18 @@ main() {
                     check_thresholds=true
                     shift
                     ;;
+                --features)
+                    if [ $# -lt 2 ]; then
+                        print_error "--features requires a feature name"
+                        exit 1
+                    fi
+                    feature_flags="--features $2"
+                    shift 2
+                    ;;
+                --all-features)
+                    feature_flags="--all-features"
+                    shift
+                    ;;
                 --help|-h)
                     show_help
                     exit 0
@@ -172,6 +192,11 @@ main() {
         print_info "Coverage thresholds enabled: Lines/Regions/Functions must be ≥ 80%"
     fi
 
+    # Display feature flags if set
+    if [ -n "$feature_flags" ]; then
+        print_info "Feature flags: $feature_flags"
+    fi
+
     # Check dependencies
     check_dependencies
 
@@ -183,20 +208,20 @@ main() {
     # Generate coverage based on format
     case "$format" in
         html)
-            generate_html "$threshold_flags"
+            generate_html "$threshold_flags" "$feature_flags"
             ;;
         lcov)
-            generate_lcov "$threshold_flags"
+            generate_lcov "$threshold_flags" "$feature_flags"
             ;;
         text)
-            generate_text "$threshold_flags"
+            generate_text "$threshold_flags" "$feature_flags"
             ;;
         all)
-            generate_text "$threshold_flags"
+            generate_text "$threshold_flags" "$feature_flags"
             echo ""
-            generate_html "$threshold_flags"
+            generate_html "$threshold_flags" "$feature_flags"
             echo ""
-            generate_lcov "$threshold_flags"
+            generate_lcov "$threshold_flags" "$feature_flags"
             ;;
     esac
 
