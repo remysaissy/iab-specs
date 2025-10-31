@@ -5,7 +5,9 @@
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
+use super::app::App;
 use super::imp::Imp;
+use super::site::Site;
 
 /// Default auction type for bid requests (Second Price Plus per OpenRTB 2.5 spec)
 fn default_auction_type() -> i32 {
@@ -41,9 +43,9 @@ fn default_auction_type() -> i32 {
 /// };
 /// ```
 ///
-/// **Note**: The `site`, `app`, `device`, `user`, `source`, and `regs` fields
+/// **Note**: The `device`, `user`, `source`, and `regs` fields
 /// currently use `serde_json::Value` as placeholders. These will be replaced with
-/// proper typed objects in subsequent commits (Phase 2, Commits 5-7).
+/// proper typed objects in subsequent commits (Phase 2, Commits 6-7).
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"))]
 pub struct BidRequest {
@@ -60,22 +62,16 @@ pub struct BidRequest {
     /// Details via a Site object about the publisher's website.
     /// Only applicable and recommended for websites.
     /// Exactly one of Site or App should be included.
-    ///
-    /// Currently uses `serde_json::Value` as a placeholder.
-    /// Will be replaced with `Site` in Commit 5.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub site: Option<serde_json::Value>,
+    pub site: Option<Site>,
 
     /// Details via an App object about the publisher's app.
     /// Only applicable and recommended for apps.
     /// Exactly one of Site or App should be included.
-    ///
-    /// Currently uses `serde_json::Value` as a placeholder.
-    /// Will be replaced with `App` in Commit 5.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub app: Option<serde_json::Value>,
+    pub app: Option<App>,
 
     /// Details via a Device object about the user's device.
     /// Recommended by the OpenRTB specification.
