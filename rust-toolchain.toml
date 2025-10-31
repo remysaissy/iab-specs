@@ -1,6 +1,5 @@
 # Note: should NOT increase during a minor/patch release cycle
 # Minimum Supported Rust Version (MSRV) based on dependencies:
-# Conservative MSRV set to 1.70 for compatibility
 [toolchain]
-channel = "1.70"
+channel = "1.86"
 profile = "minimal"
