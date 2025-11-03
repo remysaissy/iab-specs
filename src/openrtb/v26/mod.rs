@@ -3,42 +3,88 @@
 
 /// OpenRTB 2.6 Protocol Implementation
 ///
-/// This module implements the OpenRTB 2.6 specification as defined by the IAB.
+/// This module implements the complete OpenRTB 2.6 specification as defined by the IAB.
 ///
 /// OpenRTB 2.6 extends version 2.5 with support for:
-/// - Ad Pods for CTV transactions (podid, podseq, slotinpod)
-/// - Structured User-Agent object (available via AdCOM)
-/// - Enhanced privacy controls (GDPR, US Privacy, GPP)
-/// - Network and Channel objects for TV content (available via AdCOM)
-/// - DOOH (Digital Out-Of-Home) inventory support (available via AdCOM)
-/// - Qty object for DOOH multipliers
-/// - Refresh settings for rotating ad slots
-/// - Duration-based floor pricing (DurFloors)
+/// - **CTV Ad Pods**: Sequential ad placement with podid, podseq, slotinpod fields
+/// - **DOOH Support**: Digital out-of-home advertising with multi-viewer multipliers
+/// - **Duration-Based Pricing**: Floor prices based on creative duration ranges
+/// - **Structured User-Agent**: Parsed browser/OS details from User-Agent Client Hints
+/// - **Enhanced Privacy**: GDPR, US Privacy, and GPP support
 ///
-/// ## AdCOM Integration
+/// ## Example: CTV Ad Pod Configuration
 ///
-/// Like OpenRTB 2.5, version 2.6 uses AdCOM (Advertising Common Object Model) for
-/// common domain objects. All AdCOM and OpenRTB 2.5 types are available:
+/// ```rust
+/// use iab_specs::openrtb::v26::{Video, DurFloors};
 ///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let video = Video {
+///     mimes: vec!["video/mp4".to_string()],
+///     minduration: 15,
+///     maxduration: Some(30),
+///     protocols: Some(vec![7]), // VAST 4.0
+///     // CTV ad pod configuration
+///     podid: Some("pod-abc123".to_string()),
+///     podseq: 0, // First ad in pod
+///     slotinpod: 1, // Guaranteed first position
+///     // Duration-based floor pricing
+///     durfloors: Some(vec![
+///         DurFloors {
+///             minduration: Some(15),
+///             maxduration: Some(30),
+///             bidfloor: Some(5.00),
+///             bidfloorcur: Some("USD".to_string()),
+///             ..Default::default()
+///         },
+///     ]),
+///     ..Default::default()
+/// };
+/// # Ok(())
+/// # }
 /// ```
-/// use iab_specs::openrtb::v26::{AuctionType, DeviceType, Qty, DurFloors};
+///
+/// ## Example: DOOH with Viewer Multiplier
+///
+/// ```rust
+/// use iab_specs::openrtb::v26::{Imp, Qty};
+///
+/// # fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
+/// let imp = Imp {
+///     id: "dooh-imp-1".to_string(),
+///     // DOOH multiplier for multi-viewer impressions
+///     qty: Some(Qty {
+///         multiplier: Some(150.0), // 150 people viewing
+///         source: Some("venue_measurement".to_string()),
+///         ..Default::default()
+///     }),
+///     bidfloor: 2.00,
+///     bidfloorcur: "USD".to_string(),
+///     ..Default::default()
+/// };
+/// # Ok(())
+/// # }
 /// ```
 ///
-/// ## New Objects in 2.6
+/// ## New Objects in OpenRTB 2.6
 ///
-/// - **Qty**: DOOH multiplier for multi-viewer impressions
-/// - **Refresh**: Ad slot refresh configuration
-/// - **RefSettings**: Refresh interval and type settings
-/// - **DurFloors**: Duration-based floor pricing for video/audio
+/// - [`Qty`] - DOOH multiplier for multi-viewer impressions
+/// - [`Refresh`] - Ad slot refresh configuration
+/// - [`RefSettings`] - Refresh interval and type settings
+/// - [`DurFloors`] - Duration-based floor pricing for video/audio
+///
+/// ## Using OpenRTB 2.5 Types
+///
+/// All OpenRTB 2.5 types are available through this module:
+///
+/// ```rust
+/// use iab_specs::openrtb::v26::{BidRequest, Imp, Banner, AuctionType};
+/// # let _ = AuctionType::FirstPrice;
+/// ```
 ///
 /// ## Reference
 ///
 /// OpenRTB 2.6 Specification:
 /// <https://github.com/InteractiveAdvertisingBureau/openrtb2.x/blob/main/2.6.md>
-///
-/// ## Implementation Status
-///
-/// Phase 3/4 complete: All 2.6-specific objects implemented with full test coverage.
 // OpenRTB 2.6 specific objects
 pub mod durfloors;
 pub mod qty;
