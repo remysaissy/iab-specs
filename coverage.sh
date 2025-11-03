@@ -34,25 +34,30 @@ Usage: $0 [OPTION]
 Generate code coverage reports using cargo-llvm-cov.
 
 Options:
-    --html               Generate HTML report and open in browser (default)
-    --lcov               Generate lcov.info file for CI/codecov
-    --text               Show coverage summary in terminal
-    --all                Generate all formats
-    --clean              Clean coverage artifacts before running
-    --check-thresholds   Enforce 80% minimum coverage for lines, regions, and functions
-    --features <name>    Enable a specific feature during coverage
-    --all-features       Enable all features during coverage
-    --help               Display this help message
+    --html                      Generate HTML report and open in browser (default)
+    --lcov                      Generate lcov.info file for CI/codecov
+    --text                      Show coverage summary in terminal
+    --all                       Generate all formats
+    --clean                     Clean coverage artifacts before running
+    --check-thresholds          Enforce 80% minimum coverage for lines, regions, and functions
+    --no-default-features       Disable default features (like cargo --no-default-features)
+    --features <name>           Enable specific feature(s) - can be comma-separated
+    --all-features              Enable all features during coverage
+    --help                      Display this help message
 
 Examples:
-    $0                        # Generate HTML report
-    $0 --html                 # Generate HTML report
-    $0 --lcov                 # Generate lcov.info
-    $0 --text                 # Show text summary
-    $0 --all                  # Generate all formats
-    $0 --check-thresholds     # Check coverage meets 80% thresholds
-    $0 --all-features         # Generate report with all features enabled
-    $0 --features ads_txt     # Generate report with ads_txt feature enabled
+    $0                                          # Generate HTML report with default features
+    $0 --html                                   # Generate HTML report
+    $0 --lcov                                   # Generate lcov.info
+    $0 --text                                   # Show text summary
+    $0 --all                                    # Generate all formats
+    $0 --check-thresholds                       # Check coverage meets 80% thresholds
+    $0 --all-features                           # Generate report with all features enabled
+    $0 --no-default-features                    # Generate report with no features
+    $0 --no-default-features --features ads_txt # Generate report with only ads_txt
+    $0 --features openrtb_25,ads_txt            # Generate report with multiple features
+    $0 --no-default-features --features openrtb_3 --check-thresholds
+                                                # Check coverage for openrtb_3 only
 
 Requirements:
   - cargo-llvm-cov must be installed (cargo install cargo-llvm-cov)
@@ -89,9 +94,9 @@ clean_coverage() {
 # Generate HTML coverage report
 generate_html() {
     local threshold_flags="$1"
-    local feature_flags="$2"
+    local cargo_flags="$2"
     print_info "Generating HTML coverage report..."
-    cargo llvm-cov --workspace --html $threshold_flags $feature_flags
+    cargo llvm-cov --workspace --html $threshold_flags $cargo_flags
     print_success "HTML coverage report generated at target/llvm-cov/html/index.html"
 
     # Open in browser
@@ -108,18 +113,18 @@ generate_html() {
 # Generate lcov report
 generate_lcov() {
     local threshold_flags="$1"
-    local feature_flags="$2"
+    local cargo_flags="$2"
     print_info "Generating lcov report..."
-    cargo llvm-cov --workspace --lcov --output-path lcov.info $threshold_flags $feature_flags
+    cargo llvm-cov --workspace --lcov --output-path lcov.info $threshold_flags $cargo_flags
     print_success "lcov report generated at lcov.info"
 }
 
 # Generate text summary
 generate_text() {
     local threshold_flags="$1"
-    local feature_flags="$2"
+    local cargo_flags="$2"
     print_info "Generating coverage summary..."
-    cargo llvm-cov --workspace $threshold_flags $feature_flags
+    cargo llvm-cov --workspace $threshold_flags $cargo_flags
 }
 
 # Main script
@@ -129,6 +134,7 @@ main() {
     local check_thresholds=false
     local threshold_flags=""
     local feature_flags=""
+    local no_default_features=false
 
     # Parse arguments
     if [ $# -eq 0 ]; then
@@ -160,12 +166,22 @@ main() {
                     check_thresholds=true
                     shift
                     ;;
+                --no-default-features)
+                    no_default_features=true
+                    shift
+                    ;;
                 --features)
                     if [ $# -lt 2 ]; then
                         print_error "--features requires a feature name"
                         exit 1
                     fi
-                    feature_flags="--features $2"
+                    # Support multiple --features flags by appending
+                    if [ -z "$feature_flags" ]; then
+                        feature_flags="--features $2"
+                    else
+                        # If already has --features, append with comma
+                        feature_flags="$feature_flags,$2"
+                    fi
                     shift 2
                     ;;
                 --all-features)
@@ -186,15 +202,26 @@ main() {
         done
     fi
 
+    # Build feature flags string
+    local cargo_flags=""
+    if [ "$no_default_features" = true ]; then
+        cargo_flags="--no-default-features"
+    fi
+    if [ -n "$feature_flags" ]; then
+        cargo_flags="$cargo_flags $feature_flags"
+    fi
+
     # Set threshold flags if requested
     if [ "$check_thresholds" = true ]; then
         threshold_flags="--fail-under-lines 80 --fail-under-regions 80 --fail-under-functions 80"
         print_info "Coverage thresholds enabled: Lines/Regions/Functions must be ≥ 80%"
     fi
 
-    # Display feature flags if set
-    if [ -n "$feature_flags" ]; then
-        print_info "Feature flags: $feature_flags"
+    # Display cargo flags if set
+    if [ -n "$cargo_flags" ]; then
+        print_info "Cargo flags: $cargo_flags"
+    else
+        print_info "Using default features"
     fi
 
     # Check dependencies
@@ -208,20 +235,20 @@ main() {
     # Generate coverage based on format
     case "$format" in
         html)
-            generate_html "$threshold_flags" "$feature_flags"
+            generate_html "$threshold_flags" "$cargo_flags"
             ;;
         lcov)
-            generate_lcov "$threshold_flags" "$feature_flags"
+            generate_lcov "$threshold_flags" "$cargo_flags"
             ;;
         text)
-            generate_text "$threshold_flags" "$feature_flags"
+            generate_text "$threshold_flags" "$cargo_flags"
             ;;
         all)
-            generate_text "$threshold_flags" "$feature_flags"
+            generate_text "$threshold_flags" "$cargo_flags"
             echo ""
-            generate_html "$threshold_flags" "$feature_flags"
+            generate_html "$threshold_flags" "$cargo_flags"
             echo ""
-            generate_lcov "$threshold_flags" "$feature_flags"
+            generate_lcov "$threshold_flags" "$cargo_flags"
             ;;
     esac
 

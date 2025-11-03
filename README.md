@@ -491,6 +491,52 @@ Full API documentation is available on [docs.rs](https://docs.rs/iab-specs).
 
 For usage examples, please refer to the unit tests in the source code. Each module includes comprehensive test cases demonstrating both serialization and deserialization.
 
+## Development
+
+The project includes shell scripts for common development tasks:
+
+### Format Code
+
+Check or fix code formatting with rustfmt:
+
+```bash
+./format.sh --check    # Check formatting (used in CI)
+./format.sh --fix      # Fix formatting issues
+```
+
+### Run Linter
+
+Check code quality with clippy:
+
+```bash
+./check.sh --all-features                           # Check all features
+./check.sh --no-default-features --features openrtb_3  # Check specific feature
+```
+
+### Run Tests
+
+Run tests with configurable features:
+
+```bash
+./test.sh                                           # Test with default features
+./test.sh --all-features                            # Test all features
+./test.sh --no-default-features --features openrtb_3   # Test specific feature
+./test.sh --features openrtb_25,ads_txt             # Test multiple features
+```
+
+### Generate Coverage
+
+Generate code coverage reports:
+
+```bash
+./coverage.sh --html --all-features                 # HTML report (opens in browser)
+./coverage.sh --text --all-features                 # Text summary
+./coverage.sh --lcov --all-features --check-thresholds  # CI-style with 80% threshold
+./coverage.sh --no-default-features --features openrtb_3  # Coverage for specific feature
+```
+
+All scripts support `--help` for more options.
+
 ## Roadmap
 
 - [x] AdCOM 1.0
