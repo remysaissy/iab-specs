@@ -15,6 +15,7 @@ An unofficial Rust implementation of various IAB (Interactive Advertising Bureau
 - **[AdCOM 1.0](https://github.com/InteractiveAdvertisingBureau/AdCOM)** - Advertising Common Object Model (enumerations)
 - **[OpenRTB 2.5](https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf)** - Real-Time Bidding protocol
 - **[OpenRTB 2.6](https://github.com/InteractiveAdvertisingBureau/openrtb2.x/blob/main/2.6.md)** - Real-Time Bidding protocol with CTV/DOOH support
+- **[OpenRTB 3.0](https://github.com/InteractiveAdvertisingBureau/openrtb/blob/main/OpenRTB%20v3.0%20FINAL.md)** - Real-Time Bidding protocol with layered architecture
 - **[Ads.txt 1.1](https://iabtechlab.com/wp-content/uploads/2022/04/Ads.txt-1.1.pdf)** - Authorized Digital Sellers declaration for websites
 - **[App-ads.txt 1.0](https://iabtechlab.com/wp-content/uploads/2019/03/app-ads.txt-v1.0-final-.pdf)** - Authorized Digital Sellers declaration for mobile and CTV apps
 - **[Sellers.json 1.0](https://iabtechlab.com/wp-content/uploads/2019/07/Sellers.json_Final.pdf)** - Supply chain transparency
@@ -26,20 +27,20 @@ Add `iab-specs` to your `Cargo.toml` with the features you need:
 ```toml
 [dependencies]
 # Enable all specifications
-iab-specs = { version = "0.1", features = ["adcom", "openrtb_25", "openrtb_26", "ads_txt", "app_ads_txt", "sellers_json"] }
+iab-specs = { version = "0.2", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_3", "ads_txt", "app_ads_txt", "sellers_json"] }
 
 # Or enable only what you need
-iab-specs = { version = "0.1", features = ["openrtb_25"] }
+iab-specs = { version = "0.2", features = ["openrtb_3"] }
 ```
 
 Or use cargo:
 
 ```bash
 # Enable all specifications
-cargo add iab-specs --features adcom,openrtb_25,openrtb_26,ads_txt,app_ads_txt,sellers_json
+cargo add iab-specs --features adcom,openrtb_25,openrtb_26,openrtb_3,ads_txt,app_ads_txt,sellers_json
 
 # Or enable only what you need
-cargo add iab-specs --features openrtb_25
+cargo add iab-specs --features openrtb_3
 ```
 
 ## Features
@@ -51,6 +52,7 @@ The library uses cargo features to enable/disable specifications:
 - `adcom` - AdCOM 1.0 support (Advertising Common Object Model enumerations)
 - `openrtb_25` - OpenRTB 2.5 support (automatically includes `adcom`)
 - `openrtb_26` - OpenRTB 2.6 support (automatically includes `openrtb_25` and `adcom`)
+- `openrtb_3` - OpenRTB 3.0 support (automatically includes `adcom`)
 - `ads_txt` - Ads.txt 1.1 support
 - `app_ads_txt` - App-ads.txt 1.0 support (automatically includes `ads_txt`)
 - `sellers_json` - Sellers.json 1.0 support
@@ -60,28 +62,31 @@ The library uses cargo features to enable/disable specifications:
 ```toml
 [dependencies]
 # Only AdCOM support
-iab-specs = { version = "0.1", features = ["adcom"] }
+iab-specs = { version = "0.2", features = ["adcom"] }
 
 # Only OpenRTB 2.5 support (automatically includes adcom)
-iab-specs = { version = "0.1", features = ["openrtb_25"] }
+iab-specs = { version = "0.2", features = ["openrtb_25"] }
 
 # Only OpenRTB 2.6 support (automatically includes openrtb_25 and adcom)
-iab-specs = { version = "0.1", features = ["openrtb_26"] }
+iab-specs = { version = "0.2", features = ["openrtb_26"] }
+
+# Only OpenRTB 3.0 support (automatically includes adcom)
+iab-specs = { version = "0.2", features = ["openrtb_3"] }
 
 # Only ads.txt support
-iab-specs = { version = "0.1", features = ["ads_txt"] }
+iab-specs = { version = "0.2", features = ["ads_txt"] }
 
 # Only app-ads.txt support (automatically includes ads_txt)
-iab-specs = { version = "0.1", features = ["app_ads_txt"] }
+iab-specs = { version = "0.2", features = ["app_ads_txt"] }
 
 # Only sellers.json support
-iab-specs = { version = "0.1", features = ["sellers_json"] }
+iab-specs = { version = "0.2", features = ["sellers_json"] }
 
-# OpenRTB 2.5 with ads.txt and sellers.json
-iab-specs = { version = "0.1", features = ["openrtb_25", "ads_txt", "sellers_json"] }
+# OpenRTB 3.0 with ads.txt and sellers.json
+iab-specs = { version = "0.2", features = ["openrtb_3", "ads_txt", "sellers_json"] }
 
 # All specifications
-iab-specs = { version = "0.1", features = ["adcom", "openrtb_25", "openrtb_26", "ads_txt", "app_ads_txt", "sellers_json"] }
+iab-specs = { version = "0.2", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_3", "ads_txt", "app_ads_txt", "sellers_json"] }
 ```
 
 **Why no default features?**
@@ -268,6 +273,101 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+### OpenRTB 3.0
+
+OpenRTB 3.0 introduces a layered architecture with explicit versioning and supply chain transparency as a first-class feature:
+
+```rust
+use iab_specs::openrtb::v3::{Openrtb, Request, Response, Item, Bid, Seatbid};
+use iab_specs::openrtb::v3::{Source, SupplyChain, SupplyChainNode};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Create a bid request with supply chain transparency
+    let request = Openrtb {
+        ver: "3.0".to_string(),
+        domainspec: "adcom".to_string(),
+        domainver: "1.0".to_string(),
+        request: Some(Request {
+            id: "req-123".to_string(),
+            tmax: Some(100),
+            at: Some(2), // Second price auction
+            cur: Some(vec!["USD".to_string()]),
+            item: vec![Item {
+                id: "item1".to_string(),
+                qty: Some(1),
+                flr: Some(1.50), // Floor price
+                flrcur: Some("USD".to_string()),
+                ..Default::default()
+            }],
+            source: Some(Source {
+                tid: Some("txn-456".to_string()),
+                schain: Some(SupplyChain {
+                    complete: 1,
+                    nodes: vec![
+                        SupplyChainNode {
+                            asi: "publisher.com".to_string(),
+                            sid: "pub-123".to_string(),
+                            hp: Some(1), // Payment recipient
+                            ..Default::default()
+                        },
+                        SupplyChainNode {
+                            asi: "exchange.com".to_string(),
+                            sid: "exch-456".to_string(),
+                            hp: Some(1),
+                            ..Default::default()
+                        },
+                    ],
+                    ver: "1.0".to_string(),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            }),
+            ..Default::default()
+        }),
+        response: None,
+    };
+
+    // Create a bid response
+    let response = Openrtb {
+        ver: "3.0".to_string(),
+        domainspec: "adcom".to_string(),
+        domainver: "1.0".to_string(),
+        request: None,
+        response: Some(Response {
+            id: "req-123".to_string(),
+            cur: Some("USD".to_string()),
+            seatbid: vec![Seatbid {
+                seat: Some("seat-1".to_string()),
+                bid: vec![Bid {
+                    id: "bid-1".to_string(),
+                    item: "item1".to_string(), // References item ID
+                    price: 2.50,
+                    nurl: Some("https://win.example.com/?price=${AUCTION_PRICE}".to_string()),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            }],
+            ..Default::default()
+        }),
+    };
+
+    Ok(())
+}
+```
+
+**Key OpenRTB 3.0 Features:**
+- Explicit protocol and domain versioning
+- Supply chain transparency promoted to core object
+- Item-based inventory (replaces Imp)
+- Comprehensive tracking URLs (nurl, burl, lurl)
+- Package bidding support
+- Measurement metrics
+
+**OpenRTB 3.0 Documentation:**
+- [Migration Guide](docs/MIGRATION_GUIDE_OPENRTB3.md) - Migrate from 2.x to 3.0
+- [Usage Guide](docs/USAGE_GUIDE_OPENRTB3.md) - Complete examples and patterns
+- [Best Practices](docs/BEST_PRACTICES_OPENRTB3.md) - Production guidelines
+
 ### Ads.txt
 
 Parse and generate ads.txt files:
@@ -399,7 +499,7 @@ For usage examples, please refer to the unit tests in the source code. Each modu
 - [x] Sellers.json 1.0
 - [x] OpenRTB 2.5
 - [x] OpenRTB 2.6
-- [ ] OpenRTB 3.0
+- [x] OpenRTB 3.0
 - [ ] Additional IAB specifications (contributions welcome!)
 
 ## Contributing

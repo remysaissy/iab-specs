@@ -1,6 +1,6 @@
 [package]
 name = "iab-specs"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 description = "Unofficial Rust implementaton of various IAB specifications."
 license = "Apache-2.0"
@@ -34,3 +34,7 @@ sellers_json = []
 adcom = []
 openrtb_25 = ["adcom"]
 openrtb_26 = ["openrtb_25"]
+openrtb_3 = ["adcom"]
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
