@@ -172,13 +172,13 @@ pub struct Device {
     pub langb: Option<String>,
 
     /// Carrier or ISP (e.g., "VERIZON") using Mobile Country Code (MCC) and
-    /// Mobile Network Code (MNC), using the format: <MCC>-<MNC>.
+    /// Mobile Network Code (MNC), using the format: `<MCC>-<MNC>`.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
     pub carrier: Option<String>,
 
     /// Mobile carrier as the concatenated MCC-MNC code (e.g., "310-005").
-    /// Identifies wireless carrier and device using the format: <MCC>-<MNC>-<MNO>.
+    /// Identifies wireless carrier and device using the format: `<MCC>-<MNC>-<MNO>`.
     /// Prefer over carrier.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]

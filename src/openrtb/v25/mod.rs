@@ -1,28 +1,84 @@
 /// OpenRTB 2.5 Protocol Implementation
 ///
-/// This module implements the OpenRTB 2.5 specification as defined by the IAB.
+/// This module implements the complete OpenRTB 2.5 specification as defined by the IAB.
 ///
 /// OpenRTB 2.5 is the foundation protocol for real-time bidding in digital advertising,
 /// defining the communication standard between supply-side platforms (SSPs) and
 /// demand-side platforms (DSPs).
+///
+/// ## Example: Creating a Bid Request
+///
+/// ```rust
+/// use iab_specs::openrtb::v25::{BidRequest, Imp, Banner};
+///
+/// # fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
+/// let request = BidRequest {
+///     id: "bid-request-123".to_string(),
+///     imp: vec![
+///         Imp {
+///             id: "imp1".to_string(),
+///             banner: Some(Banner {
+///                 w: Some(728),
+///                 h: Some(90),
+///                 ..Default::default()
+///             }),
+///             bidfloor: 1.50,
+///             bidfloorcur: "USD".to_string(),
+///             ..Default::default()
+///         }
+///     ],
+///     tmax: Some(100), // 100ms timeout
+///     ..Default::default()
+/// };
+///
+/// // Serialize to JSON
+/// let json = serde_json::to_string(&request)?;
+/// # Ok(())
+/// # }
+/// ```
+///
+/// ## Example: Parsing a Bid Response
+///
+/// ```rust
+/// use iab_specs::openrtb::v25::BidResponse;
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let json = r#"{
+///     "id": "bid-request-123",
+///     "bidid": "bid-789",
+///     "seatbid": [{
+///         "bid": [{
+///             "id": "1",
+///             "impid": "imp1",
+///             "price": 2.50,
+///             "adid": "ad-456",
+///             "adomain": ["advertiser.com"],
+///             "crid": "creative-123"
+///         }]
+///     }]
+/// }"#;
+///
+/// let response: BidResponse = serde_json::from_str(json)?;
+/// assert_eq!(response.id, "bid-request-123");
+/// # Ok(())
+/// # }
+/// ```
 ///
 /// ## AdCOM Integration
 ///
 /// OpenRTB 2.5 uses AdCOM (Advertising Common Object Model) for common domain objects.
 /// All AdCOM types (enumerations, etc.) are available through this module:
 ///
-/// ```
+/// ```rust
 /// use iab_specs::openrtb::v25::{AuctionType, DeviceType};
+/// # let _ = AuctionType::FirstPrice;
+/// # let _ = DeviceType::Phone;
 /// ```
 ///
 /// ## Reference
 ///
 /// OpenRTB 2.5 Specification:
 /// <https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf>
-///
-/// ## Implementation Status
-///
-/// This module is under development. Core objects will be added in subsequent phases.
 // Core bid objects (Phase 2, Commit 3)
 pub mod bid;
 pub mod request;

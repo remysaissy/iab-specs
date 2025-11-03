@@ -92,6 +92,83 @@ This design allows you to:
 - **Smaller binary size**: Eliminate unused code from your final binary
 - **Explicit dependencies**: Be clear about which IAB specs your project relies on
 
+## Quick Start
+
+### Creating an OpenRTB Bid Request
+
+```rust
+use iab_specs::openrtb::v25::{BidRequest, Imp, Banner, Device};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Create a bid request with a 300x250 banner impression
+    let request = BidRequest {
+        id: "req-12345".to_string(),
+        imp: vec![
+            Imp {
+                id: "imp1".to_string(),
+                banner: Some(Banner {
+                    w: Some(300),
+                    h: Some(250),
+                    ..Default::default()
+                }),
+                bidfloor: Some(0.50), // $0.50 CPM floor
+                bidfloorcur: Some("USD".to_string()),
+                ..Default::default()
+            }
+        ],
+        device: Some(Device {
+            ua: Some("Mozilla/5.0...".to_string()),
+            ip: Some("192.168.1.1".to_string()),
+            ..Default::default()
+        }),
+        tmax: Some(100), // 100ms timeout
+        ..Default::default()
+    };
+
+    // Serialize to JSON
+    let json = serde_json::to_string_pretty(&request)?;
+    println!("{}", json);
+
+    // Deserialize from JSON
+    let parsed: BidRequest = serde_json::from_str(&json)?;
+    assert_eq!(parsed.id, "req-12345");
+
+    Ok(())
+}
+```
+
+### Using the Builder Pattern
+
+For more ergonomic construction, use the builder pattern:
+
+```rust
+use iab_specs::openrtb::v25::{BidRequestBuilder, ImpBuilder, BannerBuilder, DeviceBuilder};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let request = BidRequestBuilder::default()
+        .id("req-12345")
+        .imp(vec![
+            ImpBuilder::default()
+                .id("imp1")
+                .banner(Some(BannerBuilder::default()
+                    .w(Some(300))
+                    .h(Some(250))
+                    .build()?))
+                .bidfloor(Some(0.50))
+                .bidfloorcur(Some("USD".to_string()))
+                .build()?
+        ])
+        .device(Some(DeviceBuilder::default()
+            .ua(Some("Mozilla/5.0...".to_string()))
+            .ip(Some("192.168.1.1".to_string()))
+            .build()?))
+        .tmax(Some(100))
+        .build()?;
+
+    Ok(())
+}
+```
+
 ## Usage Examples
 
 ### AdCOM
@@ -118,33 +195,78 @@ let protocol = Protocol::Vast4;
 assert_eq!(serde_json::to_string(&protocol).unwrap(), "7");
 ```
 
-### OpenRTB
+### OpenRTB 2.5 and 2.6
 
-Work with OpenRTB 2.5 and 2.6 real-time bidding protocol objects:
+OpenRTB 2.5 and 2.6 are fully implemented with complete bid request/response objects.
+
+#### Supply Chain Transparency
 
 ```rust
 use iab_specs::openrtb::common::{SupplyChain, SupplyChainNode};
 
-// Create a supply chain for ads.txt/sellers.json transparency
-let supply_chain = SupplyChain::builder()
-    .complete(Some(1))
-    .ver(Some("1.0".to_string()))
-    .nodes(vec![
-        SupplyChainNode::builder()
-            .asi("example.com".to_string())
-            .sid("12345".to_string())
-            .hp(1)
-            .build()?,
-    ])
-    .build()?;
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Create a supply chain for ads.txt/sellers.json transparency
+    let supply_chain = SupplyChain::builder()
+        .complete(Some(1))
+        .ver(Some("1.0".to_string()))
+        .nodes(vec![
+            SupplyChainNode::builder()
+                .asi("example.com".to_string())
+                .sid("12345".to_string())
+                .hp(1) // Direct seller
+                .build()?,
+        ])
+        .build()?;
 
-// Serialize to JSON
-let json = serde_json::to_string(&supply_chain)?;
+    // Include in bid request source
+    let source = iab_specs::openrtb::v25::Source {
+        schain: Some(supply_chain),
+        ..Default::default()
+    };
+    Ok(())
+}
 ```
 
-OpenRTB 2.5 and 2.6 are fully implemented with complete bid request/response objects,
-including support for CTV ad pods, DOOH multipliers, duration-based floor pricing, and
-structured user-agent information.
+#### OpenRTB 2.6 Features
+
+OpenRTB 2.6 adds support for CTV ad pods, DOOH multipliers, and more:
+
+```rust
+use iab_specs::openrtb::v26::{Video, Qty, DurFloors};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // CTV ad pod with duration-based pricing
+    let video = Video {
+        mimes: vec!["video/mp4".to_string()],
+        minduration: 15,
+        maxduration: Some(30),
+        protocols: Some(vec![7]), // VAST 4.0
+        // Ad pod configuration
+        podid: Some("pod-123".to_string()),
+        podseq: 0, // First ad in pod
+        slotinpod: 1, // Guaranteed first position
+        // Duration-based floor pricing
+        durfloors: Some(vec![
+            DurFloors {
+                minduration: Some(15),
+                maxduration: Some(30),
+                bidfloor: Some(5.00), // $5 CPM for 15-30s ads
+                bidfloorcur: Some("USD".to_string()),
+                ..Default::default()
+            },
+        ]),
+        ..Default::default()
+    };
+
+    // DOOH impression with multiplier
+    let qty = Qty {
+        multiplier: Some(150.0), // 150 people viewing
+        source: Some("venue_measurement".to_string()),
+        ..Default::default()
+    };
+    Ok(())
+}
+```
 
 ### Ads.txt
 
