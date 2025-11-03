@@ -16,7 +16,8 @@ jobs:
       - run: rustup toolchain install stable --profile minimal
       - run: rustup component add rustfmt
       - uses: Swatinem/rust-cache@v2
-      - run: cargo fmt --all -- --check
+      - name: Run format check
+        run: ./format.sh --check
 
   check:
     name: Check
@@ -27,7 +28,8 @@ jobs:
       - run: rustup toolchain install stable --profile minimal
       - run: rustup component add clippy
       - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy --all-features -- -D warnings
+      - name: Run clippy check
+        run: ./check.sh --all-features
 
   feature-matrix:
     name: Test Feature Combinations
@@ -75,10 +77,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ matrix.features.name }}
-      - name: Build with ${{ matrix.features.name }}
-        run: cargo build ${{ matrix.features.flags }}
       - name: Test with ${{ matrix.features.name }}
-        run: cargo test ${{ matrix.features.flags }}
+        run: ./test.sh ${{ matrix.features.flags }}
 
   coverage:
     name: Code Coverage
@@ -91,8 +91,4 @@ jobs:
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
       - name: Generate coverage and check thresholds
-        run: |
-          cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info \
-            --fail-under-lines 80 \
-            --fail-under-regions 80 \
-            --fail-under-functions 80
+        run: ./coverage.sh --lcov --all-features --check-thresholds
