@@ -44,6 +44,8 @@ jobs:
             flags: "--no-default-features --features openrtb_25"
           - name: "openrtb_26"
             flags: "--no-default-features --features openrtb_26"
+          - name: "openrtb_3"
+            flags: "--no-default-features --features openrtb_3"
           - name: "ads_txt"
             flags: "--no-default-features --features ads_txt"
           - name: "sellers_json"
@@ -54,6 +56,10 @@ jobs:
             flags: "--no-default-features --features openrtb_25,ads_txt"
           - name: "openrtb_25 + sellers_json"
             flags: "--no-default-features --features openrtb_25,sellers_json"
+          - name: "openrtb_3 + ads_txt"
+            flags: "--no-default-features --features openrtb_3,ads_txt"
+          - name: "openrtb_3 + sellers_json"
+            flags: "--no-default-features --features openrtb_3,sellers_json"
           - name: "ads_txt + sellers_json"
             flags: "--no-default-features --features ads_txt,sellers_json"
           - name: "app_ads_txt"
@@ -73,17 +79,6 @@ jobs:
         run: cargo build ${{ matrix.features.flags }}
       - name: Test with ${{ matrix.features.name }}
         run: cargo test ${{ matrix.features.flags }}
-
-  test:
-    name: Unit Tests (all features)
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-      - run: rustup toolchain install stable --profile minimal
-      - uses: Swatinem/rust-cache@v2
-      - name: Test all features
-        run: cargo test --all-features
 
   coverage:
     name: Code Coverage

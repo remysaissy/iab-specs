@@ -13,6 +13,7 @@
 //! - `adcom` - AdCOM 1.0 support (Advertising Common Object Model enumerations)
 //! - `openrtb_25` - OpenRTB 2.5 support (automatically includes `adcom`)
 //! - `openrtb_26` - OpenRTB 2.6 support (automatically includes `openrtb_25` and `adcom`)
+//! - `openrtb_3` - OpenRTB 3.0 support (automatically includes `adcom`)
 //! - `ads_txt` - Ads.txt 1.1 support
 //! - `app_ads_txt` - App-ads.txt 1.0 support (automatically includes `ads_txt`)
 //! - `sellers_json` - Sellers.json 1.0 support
@@ -28,7 +29,9 @@
 //!
 //! ### Working with OpenRTB Bid Requests
 //!
-//! ```rust
+//! ```
+//! # #[cfg(feature = "openrtb_25")]
+//! # {
 //! use iab_specs::openrtb::v25::{BidRequest, Imp, Banner, Device};
 //!
 //! # fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -64,11 +67,14 @@
 //! let parsed: BidRequest = serde_json::from_str(&json)?;
 //! # Ok(())
 //! # }
+//! # }
 //! ```
 //!
 //! ### Using AdCOM Enumerations
 //!
-//! ```rust
+//! ```
+//! # #[cfg(feature = "adcom")]
+//! # {
 //! use iab_specs::adcom::{AuctionType, DeviceType, ApiFramework};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -82,11 +88,14 @@
 //! assert_eq!(serde_json::to_string(&api)?, "6");
 //! # Ok(())
 //! # }
+//! # }
 //! ```
 //!
 //! ### Parsing Ads.txt Files
 //!
-//! ```rust
+//! ```
+//! # #[cfg(feature = "ads_txt")]
+//! # {
 //! use iab_specs::ads_txt::AdsTxt;
 //! use std::str::FromStr;
 //!
@@ -98,14 +107,16 @@
 //! assert_eq!(ads_txt.systems[0].domain, "google.com");
 //! # Ok(())
 //! # }
+//! # }
 //! ```
 //!
 //! ## Module Organization
 //!
 //! - [`adcom`] - AdCOM 1.0 enumerations (device types, auction types, protocols, etc.)
-//! - [`openrtb`] - OpenRTB 2.5 and 2.6 bid request/response objects
+//! - [`openrtb`] - OpenRTB 2.5, 2.6, and 3.0 bid request/response objects
 //!   - [`openrtb::v25`] - OpenRTB 2.5 specification
 //!   - [`openrtb::v26`] - OpenRTB 2.6 with CTV and DOOH support
+//!   - [`openrtb::v3`] - OpenRTB 3.0 with layered architecture
 //!   - [`openrtb::common`] - Common objects shared between versions
 //! - [`ads_txt`] - Ads.txt 1.1 parser and generator
 //! - [`app_ads_txt`] - App-ads.txt 1.0 parser and generator
@@ -116,7 +127,9 @@
 //!
 //! The [`prelude`] module re-exports all types from enabled features for convenient imports:
 //!
-//! ```rust
+//! ```
+//! # #[cfg(feature = "openrtb_25")]
+//! # {
 //! use iab_specs::prelude::*;
 //!
 //! # fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -128,26 +141,32 @@
 //! };
 //! # Ok(())
 //! # }
+//! # }
 //! ```
 //!
 //! ## Error Handling
 //!
 //! The library provides a unified [`Error`] type that covers all error cases:
 //!
-//! ```rust
+//! ```
+//! # #[cfg(feature = "ads_txt")]
+//! # {
 //! use iab_specs::{Error, ads_txt::AdsTxt};
 //! use std::str::FromStr;
 //!
 //! fn parse_ads_txt(content: &str) -> Result<AdsTxt, Error> {
 //!     AdsTxt::from_str(content)
 //! }
+//! # }
 //! ```
 //!
 //! ## Builder Pattern Support
 //!
 //! All major types support the builder pattern for ergonomic construction:
 //!
-//! ```rust
+//! ```
+//! # #[cfg(feature = "openrtb_25")]
+//! # {
 //! use iab_specs::openrtb::v25::{request::BidRequestBuilder, imp::ImpBuilder};
 //!
 //! # fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -163,6 +182,7 @@
 //!     .build()?;
 //! # Ok(())
 //! # }
+//! # }
 //! ```
 //!
 //! ## Specification Compliance
@@ -172,6 +192,7 @@
 //! - [AdCOM 1.0](https://github.com/InteractiveAdvertisingBureau/AdCOM)
 //! - [OpenRTB 2.5](https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf)
 //! - [OpenRTB 2.6](https://github.com/InteractiveAdvertisingBureau/openrtb2.x/blob/main/2.6.md)
+//! - [OpenRTB 3.0](https://github.com/InteractiveAdvertisingBureau/openrtb/blob/main/OpenRTB%20v3.0%20FINAL.md)
 //! - [Ads.txt 1.1](https://iabtechlab.com/wp-content/uploads/2022/04/Ads.txt-1.1.pdf)
 //! - [App-ads.txt 1.0](https://iabtechlab.com/wp-content/uploads/2019/03/app-ads.txt-v1.0-final-.pdf)
 //! - [Sellers.json 1.0](https://iabtechlab.com/wp-content/uploads/2019/07/Sellers.json_Final.pdf)
@@ -183,7 +204,7 @@ pub mod ads_txt;
 #[cfg(feature = "app_ads_txt")]
 pub mod app_ads_txt;
 mod errors;
-#[cfg(any(feature = "openrtb_25", feature = "openrtb_26"))]
+#[cfg(any(feature = "openrtb_25", feature = "openrtb_26", feature = "openrtb_3"))]
 pub mod openrtb;
 pub mod prelude;
 #[cfg(feature = "sellers_json")]

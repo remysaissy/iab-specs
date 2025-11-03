@@ -1,6 +1,6 @@
 /// OpenRTB (Real-Time Bidding) Protocol Implementation
 ///
-/// This module implements the OpenRTB protocol versions 2.5 and 2.6 as specified by the
+/// This module implements the OpenRTB protocol versions 2.5, 2.6, and 3.0 as specified by the
 /// Interactive Advertising Bureau (IAB).
 ///
 /// OpenRTB is a protocol for real-time bidding in digital advertising that facilitates
@@ -10,12 +10,14 @@
 ///
 /// - `openrtb_25`: Enables OpenRTB 2.5 support (automatically includes `adcom`)
 /// - `openrtb_26`: Enables OpenRTB 2.6 support (includes 2.5 and `adcom`)
+/// - `openrtb_3`: Enables OpenRTB 3.0 support (automatically includes `adcom`)
 ///
 /// ## Module Organization
 ///
 /// - `common`: OpenRTB-specific common types and AdCOM re-exports
 /// - `v25`: OpenRTB 2.5 specific types (enabled with `openrtb_25` feature)
 /// - `v26`: OpenRTB 2.6 specific types (enabled with `openrtb_26` feature)
+/// - `v3`: OpenRTB 3.0 specific types (enabled with `openrtb_3` feature)
 ///
 /// ## AdCOM Integration
 ///
@@ -40,6 +42,7 @@
 ///
 /// - OpenRTB 2.5: <https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf>
 /// - OpenRTB 2.6: <https://github.com/InteractiveAdvertisingBureau/openrtb2.x/blob/main/2.6.md>
+/// - OpenRTB 3.0: <https://github.com/InteractiveAdvertisingBureau/openrtb/blob/main/OpenRTB%20v3.0%20FINAL.md>
 /// - AdCOM 1.0: <https://github.com/InteractiveAdvertisingBureau/AdCOM>
 pub mod common;
 
@@ -48,6 +51,9 @@ pub mod v25;
 
 #[cfg(feature = "openrtb_26")]
 pub mod v26;
+
+#[cfg(feature = "openrtb_3")]
+pub mod v3;
 
 // Re-export common types for convenience
 pub use common::*;
