@@ -44,8 +44,8 @@ Examples:
     $0                                          # Check with all features
     $0 --all-features                           # Check with all features
     $0 --no-default-features                    # Check with no features
-    $0 --no-default-features --features openrtb_3
-                                                # Check with only openrtb_3
+    $0 --no-default-features --features openrtb_30
+                                                # Check with only openrtb_30
     $0 --features openrtb_25,ads_txt            # Check with multiple features
 
 Requirements:

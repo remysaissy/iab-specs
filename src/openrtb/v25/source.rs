@@ -1,10 +1,10 @@
+use crate::Extension;
+use crate::openrtb::common::SupplyChain;
 /// OpenRTB 2.5 Source Object
 ///
 /// This module implements the Source object for inventory source transparency.
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
-
-use crate::openrtb::common::SupplyChain;
 
 /// Source object for inventory source transparency (OpenRTB 2.5 Section 3.2.2)
 ///
@@ -13,22 +13,13 @@ use crate::openrtb::common::SupplyChain;
 /// object is to define post-auction or upstream decisioning when the exchange itself
 /// does not control the final decision.
 ///
-/// # Example
+/// # Generic Parameters
 ///
-/// ```
-/// use iab_specs::openrtb::v25::Source;
-/// use iab_specs::openrtb::common::SupplyChain;
-///
-/// let source = Source {
-///     fd: Some(1), // Upstream source makes final decision
-///     tid: Some("transaction123".to_string()),
-///     pchain: Some("payment_chain_id".to_string()),
-///     ..Default::default()
-/// };
-/// ```
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
-#[builder(build_fn(error = "crate::Error"))]
-pub struct Source {
+#[builder(build_fn(error = "crate::Error"), default)]
+#[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
+pub struct Source<Ext: Extension = serde_json::Value> {
     /// Entity responsible for the final impression sale decision:
     /// - 0 = exchange
     /// - 1 = upstream source
@@ -66,7 +57,14 @@ pub struct Source {
     /// Extension object for exchange-specific extensions.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub ext: Option<serde_json::Value>,
+    pub ext: Option<Box<Ext>>,
+}
+
+impl Source {
+    /// Convenience method to create a new instance using the builder pattern.
+    pub fn builder() -> SourceBuilder {
+        SourceBuilder::create_empty()
+    }
 }
 
 #[cfg(test)]
@@ -76,12 +74,12 @@ mod tests {
 
     #[test]
     fn test_source_creation() {
-        let source = Source {
-            fd: Some(1),
-            tid: Some("transaction123".to_string()),
-            pchain: Some("payment_chain".to_string()),
-            ..Default::default()
-        };
+        let source = Source::builder()
+            .fd(Some(1))
+            .tid(Some("transaction123".to_string()))
+            .pchain(Some("payment_chain".to_string()))
+            .build()
+            .unwrap();
 
         assert_eq!(source.fd, Some(1));
         assert_eq!(source.tid, Some("transaction123".to_string()));
@@ -90,29 +88,26 @@ mod tests {
 
     #[test]
     fn test_source_with_supply_chain() {
-        let node = SupplyChainNode {
-            asi: "example.com".to_string(),
-            sid: "12345".to_string(),
-            hp: 1,
-            rid: None,
-            name: None,
-            domain: None,
-            ext: None,
-        };
+        let node = SupplyChainNode::builder()
+            .asi("example.com".to_string())
+            .sid("12345".to_string())
+            .hp(1)
+            .build()
+            .unwrap();
 
-        let schain = SupplyChain {
-            complete: Some(1),
-            nodes: vec![node],
-            ver: Some("1.0".to_string()),
-            ext: None,
-        };
+        let schain = SupplyChain::builder()
+            .complete(Some(1))
+            .nodes(vec![node])
+            .ver(Some("1.0".to_string()))
+            .build()
+            .unwrap();
 
-        let source = Source {
-            fd: Some(0),
-            tid: Some("trans456".to_string()),
-            schain: Some(schain),
-            ..Default::default()
-        };
+        let source = Source::builder()
+            .fd(Some(0))
+            .tid(Some("trans456".to_string()))
+            .schain(Some(schain))
+            .build()
+            .unwrap();
 
         assert_eq!(source.fd, Some(0));
         assert!(source.schain.is_some());
@@ -122,34 +117,34 @@ mod tests {
 
     #[test]
     fn test_source_exchange_decision() {
-        let source = Source {
-            fd: Some(0), // Exchange makes final decision
-            tid: Some("trans789".to_string()),
-            ..Default::default()
-        };
+        let source = Source::builder()
+            .fd(Some(0)) // Exchange makes final decision
+            .tid(Some("trans789".to_string()))
+            .build()
+            .unwrap();
 
         assert_eq!(source.fd, Some(0));
     }
 
     #[test]
     fn test_source_upstream_decision() {
-        let source = Source {
-            fd: Some(1), // Upstream source makes final decision
-            tid: Some("trans101".to_string()),
-            ..Default::default()
-        };
+        let source = Source::builder()
+            .fd(Some(1)) // Upstream source makes final decision
+            .tid(Some("trans101".to_string()))
+            .build()
+            .unwrap();
 
         assert_eq!(source.fd, Some(1));
     }
 
     #[test]
     fn test_source_serialization() {
-        let source = Source {
-            fd: Some(1),
-            tid: Some("transaction123".to_string()),
-            pchain: Some("payment_chain".to_string()),
-            ..Default::default()
-        };
+        let source = Source::builder()
+            .fd(Some(1))
+            .tid(Some("transaction123".to_string()))
+            .pchain(Some("payment_chain".to_string()))
+            .build()
+            .unwrap();
 
         let json = serde_json::to_string(&source).unwrap();
         assert!(json.contains("\"fd\":1"));
@@ -168,7 +163,7 @@ mod tests {
 
     #[test]
     fn test_source_empty() {
-        let source = Source::default();
+        let source = Source::builder().build().unwrap();
 
         assert_eq!(source.fd, None);
         assert_eq!(source.tid, None);

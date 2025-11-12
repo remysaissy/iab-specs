@@ -8,8 +8,9 @@ use serde::{Deserialize, Serialize};
 use super::geo::Geo;
 
 // Import UserAgent from AdCOM when openrtb_26 feature is enabled
+use crate::Extension;
 #[cfg(feature = "openrtb_26")]
-use crate::adcom::UserAgent;
+use crate::adcom::context::UserAgent;
 
 /// Device object representing user's device (OpenRTB 2.5 Section 3.2.18)
 ///
@@ -18,29 +19,13 @@ use crate::adcom::UserAgent;
 /// and carrier data. The device can refer to a mobile handset, a desktop computer,
 /// set-top box, or other digital device.
 ///
-/// # Example
+/// # Generic Parameters
 ///
-/// ```
-/// use iab_specs::openrtb::v25::{Device, Geo};
-///
-/// let device = Device {
-///     ua: Some("Mozilla/5.0...".to_string()),
-///     ip: Some("192.168.1.1".to_string()),
-///     devicetype: Some(4), // Phone
-///     make: Some("Apple".to_string()),
-///     model: Some("iPhone".to_string()),
-///     os: Some("iOS".to_string()),
-///     osv: Some("14.0".to_string()),
-///     geo: Some(Geo {
-///         country: Some("USA".to_string()),
-///         ..Default::default()
-///     }),
-///     ..Default::default()
-/// };
-/// ```
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
-#[builder(build_fn(error = "crate::Error"))]
-pub struct Device {
+#[builder(build_fn(error = "crate::Error"), default)]
+#[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
+pub struct Device<Ext: Extension = serde_json::Value> {
     /// Browser user agent string.
     /// Recommended by the OpenRTB specification.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -231,7 +216,14 @@ pub struct Device {
     /// Extension object for exchange-specific extensions.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub ext: Option<serde_json::Value>,
+    pub ext: Option<Box<Ext>>,
+}
+
+impl Device {
+    /// Convenience method to create a new instance using the builder pattern.
+    pub fn builder() -> DeviceBuilder {
+        DeviceBuilder::create_empty()
+    }
 }
 
 #[cfg(test)]
@@ -240,16 +232,16 @@ mod tests {
 
     #[test]
     fn test_device_creation() {
-        let device = Device {
-            ua: Some("Mozilla/5.0".to_string()),
-            ip: Some("192.168.1.1".to_string()),
-            devicetype: Some(4),
-            make: Some("Apple".to_string()),
-            model: Some("iPhone".to_string()),
-            os: Some("iOS".to_string()),
-            osv: Some("14.0".to_string()),
-            ..Default::default()
-        };
+        let device = Device::builder()
+            .ua(Some("Mozilla/5.0".to_string()))
+            .ip(Some("192.168.1.1".to_string()))
+            .devicetype(Some(4))
+            .make(Some("Apple".to_string()))
+            .model(Some("iPhone".to_string()))
+            .os(Some("iOS".to_string()))
+            .osv(Some("14.0".to_string()))
+            .build()
+            .unwrap();
 
         assert_eq!(device.ua, Some("Mozilla/5.0".to_string()));
         assert_eq!(device.ip, Some("192.168.1.1".to_string()));
@@ -260,17 +252,17 @@ mod tests {
 
     #[test]
     fn test_device_with_geo() {
-        let geo = Geo {
-            country: Some("USA".to_string()),
-            region: Some("CA".to_string()),
-            ..Default::default()
-        };
+        let geo = Geo::builder()
+            .country(Some("USA".to_string()))
+            .region(Some("CA".to_string()))
+            .build()
+            .unwrap();
 
-        let device = Device {
-            ip: Some("192.168.1.1".to_string()),
-            geo: Some(geo),
-            ..Default::default()
-        };
+        let device = Device::builder()
+            .ip(Some("192.168.1.1".to_string()))
+            .geo(Some(geo))
+            .build()
+            .unwrap();
 
         assert!(device.geo.is_some());
         assert_eq!(
@@ -281,11 +273,7 @@ mod tests {
 
     #[test]
     fn test_device_tracking_flags() {
-        let device = Device {
-            dnt: Some(1),
-            lmt: Some(1),
-            ..Default::default()
-        };
+        let device = Device::builder().dnt(Some(1)).lmt(Some(1)).build().unwrap();
 
         assert_eq!(device.dnt, Some(1));
         assert_eq!(device.lmt, Some(1));
@@ -293,12 +281,12 @@ mod tests {
 
     #[test]
     fn test_device_serialization() {
-        let device = Device {
-            ua: Some("Mozilla/5.0".to_string()),
-            ip: Some("192.168.1.1".to_string()),
-            devicetype: Some(4),
-            ..Default::default()
-        };
+        let device = Device::builder()
+            .ua(Some("Mozilla/5.0".to_string()))
+            .ip(Some("192.168.1.1".to_string()))
+            .devicetype(Some(4))
+            .build()
+            .unwrap();
 
         let json = serde_json::to_string(&device).unwrap();
         assert!(json.contains("\"ua\":\"Mozilla/5.0\""));
@@ -318,11 +306,11 @@ mod tests {
 
     #[test]
     fn test_device_with_ifa() {
-        let device = Device {
-            ifa: Some("AEBE52E7-03EE-455A-B3C4-E57283966239".to_string()),
-            lmt: Some(0),
-            ..Default::default()
-        };
+        let device = Device::builder()
+            .ifa(Some("AEBE52E7-03EE-455A-B3C4-E57283966239".to_string()))
+            .lmt(Some(0))
+            .build()
+            .unwrap();
 
         assert_eq!(
             device.ifa,

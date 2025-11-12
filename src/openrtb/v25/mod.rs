@@ -12,24 +12,25 @@
 /// use iab_specs::openrtb::v25::{BidRequest, Imp, Banner};
 ///
 /// # fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
-/// let request = BidRequest {
-///     id: "bid-request-123".to_string(),
-///     imp: vec![
-///         Imp {
-///             id: "imp1".to_string(),
-///             banner: Some(Banner {
-///                 w: Some(728),
-///                 h: Some(90),
-///                 ..Default::default()
-///             }),
-///             bidfloor: 1.50,
-///             bidfloorcur: "USD".to_string(),
-///             ..Default::default()
-///         }
-///     ],
-///     tmax: Some(100), // 100ms timeout
-///     ..Default::default()
-/// };
+/// let request = BidRequest::builder()
+///     .id("bid-request-123".to_string())
+///     .imp(vec![
+///         Imp::builder()
+///             .id("imp1".to_string())
+///             .banner(Some(Banner::builder()
+///                 .w(Some(728))
+///                 .h(Some(90))
+///                 .build()
+///                 .unwrap()
+///             ))
+///             .bidfloor(1.50)
+///             .bidfloorcur("USD".to_string())
+///             .build()
+///             .unwrap()
+///     ])
+///     .tmax(Some(100)) // 100ms timeout
+///     .build()
+///     .unwrap();
 ///
 /// // Serialize to JSON
 /// let json = serde_json::to_string(&request)?;
@@ -67,12 +68,14 @@
 /// ## AdCOM Integration
 ///
 /// OpenRTB 2.5 uses AdCOM (Advertising Common Object Model) for common domain objects.
-/// All AdCOM types (enumerations, etc.) are available through this module:
 ///
-/// ```rust
-/// use iab_specs::openrtb::v25::{AuctionType, DeviceType};
+/// ```
+/// #[cfg(feature = "adcom")]
+/// {
+/// // Import from AdCOM:
+/// use iab_specs::adcom::enums::{AuctionType, DeviceType};
 /// # let _ = AuctionType::FirstPrice;
-/// # let _ = DeviceType::Phone;
+/// }
 /// ```
 ///
 /// ## Reference
@@ -83,10 +86,12 @@
 pub mod bid;
 pub mod request;
 pub mod response;
+pub mod seat_bid;
 
 // Impression and media objects (Phase 2, Commit 4)
 pub mod audio;
 pub mod banner;
+pub mod format;
 pub mod imp;
 pub mod native;
 pub mod video;
@@ -94,7 +99,6 @@ pub mod video;
 // Context objects (Phase 2, Commit 5)
 pub mod app;
 pub mod content;
-pub mod data;
 pub mod producer;
 pub mod publisher;
 pub mod site;
@@ -109,21 +113,24 @@ pub mod regs;
 pub mod source;
 
 // Re-export core bid types for convenient access
-pub use bid::{Bid, SeatBid};
+pub use bid::Bid;
 pub use request::BidRequest;
 pub use response::BidResponse;
+pub use seat_bid::SeatBid;
 
 // Re-export impression and media types
 pub use audio::Audio;
-pub use banner::{Banner, Format};
+pub use banner::Banner;
+pub use format::Format;
 pub use imp::Imp;
 pub use native::Native;
 pub use video::Video;
 
 // Re-export context types
+pub use crate::adcom::context::Data;
+pub use crate::adcom::context::Segment;
 pub use app::App;
 pub use content::Content;
-pub use data::{Data, Segment};
 pub use producer::Producer;
 pub use publisher::Publisher;
 pub use site::Site;
@@ -136,6 +143,3 @@ pub use user::User;
 // Re-export regulatory and source types
 pub use regs::Regs;
 pub use source::Source;
-
-// Re-export common types (includes AdCOM and SupplyChain)
-pub use crate::openrtb::common::*;

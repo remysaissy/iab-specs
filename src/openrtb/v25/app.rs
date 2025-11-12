@@ -1,11 +1,12 @@
+use super::content::Content;
+use super::publisher::Publisher;
+use crate::Extension;
+
 /// OpenRTB 2.5 App Object
 ///
 /// This module implements the App object for mobile application context.
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
-
-use super::content::Content;
-use super::publisher::Publisher;
 
 /// Default category taxonomy (1 = IAB Content Category Taxonomy 1.0)
 fn default_cattax() -> i32 {
@@ -17,22 +18,27 @@ fn default_cattax() -> i32 {
 /// An `App` object should be included if the ad-supported content is a non-browser application
 /// (typically in mobile). A bid request must not contain both a Site and an App object.
 ///
+/// # Generic Parameters
+///
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+///
 /// # Example
 ///
 /// ```
 /// use iab_specs::openrtb::v25::App;
 ///
-/// let app = App {
-///     id: Some("app123".to_string()),
-///     name: Some("My Game".to_string()),
-///     bundle: Some("com.example.mygame".to_string()),
-///     storeurl: Some("https://play.google.com/store/apps/details?id=com.example.mygame".to_string()),
-///     ..Default::default()
-/// };
+/// let app = App::builder()
+///     .id(Some("app123".to_string()))
+///     .name(Some("My Game".to_string()))
+///     .bundle(Some("com.example.mygame".to_string()))
+///     .storeurl(Some("https://play.google.com/store/apps/details?id=com.example.mygame".to_string()))
+///     .build()
+///     .unwrap();
 /// ```
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, PartialEq)]
-#[builder(build_fn(error = "crate::Error"))]
-pub struct App {
+#[builder(build_fn(error = "crate::Error"), default)]
+#[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
+pub struct App<Ext: Extension = serde_json::Value> {
     /// Exchange-specific app ID.
     /// Recommended by the OpenRTB specification.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -135,10 +141,17 @@ pub struct App {
     /// Extension object for exchange-specific extensions.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub ext: Option<serde_json::Value>,
+    pub ext: Option<Box<Ext>>,
 }
 
-impl Default for App {
+impl App {
+    /// Convenience method to create a new instance using the builder pattern.
+    pub fn builder() -> AppBuilder {
+        AppBuilder::create_empty()
+    }
+}
+
+impl<Ext: Extension> Default for App<Ext> {
     fn default() -> Self {
         Self {
             id: None,
@@ -169,13 +182,13 @@ mod tests {
 
     #[test]
     fn test_app_creation() {
-        let app = App {
-            id: Some("app123".to_string()),
-            name: Some("My Game".to_string()),
-            bundle: Some("com.example.mygame".to_string()),
-            storeurl: Some("https://play.google.com/store".to_string()),
-            ..Default::default()
-        };
+        let app = App::builder()
+            .id(Some("app123".to_string()))
+            .name(Some("My Game".to_string()))
+            .bundle(Some("com.example.mygame".to_string()))
+            .storeurl(Some("https://play.google.com/store".to_string()))
+            .build()
+            .unwrap();
 
         assert_eq!(app.id, Some("app123".to_string()));
         assert_eq!(app.name, Some("My Game".to_string()));
@@ -185,17 +198,17 @@ mod tests {
 
     #[test]
     fn test_app_with_publisher() {
-        let publisher = Publisher {
-            id: Some("pub123".to_string()),
-            name: Some("Publisher Inc".to_string()),
-            ..Default::default()
-        };
+        let publisher = Publisher::builder()
+            .id(Some("pub123".to_string()))
+            .name(Some("Publisher Inc".to_string()))
+            .build()
+            .unwrap();
 
-        let app = App {
-            id: Some("app456".to_string()),
-            publisher: Some(publisher),
-            ..Default::default()
-        };
+        let app = App::builder()
+            .id(Some("app456".to_string()))
+            .publisher(Some(publisher))
+            .build()
+            .unwrap();
 
         assert!(app.publisher.is_some());
         assert_eq!(
@@ -206,11 +219,11 @@ mod tests {
 
     #[test]
     fn test_app_serialization() {
-        let app = App {
-            id: Some("app123".to_string()),
-            bundle: Some("com.example.mygame".to_string()),
-            ..Default::default()
-        };
+        let app = App::builder()
+            .id(Some("app123".to_string()))
+            .bundle(Some("com.example.mygame".to_string()))
+            .build()
+            .unwrap();
 
         let json = serde_json::to_string(&app).unwrap();
         assert!(json.contains("\"id\":\"app123\""));

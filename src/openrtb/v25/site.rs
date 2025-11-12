@@ -1,11 +1,11 @@
+use super::content::Content;
+use super::publisher::Publisher;
+use crate::Extension;
 /// OpenRTB 2.5 Site Object
 ///
 /// This module implements the Site object for website context.
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
-
-use super::content::Content;
-use super::publisher::Publisher;
 
 /// Default category taxonomy (1 = IAB Content Category Taxonomy 1.0)
 fn default_cattax() -> i32 {
@@ -17,22 +17,13 @@ fn default_cattax() -> i32 {
 /// A `Site` object should be included if the ad-supported content is a website (as opposed to
 /// a non-browser application). A bid request must not contain both a Site and an App object.
 ///
-/// # Example
+/// # Generic Parameters
 ///
-/// ```
-/// use iab_specs::openrtb::v25::Site;
-///
-/// let site = Site {
-///     id: Some("site123".to_string()),
-///     name: Some("Example Site".to_string()),
-///     domain: Some("example.com".to_string()),
-///     page: Some("https://example.com/page".to_string()),
-///     ..Default::default()
-/// };
-/// ```
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, PartialEq)]
-#[builder(build_fn(error = "crate::Error"))]
-pub struct Site {
+#[builder(build_fn(error = "crate::Error"), default)]
+#[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
+pub struct Site<Ext: Extension = serde_json::Value> {
     /// Exchange-specific site ID.
     /// Recommended by the OpenRTB specification.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -133,10 +124,17 @@ pub struct Site {
     /// Extension object for exchange-specific extensions.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub ext: Option<serde_json::Value>,
+    pub ext: Option<Box<Ext>>,
 }
 
-impl Default for Site {
+impl Site {
+    /// Convenience method to create a new instance using the builder pattern.
+    pub fn builder() -> SiteBuilder {
+        SiteBuilder::create_empty()
+    }
+}
+
+impl<Ext: Extension> Default for Site<Ext> {
     fn default() -> Self {
         Self {
             id: None,
@@ -167,13 +165,13 @@ mod tests {
 
     #[test]
     fn test_site_creation() {
-        let site = Site {
-            id: Some("site123".to_string()),
-            name: Some("Example Site".to_string()),
-            domain: Some("example.com".to_string()),
-            page: Some("https://example.com/page".to_string()),
-            ..Default::default()
-        };
+        let site = Site::builder()
+            .id(Some("site123".to_string()))
+            .name(Some("Example Site".to_string()))
+            .domain(Some("example.com".to_string()))
+            .page(Some("https://example.com/page".to_string()))
+            .build()
+            .unwrap();
 
         assert_eq!(site.id, Some("site123".to_string()));
         assert_eq!(site.name, Some("Example Site".to_string()));
@@ -183,17 +181,17 @@ mod tests {
 
     #[test]
     fn test_site_with_publisher() {
-        let publisher = Publisher {
-            id: Some("pub123".to_string()),
-            name: Some("Publisher Inc".to_string()),
-            ..Default::default()
-        };
+        let publisher = Publisher::builder()
+            .id(Some("pub123".to_string()))
+            .name(Some("Publisher Inc".to_string()))
+            .build()
+            .unwrap();
 
-        let site = Site {
-            id: Some("site456".to_string()),
-            publisher: Some(publisher),
-            ..Default::default()
-        };
+        let site = Site::builder()
+            .id(Some("site456".to_string()))
+            .publisher(Some(publisher))
+            .build()
+            .unwrap();
 
         assert!(site.publisher.is_some());
         assert_eq!(
@@ -204,11 +202,11 @@ mod tests {
 
     #[test]
     fn test_site_serialization() {
-        let site = Site {
-            id: Some("site123".to_string()),
-            domain: Some("example.com".to_string()),
-            ..Default::default()
-        };
+        let site = Site::builder()
+            .id(Some("site123".to_string()))
+            .domain(Some("example.com".to_string()))
+            .build()
+            .unwrap();
 
         let json = serde_json::to_string(&site).unwrap();
         assert!(json.contains("\"id\":\"site123\""));

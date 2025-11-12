@@ -62,8 +62,9 @@ pub struct AdsTxtSystem {
 }
 
 impl AdsTxtSystem {
+    /// Convenience method to create a new instance using the builder pattern.
     pub fn builder() -> AdsTxtSystemBuilder {
-        AdsTxtSystemBuilder::default()
+        AdsTxtSystemBuilder::create_empty()
     }
 }
 

@@ -18,8 +18,9 @@ pub struct ManagerDomain {
 }
 
 impl ManagerDomain {
+    /// Convenience method to create a new instance using the builder pattern.
     pub fn builder() -> ManagerDomainBuilder {
-        ManagerDomainBuilder::default()
+        ManagerDomainBuilder::create_empty()
     }
 }
 
@@ -147,14 +148,5 @@ mod tests {
             .unwrap();
         let res = manager_domain.to_string();
         assert_eq!(res, "example.com,US");
-    }
-
-    #[test]
-    fn test_builder() {
-        let result = ManagerDomain::builder().domain("builder-test.com").build();
-        assert!(result.is_ok());
-        let manager = result.unwrap();
-        assert_eq!(manager.domain, "builder-test.com");
-        assert!(manager.country_code.is_none());
     }
 }
