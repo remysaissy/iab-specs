@@ -10,32 +10,27 @@
 ///
 /// - `openrtb_25`: Enables OpenRTB 2.5 support (automatically includes `adcom`)
 /// - `openrtb_26`: Enables OpenRTB 2.6 support (includes 2.5 and `adcom`)
-/// - `openrtb_3`: Enables OpenRTB 3.0 support (automatically includes `adcom`)
+/// - `openrtb_30`: Enables OpenRTB 3.0 support (automatically includes `adcom`)
 ///
 /// ## Module Organization
 ///
-/// - `common`: OpenRTB-specific common types and AdCOM re-exports
+/// - `common`: OpenRTB-specific common types
 /// - `v25`: OpenRTB 2.5 specific types (enabled with `openrtb_25` feature)
 /// - `v26`: OpenRTB 2.6 specific types (enabled with `openrtb_26` feature)
-/// - `v3`: OpenRTB 3.0 specific types (enabled with `openrtb_3` feature)
+/// - `v30`: OpenRTB 3.0 specific types (enabled with `openrtb_30` feature)
 ///
 /// ## AdCOM Integration
 ///
 /// OpenRTB 2.5+ uses AdCOM (Advertising Common Object Model) for domain objects like
-/// enumerations, media types, and context objects. All AdCOM types are accessible via
-/// the `common` module or directly from the `adcom` crate module.
+/// enumerations, media types, and context objects. All AdCOM types are accessible via the `adcom` crate module.
 ///
 /// ```
-/// // Import from OpenRTB common:
-/// use iab_specs::openrtb::common::{AuctionType, DeviceType};
-/// # let _ = AuctionType::FirstPrice;
-/// ```
-///
-/// Or import directly from AdCOM:
-/// ```
+/// #[cfg(feature = "adcom")]
+/// {
 /// // Import from AdCOM:
-/// use iab_specs::adcom::{AuctionType, DeviceType};
+/// use iab_specs::adcom::enums::{AuctionType, DeviceType};
 /// # let _ = AuctionType::FirstPrice;
+/// }
 /// ```
 ///
 /// ## References
@@ -52,8 +47,8 @@ pub mod v25;
 #[cfg(feature = "openrtb_26")]
 pub mod v26;
 
-#[cfg(feature = "openrtb_3")]
-pub mod v3;
+#[cfg(feature = "openrtb_30")]
+pub mod v30;
 
 // Re-export common types for convenience
 pub use common::*;

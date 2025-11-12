@@ -43,8 +43,8 @@ Examples:
     $0                                          # Run tests with default features
     $0 --all-features                           # Run tests with all features
     $0 --no-default-features                    # Run tests with no features
-    $0 --no-default-features --features openrtb_3
-                                                # Run tests with only openrtb_3
+    $0 --no-default-features --features openrtb_30
+                                                # Run tests with only openrtb_30
     $0 --features openrtb_25,ads_txt            # Run tests with multiple features
 
 Note: This script only runs cargo test. For format checking use format.sh,

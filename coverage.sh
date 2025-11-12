@@ -56,8 +56,8 @@ Examples:
     $0 --no-default-features                    # Generate report with no features
     $0 --no-default-features --features ads_txt # Generate report with only ads_txt
     $0 --features openrtb_25,ads_txt            # Generate report with multiple features
-    $0 --no-default-features --features openrtb_3 --check-thresholds
-                                                # Check coverage for openrtb_3 only
+    $0 --no-default-features --features openrtb_30 --check-thresholds
+                                                # Check coverage for openrtb_30 only
 
 Requirements:
   - cargo-llvm-cov must be installed (cargo install cargo-llvm-cov)

@@ -14,8 +14,9 @@ use super::source::Source;
 use super::user::User;
 
 // Import Dooh from AdCOM when openrtb_26 feature is enabled
+use crate::Extension;
 #[cfg(feature = "openrtb_26")]
-use crate::adcom::Dooh;
+use crate::adcom::context::Dooh;
 
 /// Default auction type for bid requests (Second Price Plus per OpenRTB 2.5 spec)
 fn default_auction_type() -> i32 {
@@ -31,30 +32,35 @@ fn default_auction_type() -> i32 {
 /// and any regulatory or publisher requirements. Bidders use this information
 /// to decide whether and how much to bid.
 ///
+/// # Generic Parameters
+///
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+///
 /// # Example
 ///
 /// ```
 /// use iab_specs::openrtb::v25::{BidRequest, Imp, Banner};
 ///
-/// let imp = Imp {
-///     id: "imp1".to_string(),
-///     banner: Some(Banner { w: Some(300), h: Some(250), ..Default::default() }),
-///     ..Default::default()
-/// };
+/// let imp = Imp::builder()
+///     .id("imp1".to_string())
+///     .banner(Some(Banner::builder().w(Some(300)).h(Some(250)).build().unwrap()))
+///     .build()
+///     .unwrap();
 ///
-/// let request = BidRequest {
-///     id: "request123".to_string(),
-///     imp: vec![imp],
-///     at: 2,  // Second price auction
-///     tmax: Some(120),
-///     ..Default::default()
-/// };
+/// let request = BidRequest::builder()
+///     .id("request123".to_string())
+///     .imp(vec![imp])
+///     .at(2)  // Second price auction
+///     .tmax(Some(120))
+///     .build()
+///     .unwrap();
 /// ```
 ///
 /// All objects in BidRequest are now fully typed as of Phase 2, Commit 7.
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
-#[builder(build_fn(error = "crate::Error"))]
-pub struct BidRequest {
+#[builder(build_fn(error = "crate::Error"), default)]
+#[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
+pub struct BidRequest<Ext: Extension = serde_json::Value> {
     /// Unique ID of the bid request, provided by the exchange.
     /// **Required field**.
     #[builder(setter(into))]
@@ -63,21 +69,21 @@ pub struct BidRequest {
     /// Array of Imp objects representing the impressions offered.
     /// **Required field** - must contain at least one impression.
     #[builder(setter(into))]
-    pub imp: Vec<Imp>,
+    pub imp: Vec<Imp<Ext>>,
 
     /// Details via a Site object about the publisher's website.
     /// Only applicable and recommended for websites.
     /// Exactly one of Site or App should be included.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub site: Option<Site>,
+    pub site: Option<Site<Ext>>,
 
     /// Details via an App object about the publisher's app.
     /// Only applicable and recommended for apps.
     /// Exactly one of Site, App, or Dooh should be included.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub app: Option<App>,
+    pub app: Option<App<Ext>>,
 
     /// Details via a Dooh object about the digital out-of-home ad placement (OpenRTB 2.6+).
     /// Only applicable for DOOH inventory (billboards, transit displays, etc.).
@@ -85,19 +91,19 @@ pub struct BidRequest {
     #[cfg(feature = "openrtb_26")]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub dooh: Option<Dooh>,
+    pub dooh: Option<Dooh<Ext>>,
 
     /// Details via a Device object about the user's device.
     /// Recommended by the OpenRTB specification.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub device: Option<Device>,
+    pub device: Option<Device<Ext>>,
 
     /// Details via a User object about the human user of the device.
     /// Recommended by the OpenRTB specification.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub user: Option<User>,
+    pub user: Option<User<Ext>>,
 
     /// Indicator of test mode in which auctions are not billable:
     /// - 0 = live mode (default)
@@ -138,7 +144,7 @@ pub struct BidRequest {
     pub bseat: Option<Vec<String>>,
 
     /// Flag to indicate if Exchange can verify that the impressions offered
-    /// represent all of the impressions available in context:
+    /// represent all impressions available in context:
     /// - 0 = no or unknown (default)
     /// - 1 = yes, all impressions represented
     #[serde(default)]
@@ -180,18 +186,25 @@ pub struct BidRequest {
     /// which entity makes the final decision.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub source: Option<Source>,
+    pub source: Option<Source<Ext>>,
 
     /// A Regs object that specifies any industry, legal, or governmental
     /// regulations in force for this request.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub regs: Option<Regs>,
+    pub regs: Option<Regs<Ext>>,
 
     /// Extension object for exchange-specific extensions.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub ext: Option<serde_json::Value>,
+    pub ext: Option<Box<Ext>>,
+}
+
+impl BidRequest {
+    /// Convenience method to create a new instance using the builder pattern.
+    pub fn builder() -> BidRequestBuilder {
+        BidRequestBuilder::create_empty()
+    }
 }
 
 #[cfg(test)]
@@ -200,18 +213,15 @@ mod tests {
 
     #[test]
     fn test_bid_request_creation() {
-        let imp = Imp {
-            id: "imp1".to_string(),
-            ..Default::default()
-        };
+        let imp = Imp::builder().id("imp1".to_string()).build().unwrap();
 
-        let request = BidRequest {
-            id: "req123".to_string(),
-            imp: vec![imp],
-            test: 0,
-            at: 2,
-            ..Default::default()
-        };
+        let request = BidRequest::builder()
+            .id("req123".to_string())
+            .imp(vec![imp])
+            .test(0)
+            .at(2)
+            .build()
+            .unwrap();
 
         assert_eq!(request.id, "req123");
         assert_eq!(request.imp.len(), 1);
@@ -223,16 +233,13 @@ mod tests {
 
     #[test]
     fn test_bid_request_serialization() {
-        let imp = Imp {
-            id: "imp1".to_string(),
-            ..Default::default()
-        };
+        let imp = Imp::builder().id("imp1".to_string()).build().unwrap();
 
-        let request = BidRequest {
-            id: "req123".to_string(),
-            imp: vec![imp],
-            ..Default::default()
-        };
+        let request = BidRequest::builder()
+            .id("req123".to_string())
+            .imp(vec![imp])
+            .build()
+            .unwrap();
 
         let json = serde_json::to_string(&request).unwrap();
         assert!(json.contains("\"id\":\"req123\""));
@@ -263,23 +270,20 @@ mod tests {
 
     #[test]
     fn test_bid_request_with_site() {
-        let imp = Imp {
-            id: "imp1".to_string(),
-            ..Default::default()
-        };
+        let imp = Imp::builder().id("imp1".to_string()).build().unwrap();
 
-        let site = crate::openrtb::v25::Site {
-            id: Some("site123".to_string()),
-            domain: Some("example.com".to_string()),
-            ..Default::default()
-        };
+        let site = Site::builder()
+            .id(Some("site123".to_string()))
+            .domain(Some("example.com".to_string()))
+            .build()
+            .unwrap();
 
-        let request = BidRequest {
-            id: "req123".to_string(),
-            imp: vec![imp],
-            site: Some(site),
-            ..Default::default()
-        };
+        let request = BidRequest::builder()
+            .id("req123".to_string())
+            .imp(vec![imp])
+            .site(Some(site))
+            .build()
+            .unwrap();
 
         assert!(request.site.is_some());
         assert_eq!(
@@ -290,23 +294,20 @@ mod tests {
 
     #[test]
     fn test_bid_request_with_app() {
-        let imp = Imp {
-            id: "imp1".to_string(),
-            ..Default::default()
-        };
+        let imp = Imp::builder().id("imp1".to_string()).build().unwrap();
 
-        let app = crate::openrtb::v25::App {
-            id: Some("app123".to_string()),
-            bundle: Some("com.example.app".to_string()),
-            ..Default::default()
-        };
+        let app = App::builder()
+            .id(Some("app123".to_string()))
+            .bundle(Some("com.example.app".to_string()))
+            .build()
+            .unwrap();
 
-        let request = BidRequest {
-            id: "req123".to_string(),
-            imp: vec![imp],
-            app: Some(app),
-            ..Default::default()
-        };
+        let request = BidRequest::builder()
+            .id("req123".to_string())
+            .imp(vec![imp])
+            .app(Some(app))
+            .build()
+            .unwrap();
 
         assert!(request.app.is_some());
         assert_eq!(
@@ -317,23 +318,20 @@ mod tests {
 
     #[test]
     fn test_bid_request_with_device() {
-        let imp = Imp {
-            id: "imp1".to_string(),
-            ..Default::default()
-        };
+        let imp = Imp::builder().id("imp1".to_string()).build().unwrap();
 
-        let device = crate::openrtb::v25::Device {
-            ua: Some("Mozilla/5.0".to_string()),
-            ip: Some("192.168.1.1".to_string()),
-            ..Default::default()
-        };
+        let device = Device::builder()
+            .ua(Some("Mozilla/5.0".to_string()))
+            .ip(Some("192.168.1.1".to_string()))
+            .build()
+            .unwrap();
 
-        let request = BidRequest {
-            id: "req123".to_string(),
-            imp: vec![imp],
-            device: Some(device),
-            ..Default::default()
-        };
+        let request = BidRequest::builder()
+            .id("req123".to_string())
+            .imp(vec![imp])
+            .device(Some(device))
+            .build()
+            .unwrap();
 
         assert!(request.device.is_some());
         assert_eq!(
@@ -344,23 +342,20 @@ mod tests {
 
     #[test]
     fn test_bid_request_with_user() {
-        let imp = Imp {
-            id: "imp1".to_string(),
-            ..Default::default()
-        };
+        let imp = Imp::builder().id("imp1".to_string()).build().unwrap();
 
-        let user = crate::openrtb::v25::User {
-            id: Some("user123".to_string()),
-            yob: Some(1990),
-            ..Default::default()
-        };
+        let user = User::builder()
+            .id(Some("user123".to_string()))
+            .yob(Some(1990))
+            .build()
+            .unwrap();
 
-        let request = BidRequest {
-            id: "req123".to_string(),
-            imp: vec![imp],
-            user: Some(user),
-            ..Default::default()
-        };
+        let request = BidRequest::builder()
+            .id("req123".to_string())
+            .imp(vec![imp])
+            .user(Some(user))
+            .build()
+            .unwrap();
 
         assert!(request.user.is_some());
         assert_eq!(
@@ -371,36 +366,30 @@ mod tests {
 
     #[test]
     fn test_bid_request_test_mode() {
-        let imp = Imp {
-            id: "imp1".to_string(),
-            ..Default::default()
-        };
+        let imp = Imp::builder().id("imp1".to_string()).build().unwrap();
 
-        let request = BidRequest {
-            id: "req123".to_string(),
-            imp: vec![imp],
-            test: 1, // Test mode
-            ..Default::default()
-        };
+        let request = BidRequest::builder()
+            .id("req123".to_string())
+            .imp(vec![imp])
+            .test(1) // Test mode
+            .build()
+            .unwrap();
 
         assert_eq!(request.test, 1);
     }
 
     #[test]
     fn test_bid_request_with_blocklists() {
-        let imp = Imp {
-            id: "imp1".to_string(),
-            ..Default::default()
-        };
+        let imp = Imp::builder().id("imp1".to_string()).build().unwrap();
 
-        let request = BidRequest {
-            id: "req123".to_string(),
-            imp: vec![imp],
-            bcat: Some(vec!["IAB25".to_string(), "IAB26".to_string()]),
-            badv: Some(vec!["competitor.com".to_string()]),
-            bapp: Some(vec!["com.competitor.app".to_string()]),
-            ..Default::default()
-        };
+        let request = BidRequest::builder()
+            .id("req123".to_string())
+            .imp(vec![imp])
+            .bcat(Some(vec!["IAB25".to_string(), "IAB26".to_string()]))
+            .badv(Some(vec!["competitor.com".to_string()]))
+            .bapp(Some(vec!["com.competitor.app".to_string()]))
+            .build()
+            .unwrap();
 
         assert_eq!(request.bcat.as_ref().unwrap().len(), 2);
         assert_eq!(request.badv.as_ref().unwrap().len(), 1);
@@ -409,40 +398,34 @@ mod tests {
 
     #[test]
     fn test_bid_request_with_tmax() {
-        let imp = Imp {
-            id: "imp1".to_string(),
-            ..Default::default()
-        };
+        let imp = Imp::builder().id("imp1".to_string()).build().unwrap();
 
-        let request = BidRequest {
-            id: "req123".to_string(),
-            imp: vec![imp],
-            tmax: Some(120), // 120ms timeout
-            ..Default::default()
-        };
+        let request = BidRequest::builder()
+            .id("req123".to_string())
+            .imp(vec![imp])
+            .tmax(Some(120)) // 120ms timeout
+            .build()
+            .unwrap();
 
         assert_eq!(request.tmax, Some(120));
     }
 
     #[test]
     fn test_bid_request_with_source() {
-        let imp = Imp {
-            id: "imp1".to_string(),
-            ..Default::default()
-        };
+        let imp = Imp::builder().id("imp1".to_string()).build().unwrap();
 
-        let source = crate::openrtb::v25::Source {
-            fd: Some(1),
-            tid: Some("transaction123".to_string()),
-            ..Default::default()
-        };
+        let source = Source::builder()
+            .fd(Some(1))
+            .tid(Some("transaction123".to_string()))
+            .build()
+            .unwrap();
 
-        let request = BidRequest {
-            id: "req123".to_string(),
-            imp: vec![imp],
-            source: Some(source),
-            ..Default::default()
-        };
+        let request = BidRequest::builder()
+            .id("req123".to_string())
+            .imp(vec![imp])
+            .source(Some(source))
+            .build()
+            .unwrap();
 
         assert!(request.source.is_some());
         assert_eq!(request.source.as_ref().unwrap().fd, Some(1));
@@ -450,22 +433,16 @@ mod tests {
 
     #[test]
     fn test_bid_request_with_regs() {
-        let imp = Imp {
-            id: "imp1".to_string(),
-            ..Default::default()
-        };
+        let imp = Imp::builder().id("imp1".to_string()).build().unwrap();
 
-        let regs = crate::openrtb::v25::Regs {
-            coppa: Some(1),
-            ..Default::default()
-        };
+        let regs = Regs::builder().coppa(Some(1)).build().unwrap();
 
-        let request = BidRequest {
-            id: "req123".to_string(),
-            imp: vec![imp],
-            regs: Some(regs),
-            ..Default::default()
-        };
+        let request = BidRequest::builder()
+            .id("req123".to_string())
+            .imp(vec![imp])
+            .regs(Some(regs))
+            .build()
+            .unwrap();
 
         assert!(request.regs.is_some());
         assert_eq!(request.regs.as_ref().unwrap().coppa, Some(1));

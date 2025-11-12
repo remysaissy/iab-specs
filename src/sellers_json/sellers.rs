@@ -46,8 +46,9 @@ pub struct Sellers {
 }
 
 impl Sellers {
+    /// Convenience method to create a new instance using the builder pattern.
     pub fn builder() -> SellersBuilder {
-        SellersBuilder::default()
+        SellersBuilder::create_empty()
     }
 }
 

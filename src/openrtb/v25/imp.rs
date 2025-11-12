@@ -1,14 +1,14 @@
+use super::audio::Audio;
+use super::banner::Banner;
+use super::native::Native;
+use super::video::Video;
+use crate::Extension;
 /// OpenRTB 2.5/2.6 Impression Object
 ///
 /// This module implements the Imp (Impression) object for OpenRTB 2.5 and 2.6.
 /// OpenRTB 2.6 fields (qty, dt, refresh) are included.
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
-
-use super::audio::Audio;
-use super::banner::Banner;
-use super::native::Native;
-use super::video::Video;
 
 // Import Qty and Refresh from v26 when openrtb_26 feature is enabled
 #[cfg(feature = "openrtb_26")]
@@ -24,25 +24,22 @@ fn default_bidfloorcur() -> String {
 /// An `Imp` object describes an ad placement being auctioned within a bid request.
 /// At least one of `banner`, `video`, `audio`, or `native` must be present.
 ///
-/// # Example
+/// # Generic Parameters
 ///
-/// ```
-/// use iab_specs::openrtb::v25::{Imp, Banner};
-///
-/// let imp = Imp {
-///     id: "imp1".to_string(),
-///     banner: Some(Banner {
-///         w: Some(300),
-///         h: Some(250),
-///         ..Default::default()
-///     }),
-///     bidfloor: 1.5,
-///     ..Default::default()
-/// };
-/// ```
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+/// * `MetricExt` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+/// * `PmpExt` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, PartialEq)]
-#[builder(build_fn(error = "crate::Error"))]
-pub struct Imp {
+#[builder(build_fn(error = "crate::Error"), default)]
+#[serde(bound(
+    serialize = "Ext: Extension, MetricExt: Extension, PmpExt: Extension",
+    deserialize = "Ext: Extension, MetricExt: Extension, PmpExt: Extension"
+))]
+pub struct Imp<
+    Ext: Extension = serde_json::Value,
+    MetricExt: Extension = serde_json::Value,
+    PmpExt: Extension = serde_json::Value,
+> {
     /// Unique identifier for this impression within the context of the bid request.
     /// **Required field**.
     #[builder(setter(into))]
@@ -52,7 +49,7 @@ pub struct Imp {
     /// Uses placeholder until Metric is implemented.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub metric: Option<Vec<serde_json::Value>>,
+    pub metric: Option<Vec<Box<MetricExt>>>,
 
     /// Banner object indicating a banner impression is offered.
     /// At least one of banner, video, audio, or native must be present.
@@ -82,7 +79,7 @@ pub struct Imp {
     /// Uses placeholder until Pmp is implemented.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub pmp: Option<serde_json::Value>,
+    pub pmp: Option<Box<PmpExt>>,
 
     /// Name of ad mediation partner, SDK technology, or player responsible for rendering.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -193,10 +190,19 @@ pub struct Imp {
     /// Extension object for exchange-specific extensions.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub ext: Option<serde_json::Value>,
+    pub ext: Option<Box<Ext>>,
 }
 
-impl Default for Imp {
+impl Imp {
+    /// Convenience method to create a new instance using the builder pattern.
+    pub fn builder() -> ImpBuilder {
+        ImpBuilder::create_empty()
+    }
+}
+
+impl<Ext: Extension, MetricExt: Extension, PmpExt: Extension> Default
+    for Imp<Ext, MetricExt, PmpExt>
+{
     fn default() -> Self {
         Self {
             id: String::new(),
@@ -232,16 +238,14 @@ mod tests {
 
     #[test]
     fn test_imp_with_banner() {
-        let imp = Imp {
-            id: "imp1".to_string(),
-            banner: Some(Banner {
-                w: Some(300),
-                h: Some(250),
-                ..Default::default()
-            }),
-            bidfloor: 1.5,
-            ..Default::default()
-        };
+        let imp = Imp::builder()
+            .id("imp1".to_string())
+            .banner(Some(
+                Banner::builder().w(Some(300)).h(Some(250)).build().unwrap(),
+            ))
+            .bidfloor(1.5)
+            .build()
+            .unwrap();
 
         assert_eq!(imp.id, "imp1");
         assert!(imp.banner.is_some());
@@ -251,14 +255,16 @@ mod tests {
 
     #[test]
     fn test_imp_with_video() {
-        let imp = Imp {
-            id: "imp2".to_string(),
-            video: Some(Video {
-                mimes: vec!["video/mp4".to_string()],
-                ..Default::default()
-            }),
-            ..Default::default()
-        };
+        let imp = Imp::builder()
+            .id("imp2".to_string())
+            .video(Some(
+                Video::builder()
+                    .mimes(vec!["video/mp4".to_string()])
+                    .build()
+                    .unwrap(),
+            ))
+            .build()
+            .unwrap();
 
         assert_eq!(imp.id, "imp2");
         assert!(imp.video.is_some());
@@ -266,10 +272,7 @@ mod tests {
 
     #[test]
     fn test_imp_defaults() {
-        let imp = Imp {
-            id: "imp3".to_string(),
-            ..Default::default()
-        };
+        let imp = Imp::builder().id("imp3".to_string()).build().unwrap();
 
         assert_eq!(imp.instl, 0);
         assert_eq!(imp.bidfloor, 0.0);
@@ -280,11 +283,11 @@ mod tests {
 
     #[test]
     fn test_imp_serialization() {
-        let imp = Imp {
-            id: "imp1".to_string(),
-            bidfloor: 2.0,
-            ..Default::default()
-        };
+        let imp = Imp::builder()
+            .id("imp1".to_string())
+            .bidfloor(2.0)
+            .build()
+            .unwrap();
 
         let json = serde_json::to_string(&imp).unwrap();
         assert!(json.contains("\"id\":\"imp1\""));

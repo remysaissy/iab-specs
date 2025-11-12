@@ -1,41 +1,10 @@
+use super::RefSettings;
+use crate::Extension;
 /// OpenRTB 2.6 Refresh Objects
 ///
 /// This module implements the Refresh and RefSettings objects for ad slot refresh configuration.
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
-
-/// RefSettings Object (Section 3.2.34)
-///
-/// Settings that control refresh behavior for continuously displayed ad slots.
-/// Specifies parameters like refresh interval and maximum refresh count.
-///
-/// # Example
-/// ```
-/// use iab_specs::openrtb::v26::RefSettings;
-///
-/// let settings = RefSettings {
-///     reftype: Some(1),  // User-initiated refresh
-///     minint: Some(30),  // Minimum 30 seconds between refreshes
-///     ext: None,
-/// };
-/// ```
-#[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
-#[builder(build_fn(error = "crate::Error"), default)]
-pub struct RefSettings {
-    /// Type of refresh
-    /// 1 = User-initiated
-    /// 2 = Automatic (time-based)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub reftype: Option<i32>,
-
-    /// Minimum interval between refreshes in seconds
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub minint: Option<i32>,
-
-    /// Extension object
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub ext: Option<serde_json::Value>,
-}
 
 /// Refresh Object (Section 3.2.33)
 ///
@@ -47,31 +16,43 @@ pub struct RefSettings {
 /// - Static DOOH displays with rotating ads
 /// - Long-form content with intermittent ad updates
 ///
+/// # Generic Parameters
+///
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+///
 /// # Example
 /// ```
 /// use iab_specs::openrtb::v26::{Refresh, RefSettings};
 ///
-/// let refresh = Refresh {
-///     refsettings: Some(vec![
-///         RefSettings {
-///             reftype: Some(2),  // Automatic refresh
-///             minint: Some(60),  // Every 60 seconds
-///             ext: None,
-///         }
-///     ]),
-///     ext: None,
-/// };
+/// let refresh = Refresh::builder()
+///     .refsettings(Some(vec![
+///         RefSettings::builder()
+///             .reftype(Some(2))  // Automatic refresh
+///             .minint(Some(60))  // Every 60 seconds
+///             .build()
+///             .unwrap()
+///     ]))
+///     .build()
+///     .unwrap();
 /// ```
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
-pub struct Refresh {
+#[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
+pub struct Refresh<Ext: Extension = serde_json::Value> {
     /// Array of refresh setting objects
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub refsettings: Option<Vec<RefSettings>>,
+    pub refsettings: Option<Vec<RefSettings<Ext>>>,
 
     /// Extension object
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub ext: Option<serde_json::Value>,
+    pub ext: Option<Box<Ext>>,
+}
+
+impl Refresh {
+    /// Convenience method to create a new instance using the builder pattern.
+    pub fn builder() -> RefreshBuilder {
+        RefreshBuilder::create_empty()
+    }
 }
 
 #[cfg(test)]
@@ -79,31 +60,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_refsettings_builder() {
-        let settings = RefSettingsBuilder::default()
-            .reftype(Some(2))
-            .minint(Some(30))
-            .build()
-            .unwrap();
-
-        assert_eq!(settings.reftype, Some(2));
-        assert_eq!(settings.minint, Some(30));
-    }
-
-    #[test]
     fn test_refresh_with_settings() {
-        let refresh = RefreshBuilder::default()
+        let refresh = Refresh::builder()
             .refsettings(Some(vec![
-                RefSettings {
-                    reftype: Some(1),
-                    minint: Some(60),
-                    ext: None,
-                },
-                RefSettings {
-                    reftype: Some(2),
-                    minint: Some(120),
-                    ext: None,
-                },
+                RefSettings::builder()
+                    .reftype(Some(1))
+                    .minint(Some(60))
+                    .build()
+                    .unwrap(),
+                RefSettings::builder()
+                    .reftype(Some(2))
+                    .minint(Some(120))
+                    .build()
+                    .unwrap(),
             ]))
             .build()
             .unwrap();
@@ -114,14 +83,16 @@ mod tests {
 
     #[test]
     fn test_refresh_serialization() {
-        let refresh = Refresh {
-            refsettings: Some(vec![RefSettings {
-                reftype: Some(2),
-                minint: Some(45),
-                ext: None,
-            }]),
-            ext: None,
-        };
+        let refresh = Refresh::builder()
+            .refsettings(Some(vec![
+                RefSettings::builder()
+                    .reftype(Some(2))
+                    .minint(Some(45))
+                    .build()
+                    .unwrap(),
+            ]))
+            .build()
+            .unwrap();
 
         let json = serde_json::to_string(&refresh).unwrap();
         let deserialized: Refresh = serde_json::from_str(&json).unwrap();
@@ -130,7 +101,7 @@ mod tests {
 
     #[test]
     fn test_skip_serializing_none() {
-        let refresh = Refresh::default();
+        let refresh = Refresh::builder().build().unwrap();
         let json = serde_json::to_string(&refresh).unwrap();
         assert_eq!(json, "{}");
     }

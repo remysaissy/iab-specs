@@ -1,11 +1,11 @@
+use super::Data;
+use super::producer::Producer;
+use crate::Extension;
 /// OpenRTB 2.5 Content Object
 ///
 /// This module implements the Content object for content metadata.
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
-
-use super::data::Data;
-use super::producer::Producer;
 
 /// Default category taxonomy (1 = IAB Content Category Taxonomy 1.0)
 fn default_cattax() -> i32 {
@@ -22,23 +22,22 @@ fn default_gtax() -> i32 {
 /// A `Content` object describes the content in which the ad will appear.
 /// This is particularly useful for video and audio, as well as for syndicated content.
 ///
-/// # Example
+/// # Generic Parameters
 ///
-/// ```
-/// use iab_specs::openrtb::v25::Content;
-///
-/// let content = Content {
-///     id: Some("content123".to_string()),
-///     title: Some("Great Movie".to_string()),
-///     series: Some("Movie Series".to_string()),
-///     season: Some("Season 1".to_string()),
-///     url: Some("https://example.com/content".to_string()),
-///     ..Default::default()
-/// };
-/// ```
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+/// * `NetworkExt` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+/// * `ChannelExt` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, PartialEq)]
-#[builder(build_fn(error = "crate::Error"))]
-pub struct Content {
+#[builder(build_fn(error = "crate::Error"), default)]
+#[serde(bound(
+    serialize = "Ext: Extension, NetworkExt: Extension, ChannelExt: Extension",
+    deserialize = "Ext: Extension, NetworkExt: Extension, ChannelExt: Extension"
+))]
+pub struct Content<
+    Ext: Extension = serde_json::Value,
+    NetworkExt: Extension = serde_json::Value,
+    ChannelExt: Extension = serde_json::Value,
+> {
     /// ID uniquely identifying the content.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
@@ -207,21 +206,30 @@ pub struct Content {
     /// Uses placeholder until Network is implemented.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub network: Option<serde_json::Value>,
+    pub network: Option<Box<NetworkExt>>,
 
     /// Channel object representing the content channel.
     /// Uses placeholder until Channel is implemented.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub channel: Option<serde_json::Value>,
+    pub channel: Option<Box<ChannelExt>>,
 
     /// Extension object for exchange-specific extensions.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub ext: Option<serde_json::Value>,
+    pub ext: Option<Box<Ext>>,
 }
 
-impl Default for Content {
+impl Content {
+    /// Convenience method to create a new instance using the builder pattern.
+    pub fn builder() -> ContentBuilder {
+        ContentBuilder::create_empty()
+    }
+}
+
+impl<Ext: Extension, NetworkExt: Extension, ChannelExt: Extension> Default
+    for Content<Ext, NetworkExt, ChannelExt>
+{
     fn default() -> Self {
         Self {
             id: None,
@@ -266,13 +274,13 @@ mod tests {
 
     #[test]
     fn test_content_creation() {
-        let content = Content {
-            id: Some("content123".to_string()),
-            title: Some("Great Movie".to_string()),
-            series: Some("Movie Series".to_string()),
-            url: Some("https://example.com/content".to_string()),
-            ..Default::default()
-        };
+        let content = Content::builder()
+            .id(Some("content123".to_string()))
+            .title(Some("Great Movie".to_string()))
+            .series(Some("Movie Series".to_string()))
+            .url(Some("https://example.com/content".to_string()))
+            .build()
+            .unwrap();
 
         assert_eq!(content.id, Some("content123".to_string()));
         assert_eq!(content.title, Some("Great Movie".to_string()));
@@ -283,17 +291,17 @@ mod tests {
 
     #[test]
     fn test_content_with_producer() {
-        let producer = Producer {
-            id: Some("prod123".to_string()),
-            name: Some("Warner Bros".to_string()),
-            ..Default::default()
-        };
+        let producer = Producer::builder()
+            .id(Some("prod123".to_string()))
+            .name(Some("Warner Bros".to_string()))
+            .build()
+            .unwrap();
 
-        let content = Content {
-            id: Some("content456".to_string()),
-            producer: Some(producer),
-            ..Default::default()
-        };
+        let content = Content::builder()
+            .id(Some("content456".to_string()))
+            .producer(Some(producer))
+            .build()
+            .unwrap();
 
         assert!(content.producer.is_some());
         assert_eq!(
@@ -304,11 +312,11 @@ mod tests {
 
     #[test]
     fn test_content_serialization() {
-        let content = Content {
-            id: Some("content123".to_string()),
-            title: Some("Great Movie".to_string()),
-            ..Default::default()
-        };
+        let content = Content::builder()
+            .id(Some("content123".to_string()))
+            .title(Some("Great Movie".to_string()))
+            .build()
+            .unwrap();
 
         let json = serde_json::to_string(&content).unwrap();
         assert!(json.contains("\"id\":\"content123\""));
