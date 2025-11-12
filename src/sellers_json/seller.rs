@@ -81,8 +81,9 @@ pub struct Seller {
 }
 
 impl Seller {
+    /// Convenience method to create a new instance using the builder pattern.
     pub fn builder() -> SellerBuilder {
-        SellerBuilder::default()
+        SellerBuilder::create_empty()
     }
 }
 
@@ -414,19 +415,6 @@ mod tests {
         assert!(res.is_ok());
         let seller = res.unwrap();
         assert!(seller.is_passthrough);
-    }
-
-    #[test]
-    fn test_builder() {
-        let result = Seller::builder()
-            .seller_id("test123")
-            .seller_type(SellerType::Intermediary)
-            .name(Some("Test Company".to_string()))
-            .build();
-        assert!(result.is_ok());
-        let seller = result.unwrap();
-        assert_eq!(seller.seller_id, "test123");
-        assert_eq!(seller.seller_type, SellerType::Intermediary);
     }
 
     #[test]

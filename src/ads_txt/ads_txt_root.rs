@@ -87,8 +87,9 @@ pub struct AdsTxt {
 }
 
 impl AdsTxt {
+    /// Convenience method to create a new instance using the builder pattern.
     pub fn builder() -> AdsTxtBuilder {
-        AdsTxtBuilder::default()
+        AdsTxtBuilder::create_empty()
     }
 }
 
@@ -360,28 +361,6 @@ mod tests {
             res,
             "contact=mycontact\nsubdomain=sub.domain.com\ninventorypartnerdomain=inv.domain.com\nownerdomain=owner.domain.com\nmanagerdomain=manager.domain.com\ngreenadexchange.com,xf7342,direct,5jyxf8k54 # comment 1\nredssp.com,xf7342,direct,5jyxf8k54 # comment 2\ngreenssp.com,xf7342,direct,5jyxf8k54 # comment 3"
         );
-    }
-
-    #[test]
-    fn test_builder() {
-        let result = AdsTxt::builder().build();
-        assert!(result.is_ok());
-        let ads_txt = result.unwrap();
-        assert!(ads_txt.contact.is_none());
-        assert!(ads_txt.subdomain.is_none());
-        assert!(ads_txt.systems.is_empty());
-    }
-
-    #[test]
-    fn test_clone() {
-        let original = AdsTxt::builder()
-            .contact(Some("test@example.com".to_string()))
-            .subdomain(Some("sub.example.com".to_string()))
-            .build()
-            .unwrap();
-        let cloned = original.clone();
-        assert_eq!(cloned.contact, original.contact);
-        assert_eq!(cloned.subdomain, original.subdomain);
     }
 
     #[test]

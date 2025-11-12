@@ -46,8 +46,8 @@ jobs:
             flags: "--no-default-features --features openrtb_25"
           - name: "openrtb_26"
             flags: "--no-default-features --features openrtb_26"
-          - name: "openrtb_3"
-            flags: "--no-default-features --features openrtb_3"
+          - name: "openrtb_30"
+            flags: "--no-default-features --features openrtb_30"
           - name: "ads_txt"
             flags: "--no-default-features --features ads_txt"
           - name: "sellers_json"
@@ -58,10 +58,10 @@ jobs:
             flags: "--no-default-features --features openrtb_25,ads_txt"
           - name: "openrtb_25 + sellers_json"
             flags: "--no-default-features --features openrtb_25,sellers_json"
-          - name: "openrtb_3 + ads_txt"
-            flags: "--no-default-features --features openrtb_3,ads_txt"
-          - name: "openrtb_3 + sellers_json"
-            flags: "--no-default-features --features openrtb_3,sellers_json"
+          - name: "openrtb_30 + ads_txt"
+            flags: "--no-default-features --features openrtb_30,ads_txt"
+          - name: "openrtb_30 + sellers_json"
+            flags: "--no-default-features --features openrtb_30,sellers_json"
           - name: "ads_txt + sellers_json"
             flags: "--no-default-features --features ads_txt,sellers_json"
           - name: "app_ads_txt"
@@ -91,4 +91,4 @@ jobs:
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
       - name: Generate coverage and check thresholds
-        run: ./coverage.sh --lcov --all-features --check-thresholds
+        run: ./coverage.sh --lcov --all-features

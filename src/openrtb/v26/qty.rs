@@ -1,3 +1,4 @@
+use crate::Extension;
 /// OpenRTB 2.6 Qty Object
 ///
 /// This module implements the Qty object for DOOH (Digital Out-Of-Home) multipliers.
@@ -10,19 +11,24 @@ use serde::{Deserialize, Serialize};
 /// that may be displayed to multiple persons. This is particularly relevant for
 /// DOOH (Digital Out-Of-Home) inventory where a single ad display serves multiple viewers.
 ///
+/// # Generic Parameters
+///
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+///
 /// # Example - DOOH Multiplier
 /// ```
 /// use iab_specs::openrtb::v26::Qty;
 ///
-/// let qty = Qty {
-///     multiplier: Some(150.0),  // 150 people viewing the ad
-///     source: Some("MeasurementVendor".to_string()),
-///     ext: None,
-/// };
+/// let qty = Qty::builder()
+///     .multiplier(Some(150.0))  // 150 people viewing the ad
+///     .source(Some("MeasurementVendor".to_string()))
+///     .build()
+///     .unwrap();
 /// ```
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
-pub struct Qty {
+#[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
+pub struct Qty<Ext: Extension = serde_json::Value> {
     /// Quantity multiplier (e.g., number of people viewing)
     /// For DOOH: estimated number of impressions delivered
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -35,7 +41,14 @@ pub struct Qty {
 
     /// Extension object
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub ext: Option<serde_json::Value>,
+    pub ext: Option<Box<Ext>>,
+}
+
+impl Qty {
+    /// Convenience method to create a new instance using the builder pattern.
+    pub fn builder() -> QtyBuilder {
+        QtyBuilder::create_empty()
+    }
 }
 
 #[cfg(test)]
@@ -43,24 +56,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_qty_builder() {
-        let qty = QtyBuilder::default()
-            .multiplier(Some(150.5))
-            .source(Some("MeasurementVendor".to_string()))
+    fn test_qty_serialization() {
+        let qty = Qty::builder()
+            .multiplier(Some(100.0))
+            .source(Some("Publisher".to_string()))
             .build()
             .unwrap();
-
-        assert_eq!(qty.multiplier, Some(150.5));
-        assert_eq!(qty.source, Some("MeasurementVendor".to_string()));
-    }
-
-    #[test]
-    fn test_qty_serialization() {
-        let qty = Qty {
-            multiplier: Some(100.0),
-            source: Some("Publisher".to_string()),
-            ext: None,
-        };
 
         let json = serde_json::to_string(&qty).unwrap();
         assert!(json.contains("100"));
@@ -72,7 +73,7 @@ mod tests {
 
     #[test]
     fn test_skip_serializing_none() {
-        let qty = Qty::default();
+        let qty = Qty::builder().build().unwrap();
         let json = serde_json::to_string(&qty).unwrap();
         assert_eq!(json, "{}");
     }

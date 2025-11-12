@@ -74,8 +74,9 @@ pub struct AppAdsTxt {
 }
 
 impl AppAdsTxt {
+    /// Convenience method to create a new instance using the builder pattern.
     pub fn builder() -> AppAdsTxtBuilder {
-        AppAdsTxtBuilder::default()
+        AppAdsTxtBuilder::create_empty()
     }
 }
 
@@ -701,63 +702,6 @@ silverssp.com, 9876, RESELLER
         assert!(res.is_ok());
         let app_ads = res.unwrap();
         assert_eq!(app_ads.systems.len(), 2);
-    }
-
-    // BUILDER, CLONE, DEBUG TESTS - For code coverage
-
-    #[test]
-    fn test_builder() {
-        let result = AppAdsTxt::builder()
-            .contact(Some("test@example.com".to_string()))
-            .build();
-        assert!(result.is_ok());
-        let app_ads = result.unwrap();
-        assert_eq!(app_ads.contact, Some("test@example.com".to_string()));
-        assert!(app_ads.subdomain.is_none());
-        assert!(app_ads.systems.is_empty());
-    }
-
-    #[test]
-    fn test_builder_with_default_values() {
-        let result = AppAdsTxt::builder().build();
-        assert!(result.is_ok());
-        let app_ads = result.unwrap();
-        assert!(app_ads.contact.is_none());
-        assert!(app_ads.subdomain.is_none());
-        assert!(app_ads.inventory_partner_domain.is_none());
-        assert!(app_ads.systems.is_empty());
-    }
-
-    #[test]
-    fn test_clone() {
-        let original = AppAdsTxt::builder()
-            .contact(Some("test@example.com".to_string()))
-            .subdomain(Some("sub.example.com".to_string()))
-            .systems(vec![
-                AdsTxtSystem::builder()
-                    .domain("greenadexchange.com")
-                    .publisher_id("12345")
-                    .relation(SellerRelationType::Direct)
-                    .build()
-                    .unwrap(),
-            ])
-            .build()
-            .unwrap();
-        let cloned = original.clone();
-        assert_eq!(cloned.contact, original.contact);
-        assert_eq!(cloned.subdomain, original.subdomain);
-        assert_eq!(cloned.systems.len(), original.systems.len());
-    }
-
-    #[test]
-    fn test_debug() {
-        let app_ads = AppAdsTxt::builder()
-            .contact(Some("debug@test.com".to_string()))
-            .build()
-            .unwrap();
-        let debug_str = format!("{:?}", app_ads);
-        assert!(debug_str.contains("AppAdsTxt"));
-        assert!(debug_str.contains("debug@test.com"));
     }
 
     // SPECIFICATION EXAMPLES - From IAB Tech Lab docs

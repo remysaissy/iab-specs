@@ -27,20 +27,20 @@ Add `iab-specs` to your `Cargo.toml` with the features you need:
 ```toml
 [dependencies]
 # Enable all specifications
-iab-specs = { version = "0.2", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_3", "ads_txt", "app_ads_txt", "sellers_json"] }
+iab-specs = { version = "0.2", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "ads_txt", "app_ads_txt", "sellers_json"] }
 
 # Or enable only what you need
-iab-specs = { version = "0.2", features = ["openrtb_3"] }
+iab-specs = { version = "0.2", features = ["openrtb_30"] }
 ```
 
 Or use cargo:
 
 ```bash
 # Enable all specifications
-cargo add iab-specs --features adcom,openrtb_25,openrtb_26,openrtb_3,ads_txt,app_ads_txt,sellers_json
+cargo add iab-specs --features adcom,openrtb_25,openrtb_26,openrtb_30,ads_txt,app_ads_txt,sellers_json
 
 # Or enable only what you need
-cargo add iab-specs --features openrtb_3
+cargo add iab-specs --features openrtb_30
 ```
 
 ## Features
@@ -52,7 +52,7 @@ The library uses cargo features to enable/disable specifications:
 - `adcom` - AdCOM 1.0 support (Advertising Common Object Model enumerations)
 - `openrtb_25` - OpenRTB 2.5 support (automatically includes `adcom`)
 - `openrtb_26` - OpenRTB 2.6 support (automatically includes `openrtb_25` and `adcom`)
-- `openrtb_3` - OpenRTB 3.0 support (automatically includes `adcom`)
+- `openrtb_30` - OpenRTB 3.0 support (automatically includes `adcom`)
 - `ads_txt` - Ads.txt 1.1 support
 - `app_ads_txt` - App-ads.txt 1.0 support (automatically includes `ads_txt`)
 - `sellers_json` - Sellers.json 1.0 support
@@ -71,7 +71,7 @@ iab-specs = { version = "0.2", features = ["openrtb_25"] }
 iab-specs = { version = "0.2", features = ["openrtb_26"] }
 
 # Only OpenRTB 3.0 support (automatically includes adcom)
-iab-specs = { version = "0.2", features = ["openrtb_3"] }
+iab-specs = { version = "0.2", features = ["openrtb_30"] }
 
 # Only ads.txt support
 iab-specs = { version = "0.2", features = ["ads_txt"] }
@@ -83,10 +83,10 @@ iab-specs = { version = "0.2", features = ["app_ads_txt"] }
 iab-specs = { version = "0.2", features = ["sellers_json"] }
 
 # OpenRTB 3.0 with ads.txt and sellers.json
-iab-specs = { version = "0.2", features = ["openrtb_3", "ads_txt", "sellers_json"] }
+iab-specs = { version = "0.2", features = ["openrtb_30", "ads_txt", "sellers_json"] }
 
 # All specifications
-iab-specs = { version = "0.2", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_3", "ads_txt", "app_ads_txt", "sellers_json"] }
+iab-specs = { version = "0.2", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "ads_txt", "app_ads_txt", "sellers_json"] }
 ```
 
 **Why no default features?**
@@ -200,6 +200,91 @@ let protocol = Protocol::Vast4;
 assert_eq!(serde_json::to_string(&protocol).unwrap(), "7");
 ```
 
+#### Extension Trait
+
+The `Extension` trait provides a flexible mechanism for adding custom fields to IAB specification objects. This is particularly useful for vendor-specific data, internal tracking, or experimental features.
+
+**Key Features:**
+- Type-safe extension handling with generics
+- Default to `serde_json::Value` for maximum flexibility
+- Support for custom strongly-typed extensions
+- Thread-safe (Send + Sync)
+- Serialization/deserialization support
+
+**Using default JSON extensions:**
+
+```rust
+use iab_specs::adcom::media::Ad;
+
+// Use serde_json::Value for flexible, untyped extensions
+let ad: Ad = Ad {
+    id: Some("ad123".to_string()),
+    ext: Some(Box::new(serde_json::json!({
+        "vendor_field": "custom_value",
+        "internal_id": 12345,
+        "tracking_data": {
+            "campaign": "summer_sale"
+        }
+    }))),
+    ..Default::default()
+};
+
+// Serialize to JSON
+let json = serde_json::to_string(&ad)?;
+```
+
+**Using custom typed extensions:**
+
+```rust
+use iab_specs::adcom::media::Ad;
+use serde::{Deserialize, Serialize};
+
+// Define your custom extension type
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
+struct MyAdExtension {
+    campaign_id: String,
+    internal_tracking: i64,
+    priority: u8,
+}
+
+// Use your custom type for compile-time type safety
+let ad: Ad<MyAdExtension> = Ad {
+    id: Some("ad456".to_string()),
+    ext: Some(Box::new(MyAdExtension {
+        campaign_id: "camp_123".to_string(),
+        internal_tracking: 999,
+        priority: 5,
+    })),
+    ..Default::default()
+};
+
+// Type-safe access to extension fields
+if let Some(ext) = &ad.ext {
+    println!("Campaign: {}", ext.campaign_id);
+    println!("Priority: {}", ext.priority);
+}
+```
+
+**No extensions needed:**
+
+```rust
+use iab_specs::adcom::media::Ad;
+
+// Use unit type () when you don't need extensions
+let ad: Ad<()> = Ad {
+    id: Some("ad789".to_string()),
+    ext: None,
+    ..Default::default()
+};
+```
+
+**Applies to these AdCOM types:**
+- `Ad` - Media objects
+- `Context` - Context objects (DistributionChannel, Publisher, Content, etc.)
+- `Placement` - Placement objects
+
+For complete documentation and examples, see the [`Extension` trait documentation](https://docs.rs/iab-specs/latest/iab_specs/trait.Extension.html).
+
 ### OpenRTB 2.5 and 2.6
 
 OpenRTB 2.5 and 2.6 are fully implemented with complete bid request/response objects.
@@ -278,8 +363,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 OpenRTB 3.0 introduces a layered architecture with explicit versioning and supply chain transparency as a first-class feature:
 
 ```rust
-use iab_specs::openrtb::v3::{Openrtb, Request, Response, Item, Bid, Seatbid};
-use iab_specs::openrtb::v3::{Source, SupplyChain, SupplyChainNode};
+use iab_specs::openrtb::v30::{Openrtb, Request, Response, Item, Bid, Seatbid};
+use iab_specs::openrtb::v30::{Source, SupplyChain, SupplyChainNode};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create a bid request with supply chain transparency
@@ -510,7 +595,7 @@ Check code quality with clippy:
 
 ```bash
 ./check.sh --all-features                           # Check all features
-./check.sh --no-default-features --features openrtb_3  # Check specific feature
+./check.sh --no-default-features --features openrtb_30  # Check specific feature
 ```
 
 ### Run Tests
@@ -520,7 +605,7 @@ Run tests with configurable features:
 ```bash
 ./test.sh                                           # Test with default features
 ./test.sh --all-features                            # Test all features
-./test.sh --no-default-features --features openrtb_3   # Test specific feature
+./test.sh --no-default-features --features openrtb_30   # Test specific feature
 ./test.sh --features openrtb_25,ads_txt             # Test multiple features
 ```
 
@@ -532,7 +617,7 @@ Generate code coverage reports:
 ./coverage.sh --html --all-features                 # HTML report (opens in browser)
 ./coverage.sh --text --all-features                 # Text summary
 ./coverage.sh --lcov --all-features --check-thresholds  # CI-style with 80% threshold
-./coverage.sh --no-default-features --features openrtb_3  # Coverage for specific feature
+./coverage.sh --no-default-features --features openrtb_30  # Coverage for specific feature
 ```
 
 All scripts support `--help` for more options.

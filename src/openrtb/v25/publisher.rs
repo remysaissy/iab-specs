@@ -1,3 +1,4 @@
+use crate::Extension;
 /// OpenRTB 2.5 Publisher Object
 ///
 /// This module implements the Publisher object for inventory suppliers.
@@ -14,21 +15,26 @@ fn default_cattax() -> i32 {
 /// A `Publisher` object describes the publisher of the media in which the ad will be displayed.
 /// The publisher is typically the seller in an RTB transaction.
 ///
+/// # Generic Parameters
+///
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+///
 /// # Example
 ///
 /// ```
 /// use iab_specs::openrtb::v25::Publisher;
 ///
-/// let publisher = Publisher {
-///     id: Some("pub123".to_string()),
-///     name: Some("Publisher Inc".to_string()),
-///     domain: Some("publisher.com".to_string()),
-///     ..Default::default()
-/// };
+/// let publisher = Publisher::builder()
+///     .id(Some("pub123".to_string()))
+///     .name(Some("Publisher Inc".to_string()))
+///     .domain(Some("publisher.com".to_string()))
+///     .build()
+///     .unwrap();
 /// ```
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, PartialEq)]
-#[builder(build_fn(error = "crate::Error"))]
-pub struct Publisher {
+#[builder(build_fn(error = "crate::Error"), default)]
+#[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
+pub struct Publisher<Ext: Extension = serde_json::Value> {
     /// Exchange-specific publisher ID.
     /// This ID maps to the `seller_id` in the ads.txt specification.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -61,10 +67,17 @@ pub struct Publisher {
     /// Extension object for exchange-specific extensions.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub ext: Option<serde_json::Value>,
+    pub ext: Option<Box<Ext>>,
 }
 
-impl Default for Publisher {
+impl Publisher {
+    /// Convenience method to create a new instance using the builder pattern.
+    pub fn builder() -> PublisherBuilder {
+        PublisherBuilder::create_empty()
+    }
+}
+
+impl<Ext: Extension> Default for Publisher<Ext> {
     fn default() -> Self {
         Self {
             id: None,
@@ -83,12 +96,12 @@ mod tests {
 
     #[test]
     fn test_publisher_creation() {
-        let publisher = Publisher {
-            id: Some("pub123".to_string()),
-            name: Some("Publisher Inc".to_string()),
-            domain: Some("publisher.com".to_string()),
-            ..Default::default()
-        };
+        let publisher = Publisher::builder()
+            .id(Some("pub123".to_string()))
+            .name(Some("Publisher Inc".to_string()))
+            .domain(Some("publisher.com".to_string()))
+            .build()
+            .unwrap();
 
         assert_eq!(publisher.id, Some("pub123".to_string()));
         assert_eq!(publisher.name, Some("Publisher Inc".to_string()));
@@ -98,22 +111,22 @@ mod tests {
 
     #[test]
     fn test_publisher_with_categories() {
-        let publisher = Publisher {
-            id: Some("pub456".to_string()),
-            cat: Some(vec!["IAB1".to_string(), "IAB2".to_string()]),
-            ..Default::default()
-        };
+        let publisher = Publisher::builder()
+            .id(Some("pub456".to_string()))
+            .cat(Some(vec!["IAB1".to_string(), "IAB2".to_string()]))
+            .build()
+            .unwrap();
 
         assert_eq!(publisher.cat.as_ref().unwrap().len(), 2);
     }
 
     #[test]
     fn test_publisher_serialization() {
-        let publisher = Publisher {
-            id: Some("pub123".to_string()),
-            name: Some("Publisher Inc".to_string()),
-            ..Default::default()
-        };
+        let publisher = Publisher::builder()
+            .id(Some("pub123".to_string()))
+            .name(Some("Publisher Inc".to_string()))
+            .build()
+            .unwrap();
 
         let json = serde_json::to_string(&publisher).unwrap();
         assert!(json.contains("\"id\":\"pub123\""));

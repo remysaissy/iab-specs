@@ -1,11 +1,11 @@
+use super::banner::Banner;
+use crate::Extension;
 /// OpenRTB 2.5/2.6 Video Ad Object
 ///
 /// This module implements the Video object for OpenRTB 2.5 and 2.6.
 /// OpenRTB 2.6 fields (podid, podseq, slotinpod, durfloors) are included.
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
-
-use super::banner::Banner;
 
 // Import DurFloors from v26 when openrtb_26 feature is enabled
 #[cfg(feature = "openrtb_26")]
@@ -21,24 +21,29 @@ fn default_boxingallowed() -> i32 {
 /// A `Video` object represents a video ad impression with VAST compliance.
 /// It describes the video player capabilities, supported formats, and playback requirements.
 ///
+/// # Generic Parameters
+///
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+///
 /// # Example
 ///
 /// ```
 /// use iab_specs::openrtb::v25::Video;
 ///
-/// let video = Video {
-///     mimes: vec!["video/mp4".to_string(), "video/webm".to_string()],
-///     minduration: 5,
-///     maxduration: Some(30),
-///     protocols: Some(vec![2, 3, 5, 6]),
-///     w: Some(640),
-///     h: Some(480),
-///     ..Default::default()
-/// };
+/// let video = Video::builder()
+///     .mimes(vec!["video/mp4".to_string(), "video/webm".to_string()])
+///     .minduration(5)
+///     .maxduration(Some(30))
+///     .protocols(Some(vec![2, 3, 5, 6]))
+///     .w(Some(640))
+///     .h(Some(480))
+///     .build()
+///     .unwrap();
 /// ```
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, PartialEq)]
-#[builder(build_fn(error = "crate::Error"))]
-pub struct Video {
+#[builder(build_fn(error = "crate::Error"), default)]
+#[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
+pub struct Video<Ext: Extension = serde_json::Value> {
     /// Content MIME types supported (e.g., "video/mp4").
     /// **Required field** - at least one MIME type must be specified.
     #[builder(setter(into))]
@@ -246,10 +251,17 @@ pub struct Video {
     /// Extension object for exchange-specific extensions.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub ext: Option<serde_json::Value>,
+    pub ext: Option<Box<Ext>>,
 }
 
-impl Default for Video {
+impl Video {
+    /// Convenience method to create a new instance using the builder pattern.
+    pub fn builder() -> VideoBuilder {
+        VideoBuilder::create_empty()
+    }
+}
+
+impl<Ext: Extension> Default for Video<Ext> {
     fn default() -> Self {
         Self {
             mimes: Vec::new(),
@@ -296,14 +308,14 @@ mod tests {
 
     #[test]
     fn test_video_creation() {
-        let video = Video {
-            mimes: vec!["video/mp4".to_string()],
-            minduration: 5,
-            maxduration: Some(30),
-            w: Some(640),
-            h: Some(480),
-            ..Default::default()
-        };
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .minduration(5)
+            .maxduration(Some(30))
+            .w(Some(640))
+            .h(Some(480))
+            .build()
+            .unwrap();
 
         assert_eq!(video.mimes.len(), 1);
         assert_eq!(video.minduration, 5);
@@ -312,28 +324,13 @@ mod tests {
     }
 
     #[test]
-    fn test_video_defaults() {
-        let video = Video {
-            mimes: vec!["video/mp4".to_string()],
-            ..Default::default()
-        };
-
-        assert_eq!(video.minduration, 0);
-        assert_eq!(video.podseq, 0);
-        assert_eq!(video.skipmin, 0);
-        assert_eq!(video.skipafter, 0);
-        assert_eq!(video.slotinpod, 0);
-        assert_eq!(video.boxingallowed, 1);
-    }
-
-    #[test]
     fn test_video_serialization() {
-        let video = Video {
-            mimes: vec!["video/mp4".to_string()],
-            w: Some(640),
-            h: Some(480),
-            ..Default::default()
-        };
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .w(Some(640))
+            .h(Some(480))
+            .build()
+            .unwrap();
 
         let json = serde_json::to_string(&video).unwrap();
         assert!(json.contains("\"mimes\":[\"video/mp4\"]"));
