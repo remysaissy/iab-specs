@@ -106,29 +106,25 @@ use iab_specs::openrtb::v25::{BidRequest, Imp, Banner, Device};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create a bid request with a 300x250 banner impression
-    let request = BidRequest {
-        id: "req-12345".to_string(),
-        imp: vec![
-            Imp {
-                id: "imp1".to_string(),
-                banner: Some(Banner {
-                    w: Some(300),
-                    h: Some(250),
-                    ..Default::default()
-                }),
-                bidfloor: Some(0.50), // $0.50 CPM floor
-                bidfloorcur: Some("USD".to_string()),
-                ..Default::default()
-            }
-        ],
-        device: Some(Device {
-            ua: Some("Mozilla/5.0...".to_string()),
-            ip: Some("192.168.1.1".to_string()),
-            ..Default::default()
-        }),
-        tmax: Some(100), // 100ms timeout
-        ..Default::default()
-    };
+    let request = BidRequest::builder()
+        .id("req-12345".to_string())
+        .imp(vec![
+            Imp::builder()
+                .id("imp1".to_string())
+                .banner(Some(Banner::builder()
+                    .w(Some(300))
+                    .h(Some(250))
+                    .build()?))
+                .bidfloor(Some(0.50)) // $0.50 CPM floor
+                .bidfloorcur(Some("USD".to_string()))
+                .build()?
+        ])
+        .device(Some(Device::builder()
+            .ua(Some("Mozilla/5.0...".to_string()))
+            .ip(Some("192.168.1.1".to_string()))
+            .build()?))
+        .tmax(Some(100)) // 100ms timeout
+        .build()?;
 
     // Serialize to JSON
     let json = serde_json::to_string_pretty(&request)?;
@@ -147,15 +143,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 For more ergonomic construction, use the builder pattern:
 
 ```rust
-use iab_specs::openrtb::v25::{BidRequestBuilder, ImpBuilder, BannerBuilder, DeviceBuilder};
+use iab_specs::openrtb::v25::{BidRequest, Imp, Banner, Device};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let request = BidRequestBuilder::default()
+    let request = BidRequest::builder()
         .id("req-12345")
         .imp(vec![
-            ImpBuilder::default()
+            Imp::builder()
                 .id("imp1")
-                .banner(Some(BannerBuilder::default()
+                .banner(Some(Banner::builder()
                     .w(Some(300))
                     .h(Some(250))
                     .build()?))
@@ -163,7 +159,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .bidfloorcur(Some("USD".to_string()))
                 .build()?
         ])
-        .device(Some(DeviceBuilder::default()
+        .device(Some(Device::builder()
             .ua(Some("Mozilla/5.0...".to_string()))
             .ip(Some("192.168.1.1".to_string()))
             .build()?))
@@ -211,77 +207,97 @@ The `Extension` trait provides a flexible mechanism for adding custom fields to 
 - Thread-safe (Send + Sync)
 - Serialization/deserialization support
 
+**Types Supporting Extensions:**
+
+The Extension trait is used throughout the crate on many types:
+- **AdCOM types**: `Ad`, `Placement`, `DistributionChannel`, `Site`, `App`, `User`, `Device`, `Content`, `Publisher`, `Geo`, `Segment`, `Data`, `Regs`, and many more
+- **OpenRTB 2.5/2.6 types**: `BidRequest`, `BidResponse`, `Imp`, `Banner`, `Video`, `Audio`, `Site`, `App`, `Device`, `User`, `Geo`, `Publisher`, `Content`, `Source`, `SeatBid`, `Bid`, and many more
+- **OpenRTB 3.0 types**: `Request`, `Response`, `Item`, `Bid`, `SeatBid`, `Source`, `SupplyChain`, `SupplyChainNode`, `Deal`, `Metric`, and many more
+
 **Using default JSON extensions:**
 
 ```rust
 use iab_specs::adcom::media::Ad;
+# use std::error::Error;
+# fn main() -> Result<(), Box<dyn Error>> {
 
 // Use serde_json::Value for flexible, untyped extensions
-let ad: Ad = Ad {
-    id: Some("ad123".to_string()),
-    ext: Some(Box::new(serde_json::json!({
+let ad = Ad::builder()
+    .id(Some("ad123".to_string()))
+    .ext(Some(Box::new(serde_json::json!({
         "vendor_field": "custom_value",
         "internal_id": 12345,
         "tracking_data": {
             "campaign": "summer_sale"
         }
-    }))),
-    ..Default::default()
-};
+    }))))
+    .build()?;
 
 // Serialize to JSON
 let json = serde_json::to_string(&ad)?;
+# Ok(())
+# }
 ```
 
 **Using custom typed extensions:**
 
 ```rust
-use iab_specs::adcom::media::Ad;
+use iab_specs::adcom::media::{Ad, AdBuilder};
 use serde::{Deserialize, Serialize};
+use derive_builder::Builder;
+# use std::error::Error;
+# fn main() -> Result<(), Box<dyn Error>> {
 
-// Define your custom extension type
-#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
+// Define your custom extension type with Builder support
+#[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 struct MyAdExtension {
     campaign_id: String,
     internal_tracking: i64,
     priority: u8,
 }
 
-// Use your custom type for compile-time type safety
-let ad: Ad<MyAdExtension> = Ad {
-    id: Some("ad456".to_string()),
-    ext: Some(Box::new(MyAdExtension {
-        campaign_id: "camp_123".to_string(),
-        internal_tracking: 999,
-        priority: 5,
-    })),
-    ..Default::default()
-};
+impl MyAdExtension {
+    pub fn builder() -> MyAdExtensionBuilder {
+        MyAdExtensionBuilder::create_empty()
+    }
+}
+
+// Create extension using builder pattern
+let my_ext = MyAdExtension::builder()
+    .campaign_id("camp_123".to_string())
+    .internal_tracking(999)
+    .priority(5)
+    .build()?;
+
+// Use your custom type for compile-time type safety (use AdBuilder with type parameter)
+let ad = AdBuilder::<MyAdExtension>::default()
+    .id(Some("ad456".to_string()))
+    .ext(Some(Box::new(my_ext)))
+    .build()?;
 
 // Type-safe access to extension fields
 if let Some(ext) = &ad.ext {
     println!("Campaign: {}", ext.campaign_id);
     println!("Priority: {}", ext.priority);
 }
+# Ok(())
+# }
 ```
 
 **No extensions needed:**
 
 ```rust
 use iab_specs::adcom::media::Ad;
+# use std::error::Error;
+# fn main() -> Result<(), Box<dyn Error>> {
 
-// Use unit type () when you don't need extensions
-let ad: Ad<()> = Ad {
-    id: Some("ad789".to_string()),
-    ext: None,
-    ..Default::default()
-};
+// Simply omit the ext field when you don't need extensions
+let ad = Ad::builder()
+    .id(Some("ad789".to_string()))
+    .build()?;
+# Ok(())
+# }
 ```
-
-**Applies to these AdCOM types:**
-- `Ad` - Media objects
-- `Context` - Context objects (DistributionChannel, Publisher, Content, etc.)
-- `Placement` - Placement objects
 
 For complete documentation and examples, see the [`Extension` trait documentation](https://docs.rs/iab-specs/latest/iab_specs/trait.Extension.html).
 
@@ -326,34 +342,31 @@ use iab_specs::openrtb::v26::{Video, Qty, DurFloors};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // CTV ad pod with duration-based pricing
-    let video = Video {
-        mimes: vec!["video/mp4".to_string()],
-        minduration: 15,
-        maxduration: Some(30),
-        protocols: Some(vec![7]), // VAST 4.0
+    let video = Video::builder()
+        .mimes(vec!["video/mp4".to_string()])
+        .minduration(15)
+        .maxduration(Some(30))
+        .protocols(Some(vec![7])) // VAST 4.0
         // Ad pod configuration
-        podid: Some("pod-123".to_string()),
-        podseq: 0, // First ad in pod
-        slotinpod: 1, // Guaranteed first position
+        .podid(Some("pod-123".to_string()))
+        .podseq(0) // First ad in pod
+        .slotinpod(1) // Guaranteed first position
         // Duration-based floor pricing
-        durfloors: Some(vec![
-            DurFloors {
-                minduration: Some(15),
-                maxduration: Some(30),
-                bidfloor: Some(5.00), // $5 CPM for 15-30s ads
-                bidfloorcur: Some("USD".to_string()),
-                ..Default::default()
-            },
-        ]),
-        ..Default::default()
-    };
+        .durfloors(Some(vec![
+            DurFloors::builder()
+                .minduration(Some(15))
+                .maxduration(Some(30))
+                .bidfloor(Some(5.00)) // $5 CPM for 15-30s ads
+                .bidfloorcur(Some("USD".to_string()))
+                .build()?,
+        ]))
+        .build()?;
 
     // DOOH impression with multiplier
-    let qty = Qty {
-        multiplier: Some(150.0), // 150 people viewing
-        source: Some("venue_measurement".to_string()),
-        ..Default::default()
-    };
+    let qty = Qty::builder()
+        .multiplier(Some(150.0)) // 150 people viewing
+        .source(Some("venue_measurement".to_string()))
+        .build()?;
     Ok(())
 }
 ```
@@ -368,73 +381,64 @@ use iab_specs::openrtb::v30::{Source, SupplyChain, SupplyChainNode};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create a bid request with supply chain transparency
-    let request = Openrtb {
-        ver: "3.0".to_string(),
-        domainspec: "adcom".to_string(),
-        domainver: "1.0".to_string(),
-        request: Some(Request {
-            id: "req-123".to_string(),
-            tmax: Some(100),
-            at: Some(2), // Second price auction
-            cur: Some(vec!["USD".to_string()]),
-            item: vec![Item {
-                id: "item1".to_string(),
-                qty: Some(1),
-                flr: Some(1.50), // Floor price
-                flrcur: Some("USD".to_string()),
-                ..Default::default()
-            }],
-            source: Some(Source {
-                tid: Some("txn-456".to_string()),
-                schain: Some(SupplyChain {
-                    complete: 1,
-                    nodes: vec![
-                        SupplyChainNode {
-                            asi: "publisher.com".to_string(),
-                            sid: "pub-123".to_string(),
-                            hp: Some(1), // Payment recipient
-                            ..Default::default()
-                        },
-                        SupplyChainNode {
-                            asi: "exchange.com".to_string(),
-                            sid: "exch-456".to_string(),
-                            hp: Some(1),
-                            ..Default::default()
-                        },
-                    ],
-                    ver: "1.0".to_string(),
-                    ..Default::default()
-                }),
-                ..Default::default()
-            }),
-            ..Default::default()
-        }),
-        response: None,
-    };
+    let request = Openrtb::builder()
+        .ver("3.0".to_string())
+        .domainspec("adcom".to_string())
+        .domainver("1.0".to_string())
+        .request(Some(Request::builder()
+            .id("req-123".to_string())
+            .tmax(Some(100))
+            .at(Some(2)) // Second price auction
+            .cur(Some(vec!["USD".to_string()]))
+            .item(vec![Item::builder()
+                .id("item1".to_string())
+                .qty(Some(1))
+                .flr(Some(1.50)) // Floor price
+                .flrcur(Some("USD".to_string()))
+                .build()?])
+            .source(Some(Source::builder()
+                .tid(Some("txn-456".to_string()))
+                .schain(Some(SupplyChain::builder()
+                    .complete(1)
+                    .nodes(vec![
+                        SupplyChainNode::builder()
+                            .asi("publisher.com".to_string())
+                            .sid("pub-123".to_string())
+                            .hp(Some(1)) // Payment recipient
+                            .build()?,
+                        SupplyChainNode::builder()
+                            .asi("exchange.com".to_string())
+                            .sid("exch-456".to_string())
+                            .hp(Some(1))
+                            .build()?,
+                    ])
+                    .ver("1.0".to_string())
+                    .build()?))
+                .build()?))
+            .build()?))
+        .response(None)
+        .build()?;
 
     // Create a bid response
-    let response = Openrtb {
-        ver: "3.0".to_string(),
-        domainspec: "adcom".to_string(),
-        domainver: "1.0".to_string(),
-        request: None,
-        response: Some(Response {
-            id: "req-123".to_string(),
-            cur: Some("USD".to_string()),
-            seatbid: vec![Seatbid {
-                seat: Some("seat-1".to_string()),
-                bid: vec![Bid {
-                    id: "bid-1".to_string(),
-                    item: "item1".to_string(), // References item ID
-                    price: 2.50,
-                    nurl: Some("https://win.example.com/?price=${AUCTION_PRICE}".to_string()),
-                    ..Default::default()
-                }],
-                ..Default::default()
-            }],
-            ..Default::default()
-        }),
-    };
+    let response = Openrtb::builder()
+        .ver("3.0".to_string())
+        .domainspec("adcom".to_string())
+        .domainver("1.0".to_string())
+        .request(None)
+        .response(Some(Response::builder()
+            .id("req-123".to_string())
+            .cur(Some("USD".to_string()))
+            .seatbid(vec![Seatbid::builder()
+                .seat(Some("seat-1".to_string()))
+                .bid(vec![Bid::builder()
+                    .id("bid-1".to_string())
+                    .item("item1".to_string()) // References item ID
+                    .price(2.50)
+                    .nurl(Some("https://win.example.com/?price=${AUCTION_PRICE}".to_string()))
+                    .build()?])
+                .build()?])
+            .build()?))
+        .build()?;
 
     Ok(())
 }
