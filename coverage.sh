@@ -39,7 +39,11 @@ Options:
     --text                      Show coverage summary in terminal
     --all                       Generate all formats
     --clean                     Clean coverage artifacts before running
-    --check-thresholds          Enforce 80% minimum coverage for lines, regions, and functions
+    --check-thresholds          Enforce minimum coverage for lines, regions, and functions
+    --threshold <value>         Set all coverage thresholds to the same value (default: 80)
+    --threshold-lines <value>   Set line coverage threshold (default: 80)
+    --threshold-regions <value> Set region coverage threshold (default: 80)
+    --threshold-functions <value> Set function coverage threshold (default: 80)
     --no-default-features       Disable default features (like cargo --no-default-features)
     --features <name>           Enable specific feature(s) - can be comma-separated
     --all-features              Enable all features during coverage
@@ -51,22 +55,30 @@ Examples:
     $0 --lcov                                   # Generate lcov.info
     $0 --text                                   # Show text summary
     $0 --all                                    # Generate all formats
-    $0 --check-thresholds                       # Check coverage meets 80% thresholds
+    $0 --check-thresholds                       # Check coverage meets 80% thresholds (default)
+    $0 --check-thresholds --threshold 90        # Check coverage meets 90% thresholds
+    $0 --check-thresholds --threshold-lines 85  # Check line coverage meets 85%
+    $0 --check-thresholds --threshold-lines 85 --threshold-regions 80 --threshold-functions 90
+                                                # Check different thresholds for each metric
     $0 --all-features                           # Generate report with all features enabled
     $0 --no-default-features                    # Generate report with no features
-    $0 --no-default-features --features ads_txt # Generate report with only ads_txt
-    $0 --features openrtb_25,ads_txt            # Generate report with multiple features
-    $0 --no-default-features --features openrtb_30 --check-thresholds
-                                                # Check coverage for openrtb_30 only
+    $0 --no-default-features --features feat1   # Generate report with only feat1
+    $0 --features feat1,feat2                   # Generate report with multiple features
+    $0 --no-default-features --features feat1 --check-thresholds
+                                                # Check coverage for feat1 only
 
 Requirements:
   - cargo-llvm-cov must be installed (cargo install cargo-llvm-cov)
 
 Coverage Thresholds:
-  When --check-thresholds is used, the script will fail if:
-  - Line coverage < 80%
-  - Region coverage < 80%
-  - Function coverage < 80%
+  When --check-thresholds is used, the script will fail if coverage is below the thresholds.
+  Default threshold for all metrics is 80%.
+
+  You can customize thresholds using:
+  - --threshold <value>: Set all thresholds to the same value
+  - --threshold-lines <value>: Set line coverage threshold
+  - --threshold-regions <value>: Set region coverage threshold
+  - --threshold-functions <value>: Set function coverage threshold
 
 EOF
 }
@@ -135,6 +147,9 @@ main() {
     local threshold_flags=""
     local feature_flags=""
     local no_default_features=false
+    local threshold_lines=80
+    local threshold_regions=80
+    local threshold_functions=80
 
     # Parse arguments
     if [ $# -eq 0 ]; then
@@ -165,6 +180,40 @@ main() {
                 --check-thresholds)
                     check_thresholds=true
                     shift
+                    ;;
+                --threshold)
+                    if [ $# -lt 2 ]; then
+                        print_error "--threshold requires a value"
+                        exit 1
+                    fi
+                    threshold_lines="$2"
+                    threshold_regions="$2"
+                    threshold_functions="$2"
+                    shift 2
+                    ;;
+                --threshold-lines)
+                    if [ $# -lt 2 ]; then
+                        print_error "--threshold-lines requires a value"
+                        exit 1
+                    fi
+                    threshold_lines="$2"
+                    shift 2
+                    ;;
+                --threshold-regions)
+                    if [ $# -lt 2 ]; then
+                        print_error "--threshold-regions requires a value"
+                        exit 1
+                    fi
+                    threshold_regions="$2"
+                    shift 2
+                    ;;
+                --threshold-functions)
+                    if [ $# -lt 2 ]; then
+                        print_error "--threshold-functions requires a value"
+                        exit 1
+                    fi
+                    threshold_functions="$2"
+                    shift 2
                     ;;
                 --no-default-features)
                     no_default_features=true
@@ -213,8 +262,8 @@ main() {
 
     # Set threshold flags if requested
     if [ "$check_thresholds" = true ]; then
-        threshold_flags="--fail-under-lines 80 --fail-under-regions 80 --fail-under-functions 80"
-        print_info "Coverage thresholds enabled: Lines/Regions/Functions must be ≥ 80%"
+        threshold_flags="--fail-under-lines $threshold_lines --fail-under-regions $threshold_regions --fail-under-functions $threshold_functions"
+        print_info "Coverage thresholds enabled: Lines ≥ ${threshold_lines}%, Regions ≥ ${threshold_regions}%, Functions ≥ ${threshold_functions}%"
     fi
 
     # Display cargo flags if set
