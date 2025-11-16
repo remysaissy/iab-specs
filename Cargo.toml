@@ -35,6 +35,7 @@ adcom = []
 openrtb_25 = ["adcom"]
 openrtb_26 = ["openrtb_25"]
 openrtb_30 = ["adcom"]
+openrtb_native_12 = ["adcom"]
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
