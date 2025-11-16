@@ -44,9 +44,9 @@ Examples:
     $0                                          # Check with all features
     $0 --all-features                           # Check with all features
     $0 --no-default-features                    # Check with no features
-    $0 --no-default-features --features openrtb_30
-                                                # Check with only openrtb_30
-    $0 --features openrtb_25,ads_txt            # Check with multiple features
+    $0 --no-default-features --features my_feature
+                                                # Check with only my_feature
+    $0 --features feature1,feature2            # Check with multiple features
 
 Requirements:
   - clippy must be installed (rustup component add clippy)

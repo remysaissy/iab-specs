@@ -11,6 +11,7 @@
 /// - `openrtb_25`: Enables OpenRTB 2.5 support (automatically includes `adcom`)
 /// - `openrtb_26`: Enables OpenRTB 2.6 support (includes 2.5 and `adcom`)
 /// - `openrtb_30`: Enables OpenRTB 3.0 support (automatically includes `adcom`)
+/// - `openrtb_native_12`: Enables OpenRTB Native Ads 1.2 support (automatically includes `adcom`)
 ///
 /// ## Module Organization
 ///
@@ -18,6 +19,7 @@
 /// - `v25`: OpenRTB 2.5 specific types (enabled with `openrtb_25` feature)
 /// - `v26`: OpenRTB 2.6 specific types (enabled with `openrtb_26` feature)
 /// - `v30`: OpenRTB 3.0 specific types (enabled with `openrtb_30` feature)
+/// - `native`: OpenRTB Native Ads specification (enabled with `openrtb_native_12` feature)
 ///
 /// ## AdCOM Integration
 ///
@@ -38,8 +40,12 @@
 /// - OpenRTB 2.5: <https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf>
 /// - OpenRTB 2.6: <https://github.com/InteractiveAdvertisingBureau/openrtb2.x/blob/main/2.6.md>
 /// - OpenRTB 3.0: <https://github.com/InteractiveAdvertisingBureau/openrtb/blob/main/OpenRTB%20v3.0%20FINAL.md>
+/// - OpenRTB Native 1.2: <https://github.com/InteractiveAdvertisingBureau/Native-Ads/blob/main/OpenRTB-Native-Ads-Specification-Final-1.2.md>
 /// - AdCOM 1.0: <https://github.com/InteractiveAdvertisingBureau/AdCOM>
 pub mod common;
+
+#[cfg(feature = "openrtb_native_12")]
+pub mod native;
 
 #[cfg(feature = "openrtb_25")]
 pub mod v25;

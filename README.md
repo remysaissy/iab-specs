@@ -16,6 +16,7 @@ An unofficial Rust implementation of various IAB (Interactive Advertising Bureau
 - **[OpenRTB 2.5](https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf)** - Real-Time Bidding protocol
 - **[OpenRTB 2.6](https://github.com/InteractiveAdvertisingBureau/openrtb2.x/blob/main/2.6.md)** - Real-Time Bidding protocol with CTV/DOOH support
 - **[OpenRTB 3.0](https://github.com/InteractiveAdvertisingBureau/openrtb/blob/main/OpenRTB%20v3.0%20FINAL.md)** - Real-Time Bidding protocol with layered architecture
+- **[OpenRTB Native Ads 1.2](https://github.com/InteractiveAdvertisingBureau/Native-Ads/blob/main/OpenRTB-Native-Ads-Specification-Final-1.2.md)** - Native advertising specification
 - **[Ads.txt 1.1](https://iabtechlab.com/wp-content/uploads/2022/04/Ads.txt-1.1.pdf)** - Authorized Digital Sellers declaration for websites
 - **[App-ads.txt 1.0](https://iabtechlab.com/wp-content/uploads/2019/03/app-ads.txt-v1.0-final-.pdf)** - Authorized Digital Sellers declaration for mobile and CTV apps
 - **[Sellers.json 1.0](https://iabtechlab.com/wp-content/uploads/2019/07/Sellers.json_Final.pdf)** - Supply chain transparency
@@ -27,7 +28,7 @@ Add `iab-specs` to your `Cargo.toml` with the features you need:
 ```toml
 [dependencies]
 # Enable all specifications
-iab-specs = { version = "0.2", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "ads_txt", "app_ads_txt", "sellers_json"] }
+iab-specs = { version = "0.2", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json"] }
 
 # Or enable only what you need
 iab-specs = { version = "0.2", features = ["openrtb_30"] }
@@ -37,7 +38,7 @@ Or use cargo:
 
 ```bash
 # Enable all specifications
-cargo add iab-specs --features adcom,openrtb_25,openrtb_26,openrtb_30,ads_txt,app_ads_txt,sellers_json
+cargo add iab-specs --features adcom,openrtb_25,openrtb_26,openrtb_30,openrtb_native_12,ads_txt,app_ads_txt,sellers_json
 
 # Or enable only what you need
 cargo add iab-specs --features openrtb_30
@@ -53,6 +54,7 @@ The library uses cargo features to enable/disable specifications:
 - `openrtb_25` - OpenRTB 2.5 support (automatically includes `adcom`)
 - `openrtb_26` - OpenRTB 2.6 support (automatically includes `openrtb_25` and `adcom`)
 - `openrtb_30` - OpenRTB 3.0 support (automatically includes `adcom`)
+- `openrtb_native_12` - OpenRTB Native Ads 1.2 support (automatically includes `adcom`)
 - `ads_txt` - Ads.txt 1.1 support
 - `app_ads_txt` - App-ads.txt 1.0 support (automatically includes `ads_txt`)
 - `sellers_json` - Sellers.json 1.0 support
@@ -457,6 +459,128 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 - [Usage Guide](docs/USAGE_GUIDE_OPENRTB3.md) - Complete examples and patterns
 - [Best Practices](docs/BEST_PRACTICES_OPENRTB3.md) - Production guidelines
 
+### OpenRTB Native Ads 1.2
+
+Create and parse native ad requests and responses:
+
+```rust
+use iab_specs::openrtb::native::v12::{
+    NativeRequest, NativeResponse, Asset, AssetResponse,
+    Title, TitleResponse, Image, ImageResponse, Data, DataResponse, Link
+};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Create a native ad request
+    let request = NativeRequest::builder()
+        .ver(Some("1.2".to_string()))
+        .context(Some(1))      // Content-centric context
+        .plcmttype(Some(1))    // In-feed placement
+        .assets(vec![
+            // Title asset
+            Asset::builder()
+                .id(1)
+                .required(Some(1))
+                .title(Some(Title::builder()
+                    .len(90)  // Max 90 characters
+                    .build()?))
+                .build()?,
+            // Main image asset
+            Asset::builder()
+                .id(2)
+                .img(Some(Image::builder()
+                    .type_(Some(3))   // Main image
+                    .w(Some(1200))
+                    .h(Some(627))
+                    .build()?))
+                .build()?,
+            // Description data asset
+            Asset::builder()
+                .id(3)
+                .data(Some(Data::builder()
+                    .type_(2)         // Description
+                    .len(Some(140))
+                    .build()?))
+                .build()?,
+        ])
+        .build()?;
+
+    // Parse a native ad response
+    let response = NativeResponse::builder()
+        .ver(Some("1.2".to_string()))
+        .assets(vec![
+            AssetResponse::builder()
+                .id(1)
+                .title(Some(TitleResponse::builder()
+                    .text("Amazing Product - Limited Offer!".to_string())
+                    .build()?))
+                .build()?,
+            AssetResponse::builder()
+                .id(2)
+                .img(Some(ImageResponse::builder()
+                    .url("https://cdn.example.com/product.jpg".to_string())
+                    .w(Some(1200))
+                    .h(Some(627))
+                    .build()?))
+                .build()?,
+            AssetResponse::builder()
+                .id(3)
+                .data(Some(DataResponse::builder()
+                    .value("High-quality product with excellent reviews".to_string())
+                    .build()?))
+                .build()?,
+        ])
+        .link(Link::builder()
+            .url("https://example.com/product?utm_source=native".to_string())
+            .clicktrackers(Some(vec![
+                "https://tracker.com/click".to_string(),
+            ]))
+            .build()?)
+        .build()?;
+
+    // Serialize to JSON for embedding in OpenRTB 2.5 request
+    let native_json = serde_json::to_string(&request)?;
+
+    Ok(())
+}
+```
+
+**Integration with OpenRTB 2.5:**
+
+```rust
+use iab_specs::openrtb::v25::{BidRequest, Imp, Native};
+use iab_specs::openrtb::native::v12::NativeRequest;
+
+// Create native request
+let native_req = NativeRequest::builder()
+    .ver(Some("1.2".to_string()))
+    .assets(/* ... */)
+    .build()?;
+
+// Serialize to JSON string
+let native_json = serde_json::to_string(&native_req)?;
+
+// Embed in OpenRTB bid request
+let bid_request = BidRequest::builder()
+    .id("req-123".to_string())
+    .imp(vec![
+        Imp::builder()
+            .id("imp1".to_string())
+            .native(Some(Native::builder()
+                .request(native_json)
+                .ver(Some("1.2".to_string()))
+                .build()?))
+            .build()?
+    ])
+    .build()?;
+```
+
+**Key Features:**
+- Asset-based composition (title, image, video, data)
+- Event tracking with impression and click support
+- Multi-placement support for feed-based layouts
+- DCO (Dynamic Creative Optimization) URL support
+- AdCOM integration for standardized enumerations
+
 ### Ads.txt
 
 Parse and generate ads.txt files:
@@ -635,6 +759,7 @@ All scripts support `--help` for more options.
 - [x] OpenRTB 2.5
 - [x] OpenRTB 2.6
 - [x] OpenRTB 3.0
+- [x] OpenRTB Native Ads 1.2
 - [ ] Additional IAB specifications (contributions welcome!)
 
 ## Contributing

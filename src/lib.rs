@@ -1,10 +1,11 @@
 //! ## Module Organization
 //!
 //! - [`adcom`] - AdCOM 1.0 enumerations (device types, auction types, protocols, etc.)
-//! - [`openrtb`] - OpenRTB 2.5, 2.6, and 3.0 bid request/response objects
+//! - [`openrtb`] - OpenRTB 2.5, 2.6, 3.0, and Native Ads 1.2 specifications
 //!   - [`openrtb::v25`] - OpenRTB 2.5 specification
 //!   - [`openrtb::v26`] - OpenRTB 2.6 with CTV and DOOH support
 //!   - [`openrtb::v30`] - OpenRTB 3.0 with layered architecture
+//!   - [`openrtb::native`] - OpenRTB Native Ads 1.2 specification
 //!   - [`openrtb::common`] - Common objects shared between versions
 //! - [`ads_txt`] - Ads.txt 1.1 parser and generator
 //! - [`app_ads_txt`] - App-ads.txt 1.0 parser and generator
