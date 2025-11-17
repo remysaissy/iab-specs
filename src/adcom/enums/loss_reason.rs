@@ -87,3 +87,86 @@ pub enum LossReason {
     /// Creative Filtered - Not Allowed in PMP Deal
     CreativeNotAllowedInPmp = 210,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_all_valid_values() {
+        // Test all valid LossReason values: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 101, 102, 103, 104, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210
+        let valid_values = [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 101, 102, 103, 104, 200, 201, 202, 203, 204,
+            205, 206, 207, 208, 209, 210,
+        ];
+        for value in valid_values {
+            let json = format!("{}", value);
+            let result: Result<LossReason, _> = serde_json::from_str(&json);
+            assert!(
+                result.is_ok(),
+                "Valid value {} should deserialize successfully",
+                value
+            );
+        }
+    }
+    #[test]
+    fn test_invalid_value_out_of_range() {
+        let json = "99";
+        let result: Result<LossReason, _> = serde_json::from_str(json);
+        assert!(
+            result.is_err(),
+            "Value 99 is out of range and should fail deserialization"
+        );
+    }
+    #[test]
+    fn test_invalid_value_negative() {
+        let json = "-1";
+        let result: Result<LossReason, _> = serde_json::from_str(json);
+        assert!(
+            result.is_err(),
+            "Negative values should fail deserialization"
+        );
+    }
+    #[test]
+    fn test_serialization_roundtrip() {
+        let values = [
+            LossReason::BidWon,
+            LossReason::InternalError,
+            LossReason::Expired,
+            LossReason::InvalidBidResponse,
+            LossReason::InvalidDealId,
+            LossReason::InvalidAuctionId,
+            LossReason::InvalidAdvertiserDomain,
+            LossReason::MissingMarkup,
+            LossReason::MissingCreativeId,
+            LossReason::MissingPrice,
+            LossReason::MissingCreativeApproval,
+            LossReason::BelowFloor,
+            LossReason::BelowDealFloor,
+            LossReason::LostToHigherBid,
+            LossReason::LostToPmp,
+            LossReason::SeatBlocked,
+            LossReason::CreativeFiltered,
+            LossReason::CreativePending,
+            LossReason::CreativeDisapproved,
+            LossReason::CreativeSizeNotAllowed,
+            LossReason::CreativeNotSecure,
+            LossReason::CreativeLanguageExcluded,
+            LossReason::CreativeCategoryExcluded,
+            LossReason::CreativeAttributeExcluded,
+            LossReason::CreativeAdTypeExcluded,
+            LossReason::CreativeAnimationTooLong,
+            LossReason::CreativeNotAllowedInPmp,
+        ];
+
+        for original in values {
+            let json = serde_json::to_string(&original).unwrap();
+            let deserialized: LossReason = serde_json::from_str(&json).unwrap();
+            assert_eq!(
+                original, deserialized,
+                "Serialization roundtrip failed for {:?}",
+                original
+            );
+        }
+    }
+}

@@ -89,3 +89,126 @@ impl DisplayPlacement {
         DisplayPlacementBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_display_placement_builder() {
+        let display = DisplayPlacement::builder()
+            .pos(Some(1))
+            .w(Some(300))
+            .h(Some(250))
+            .topframe(Some(0))
+            .build()
+            .unwrap();
+
+        assert_eq!(display.pos, Some(1));
+        assert_eq!(display.w, Some(300));
+        assert_eq!(display.h, Some(250));
+        assert_eq!(display.topframe, Some(0));
+    }
+
+    #[test]
+    fn test_display_placement_default() {
+        let display = DisplayPlacement::builder().build().unwrap();
+
+        assert!(display.pos.is_none());
+        assert!(display.w.is_none());
+        assert!(display.h.is_none());
+        assert!(display.instl.is_none());
+        assert!(display.displayfmt.is_none());
+        assert!(display.nativefmt.is_none());
+    }
+
+    #[test]
+    fn test_display_placement_interstitial() {
+        let display = DisplayPlacement::builder()
+            .instl(Some(1))
+            .w(Some(320))
+            .h(Some(480))
+            .build()
+            .unwrap();
+
+        assert_eq!(display.instl, Some(1));
+        assert_eq!(display.w, Some(320));
+        assert_eq!(display.h, Some(480));
+    }
+
+    #[test]
+    fn test_display_placement_with_mime_and_api() {
+        let display = DisplayPlacement::builder()
+            .mime(Some(vec![
+                "image/jpeg".to_string(),
+                "image/png".to_string(),
+            ]))
+            .api(Some(vec![1, 2, 5]))
+            .ctype(Some(vec![1, 2]))
+            .build()
+            .unwrap();
+
+        assert_eq!(
+            display.mime,
+            Some(vec!["image/jpeg".to_string(), "image/png".to_string()])
+        );
+        assert_eq!(display.api, Some(vec![1, 2, 5]));
+        assert_eq!(display.ctype, Some(vec![1, 2]));
+    }
+
+    #[test]
+    fn test_display_placement_with_amp() {
+        let display = DisplayPlacement::builder().ampren(Some(1)).build().unwrap();
+
+        assert_eq!(display.ampren, Some(1));
+    }
+
+    #[test]
+    fn test_display_placement_with_formats() {
+        let format1 = DisplayFormat::builder()
+            .w(Some(300))
+            .h(Some(250))
+            .build()
+            .unwrap();
+
+        let format2 = DisplayFormat::builder()
+            .w(Some(728))
+            .h(Some(90))
+            .build()
+            .unwrap();
+
+        let display = DisplayPlacement::builder()
+            .displayfmt(Some(vec![format1, format2]))
+            .build()
+            .unwrap();
+
+        assert!(display.displayfmt.is_some());
+        assert_eq!(display.displayfmt.as_ref().unwrap().len(), 2);
+    }
+
+    #[test]
+    fn test_display_placement_serialization() {
+        let display = DisplayPlacement::builder()
+            .pos(Some(1))
+            .w(Some(300))
+            .h(Some(250))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&display).unwrap();
+        assert!(json.contains("\"pos\":1"));
+        assert!(json.contains("\"w\":300"));
+        assert!(json.contains("\"h\":250"));
+    }
+
+    #[test]
+    fn test_display_placement_deserialization() {
+        let json = r#"{"pos":1,"w":300,"h":250,"instl":0}"#;
+        let display: DisplayPlacement = serde_json::from_str(json).unwrap();
+
+        assert_eq!(display.pos, Some(1));
+        assert_eq!(display.w, Some(300));
+        assert_eq!(display.h, Some(250));
+        assert_eq!(display.instl, Some(0));
+    }
+}

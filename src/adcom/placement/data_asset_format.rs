@@ -32,3 +32,51 @@ impl DataAssetFormat {
         DataAssetFormatBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_data_asset_format_builder() {
+        let data = DataAssetFormat::builder()
+            .type_(Some(1))
+            .len(Some(25))
+            .build()
+            .unwrap();
+
+        assert_eq!(data.type_, Some(1));
+        assert_eq!(data.len, Some(25));
+    }
+
+    #[test]
+    fn test_data_asset_format_default() {
+        let data = DataAssetFormat::builder().build().unwrap();
+
+        assert!(data.type_.is_none());
+        assert!(data.len.is_none());
+        assert!(data.ext.is_none());
+    }
+
+    #[test]
+    fn test_data_asset_format_serialization() {
+        let data = DataAssetFormat::builder()
+            .type_(Some(2))
+            .len(Some(140))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&data).unwrap();
+        assert!(json.contains("\"type_\":2"));
+        assert!(json.contains("\"len\":140"));
+    }
+
+    #[test]
+    fn test_data_asset_format_deserialization() {
+        let json = r#"{"type_":1,"len":25}"#;
+        let data: DataAssetFormat = serde_json::from_str(json).unwrap();
+
+        assert_eq!(data.type_, Some(1));
+        assert_eq!(data.len, Some(25));
+    }
+}

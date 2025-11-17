@@ -72,3 +72,98 @@ impl Video {
         VideoBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_video_builder() {
+        let video = Video::builder()
+            .mimes(Some(vec!["video/mp4".to_string()]))
+            .dur(Some(30))
+            .w(Some(1920))
+            .h(Some(1080))
+            .build()
+            .unwrap();
+
+        assert_eq!(video.mimes, Some(vec!["video/mp4".to_string()]));
+        assert_eq!(video.dur, Some(30));
+        assert_eq!(video.w, Some(1920));
+        assert_eq!(video.h, Some(1080));
+    }
+
+    #[test]
+    fn test_video_default() {
+        let video = Video::builder().build().unwrap();
+
+        assert!(video.mimes.is_none());
+        assert!(video.dur.is_none());
+        assert!(video.w.is_none());
+        assert!(video.h.is_none());
+    }
+
+    #[test]
+    fn test_video_with_protocols() {
+        let video = Video::builder()
+            .mimes(Some(vec!["video/mp4".to_string()]))
+            .protocols(Some(vec![2, 3, 5, 6]))
+            .build()
+            .unwrap();
+
+        assert_eq!(video.protocols, Some(vec![2, 3, 5, 6]));
+    }
+
+    #[test]
+    fn test_video_with_bitrate() {
+        let video = Video::builder()
+            .mimes(Some(vec!["video/webm".to_string()]))
+            .bitrate(Some(2500))
+            .build()
+            .unwrap();
+
+        assert_eq!(video.bitrate, Some(2500));
+    }
+
+    #[test]
+    fn test_video_serialization() {
+        let video = Video::builder()
+            .mimes(Some(vec![
+                "video/mp4".to_string(),
+                "video/webm".to_string(),
+            ]))
+            .dur(Some(15))
+            .w(Some(640))
+            .h(Some(480))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&video).unwrap();
+        assert!(json.contains("\"mimes\":[\"video/mp4\",\"video/webm\"]"));
+        assert!(json.contains("\"dur\":15"));
+        assert!(json.contains("\"w\":640"));
+    }
+
+    #[test]
+    fn test_video_deserialization() {
+        let json = r#"{"mimes":["video/mp4"],"dur":30,"w":1280,"h":720}"#;
+        let video: Video = serde_json::from_str(json).unwrap();
+
+        assert_eq!(video.mimes, Some(vec!["video/mp4".to_string()]));
+        assert_eq!(video.dur, Some(30));
+        assert_eq!(video.w, Some(1280));
+        assert_eq!(video.h, Some(720));
+    }
+
+    #[test]
+    fn test_video_with_vast() {
+        let video = Video::builder()
+            .mimes(Some(vec!["video/mp4".to_string()]))
+            .adm(Some("<VAST version=\"3.0\">...</VAST>".to_string()))
+            .build()
+            .unwrap();
+
+        assert!(video.adm.is_some());
+        assert!(video.adm.as_ref().unwrap().contains("<VAST"));
+    }
+}

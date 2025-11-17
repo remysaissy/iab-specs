@@ -105,3 +105,116 @@ impl AudioPlacement {
         AudioPlacementBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_audio_placement_builder() {
+        let audio = AudioPlacement::builder()
+            .delay(Some(0))
+            .feed(Some(1))
+            .mindur(Some(15))
+            .maxdur(Some(30))
+            .build()
+            .unwrap();
+
+        assert_eq!(audio.delay, Some(0));
+        assert_eq!(audio.feed, Some(1));
+        assert_eq!(audio.mindur, Some(15));
+        assert_eq!(audio.maxdur, Some(30));
+    }
+
+    #[test]
+    fn test_audio_placement_default() {
+        let audio = AudioPlacement::builder().build().unwrap();
+
+        assert!(audio.delay.is_none());
+        assert!(audio.skip.is_none());
+        assert!(audio.mindur.is_none());
+        assert!(audio.maxdur.is_none());
+        assert!(audio.mime.is_none());
+    }
+
+    #[test]
+    fn test_audio_placement_skippable() {
+        let audio = AudioPlacement::builder()
+            .skip(Some(1))
+            .skipmin(Some(5))
+            .skipafter(Some(5))
+            .build()
+            .unwrap();
+
+        assert_eq!(audio.skip, Some(1));
+        assert_eq!(audio.skipmin, Some(5));
+        assert_eq!(audio.skipafter, Some(5));
+    }
+
+    #[test]
+    fn test_audio_placement_duration() {
+        let audio = AudioPlacement::builder()
+            .mindur(Some(15))
+            .maxdur(Some(60))
+            .maxext(Some(120))
+            .build()
+            .unwrap();
+
+        assert_eq!(audio.mindur, Some(15));
+        assert_eq!(audio.maxdur, Some(60));
+        assert_eq!(audio.maxext, Some(120));
+    }
+
+    #[test]
+    fn test_audio_placement_bitrate() {
+        let audio = AudioPlacement::builder()
+            .minbitrate(Some(64))
+            .maxbitrate(Some(320))
+            .build()
+            .unwrap();
+
+        assert_eq!(audio.minbitrate, Some(64));
+        assert_eq!(audio.maxbitrate, Some(320));
+    }
+
+    #[test]
+    fn test_audio_placement_with_mime_and_api() {
+        let audio = AudioPlacement::builder()
+            .mime(Some(vec!["audio/mp3".to_string(), "audio/aac".to_string()]))
+            .api(Some(vec![1, 2]))
+            .build()
+            .unwrap();
+
+        assert_eq!(
+            audio.mime,
+            Some(vec!["audio/mp3".to_string(), "audio/aac".to_string()])
+        );
+        assert_eq!(audio.api, Some(vec![1, 2]));
+    }
+
+    #[test]
+    fn test_audio_placement_serialization() {
+        let audio = AudioPlacement::builder()
+            .delay(Some(0))
+            .mindur(Some(15))
+            .maxdur(Some(30))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&audio).unwrap();
+        assert!(json.contains("\"delay\":0"));
+        assert!(json.contains("\"mindur\":15"));
+        assert!(json.contains("\"maxdur\":30"));
+    }
+
+    #[test]
+    fn test_audio_placement_deserialization() {
+        let json = r#"{"delay":0,"mindur":15,"maxdur":30,"feed":1}"#;
+        let audio: AudioPlacement = serde_json::from_str(json).unwrap();
+
+        assert_eq!(audio.delay, Some(0));
+        assert_eq!(audio.mindur, Some(15));
+        assert_eq!(audio.maxdur, Some(30));
+        assert_eq!(audio.feed, Some(1));
+    }
+}

@@ -74,3 +74,123 @@ impl Placement {
         PlacementBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_placement_builder() {
+        let placement = Placement::builder()
+            .id(Some("placement123".to_string()))
+            .name(Some("Homepage Banner".to_string()))
+            .desc(Some("Main banner placement".to_string()))
+            .secure(Some(1))
+            .build()
+            .unwrap();
+
+        assert_eq!(placement.id, Some("placement123".to_string()));
+        assert_eq!(placement.name, Some("Homepage Banner".to_string()));
+        assert_eq!(placement.desc, Some("Main banner placement".to_string()));
+        assert_eq!(placement.secure, Some(1));
+    }
+
+    #[test]
+    fn test_placement_default() {
+        let placement = Placement::builder().build().unwrap();
+
+        assert!(placement.id.is_none());
+        assert!(placement.name.is_none());
+        assert!(placement.desc.is_none());
+        assert!(placement.secure.is_none());
+        assert!(placement.display.is_none());
+        assert!(placement.video.is_none());
+        assert!(placement.audio.is_none());
+    }
+
+    #[test]
+    fn test_placement_with_blocking_rules() {
+        let placement = Placement::builder()
+            .id(Some("p1".to_string()))
+            .bcat(Some(vec!["IAB25".to_string(), "IAB26".to_string()]))
+            .baddr(Some(vec!["advertiser.com".to_string()]))
+            .battr(Some(vec![1, 2, 3]))
+            .build()
+            .unwrap();
+
+        assert_eq!(
+            placement.bcat,
+            Some(vec!["IAB25".to_string(), "IAB26".to_string()])
+        );
+        assert_eq!(placement.baddr, Some(vec!["advertiser.com".to_string()]));
+        assert_eq!(placement.battr, Some(vec![1, 2, 3]));
+    }
+
+    #[test]
+    fn test_placement_with_display() {
+        let display = DisplayPlacement::builder().pos(Some(1)).build().unwrap();
+
+        let placement = Placement::builder()
+            .id(Some("p2".to_string()))
+            .display(Some(Box::new(display)))
+            .build()
+            .unwrap();
+
+        assert!(placement.display.is_some());
+        assert_eq!(placement.display.as_ref().unwrap().pos, Some(1));
+    }
+
+    #[test]
+    fn test_placement_with_video() {
+        let video = VideoPlacement::builder().ptype(Some(1)).build().unwrap();
+
+        let placement = Placement::builder()
+            .id(Some("p3".to_string()))
+            .video(Some(Box::new(video)))
+            .build()
+            .unwrap();
+
+        assert!(placement.video.is_some());
+        assert_eq!(placement.video.as_ref().unwrap().ptype, Some(1));
+    }
+
+    #[test]
+    fn test_placement_with_languages() {
+        let placement = Placement::builder()
+            .wlang(Some(vec![
+                "en".to_string(),
+                "es".to_string(),
+                "fr".to_string(),
+            ]))
+            .build()
+            .unwrap();
+
+        assert_eq!(
+            placement.wlang,
+            Some(vec!["en".to_string(), "es".to_string(), "fr".to_string()])
+        );
+    }
+
+    #[test]
+    fn test_placement_serialization() {
+        let placement = Placement::builder()
+            .id(Some("p4".to_string()))
+            .secure(Some(1))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&placement).unwrap();
+        assert!(json.contains("\"id\":\"p4\""));
+        assert!(json.contains("\"secure\":1"));
+    }
+
+    #[test]
+    fn test_placement_deserialization() {
+        let json = r#"{"id":"p5","name":"Test Placement","secure":1}"#;
+        let placement: Placement = serde_json::from_str(json).unwrap();
+
+        assert_eq!(placement.id, Some("p5".to_string()));
+        assert_eq!(placement.name, Some("Test Placement".to_string()));
+        assert_eq!(placement.secure, Some(1));
+    }
+}

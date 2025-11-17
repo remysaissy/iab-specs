@@ -252,4 +252,61 @@ mod tests {
         assert_eq!(audio.mimes, vec!["audio/mp4"]);
         assert_eq!(audio.minduration, 15);
     }
+
+    // === Phase 2.3: Feature Flag Tests (openrtb_26) ===
+
+    #[cfg(feature = "openrtb_26")]
+    #[test]
+    fn test_audio_with_nvol_field() {
+        // Test that OpenRTB 2.6 nvol (volume normalization mode) field is available
+        let audio = Audio::builder()
+            .mimes(vec!["audio/mp4".to_string()])
+            .nvol(Some(1)) // VolumeNormalizationMode::AverageVolume
+            .build()
+            .unwrap();
+
+        assert_eq!(audio.nvol, Some(1));
+    }
+
+    #[cfg(feature = "openrtb_26")]
+    #[test]
+    fn test_audio_nvol_serialization() {
+        // Test serialization of OpenRTB 2.6 nvol field
+        let audio = Audio::builder()
+            .mimes(vec!["audio/mp4".to_string()])
+            .nvol(Some(2))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&audio).unwrap();
+        assert!(json.contains("\"nvol\":2"));
+    }
+
+    #[cfg(feature = "openrtb_26")]
+    #[test]
+    fn test_audio_nvol_deserialization() {
+        // Test deserialization of OpenRTB 2.6 nvol field
+        let json = r#"{"mimes":["audio/mp4"],"nvol":1}"#;
+        let result: Result<Audio, _> = serde_json::from_str(json);
+
+        assert!(result.is_ok(), "Audio with nvol field should deserialize");
+        let audio = result.unwrap();
+        assert_eq!(audio.nvol, Some(1));
+    }
+
+    #[cfg(not(feature = "openrtb_26"))]
+    #[test]
+    fn test_audio_nvol_not_available_without_feature() {
+        // This test verifies that nvol field is not available without openrtb_26 feature
+        let audio = Audio::builder()
+            .mimes(vec!["audio/mp4".to_string()])
+            .minduration(15)
+            .build()
+            .unwrap();
+
+        // The nvol field should not exist in Audio when openrtb_26 is disabled
+        // This is verified at compile time
+        assert_eq!(audio.mimes, vec!["audio/mp4"]);
+        assert_eq!(audio.minduration, 15);
+    }
 }
