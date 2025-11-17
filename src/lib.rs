@@ -36,6 +36,8 @@
 //! **Using default JSON extensions:**
 //!
 //! ```
+//! #[cfg(feature = "adcom")]
+//! {
 //! use iab_specs::adcom::media::Ad;
 //! # use std::error::Error;
 //! # fn main() -> Result<(), Box<dyn Error>> {
@@ -49,11 +51,14 @@
 //!     .build()?;
 //! # Ok(())
 //! # }
+//! }
 //! ```
 //!
 //! **Using custom typed extensions:**
 //!
 //! ```
+//! #[cfg(feature = "adcom")]
+//! {
 //! use iab_specs::adcom::media::{Ad, AdBuilder};
 //! use serde::{Deserialize, Serialize};
 //! use derive_builder::Builder;
@@ -84,6 +89,7 @@
 //!     .build()?;
 //! # Ok(())
 //! # }
+//! }
 //! ```
 //!
 //! For complete documentation and more examples, see the [`Extension`] trait documentation.

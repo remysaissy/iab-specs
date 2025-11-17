@@ -25,6 +25,8 @@
 //! Use `serde_json::Value` for maximum flexibility when you don't need compile-time type safety:
 //!
 //! ```
+//! #[cfg(feature = "adcom")]
+//! {
 //! use iab_specs::adcom::media::Ad;
 //! # use std::error::Error;
 //! # fn main() -> Result<(), Box<dyn Error>> {
@@ -45,6 +47,7 @@
 //! let json = serde_json::to_string(&ad)?;
 //! # Ok(())
 //! # }
+//! }
 //! ```
 //!
 //! ## Pattern 2: Custom Typed Extensions (Type Safe)
@@ -52,6 +55,8 @@
 //! Define your own extension type for compile-time type safety and better documentation:
 //!
 //! ```
+//! #[cfg(feature = "adcom")]
+//! {
 //! use iab_specs::adcom::media::{Ad, AdBuilder};
 //! use serde::{Deserialize, Serialize};
 //! use derive_builder::Builder;
@@ -92,6 +97,7 @@
 //! }
 //! # Ok(())
 //! # }
+//! }
 //! ```
 //!
 //! ## Pattern 3: No Extensions
@@ -99,6 +105,8 @@
 //! Use the unit type `()` when you don't need extensions at all:
 //!
 //! ```
+//! #[cfg(feature = "adcom")]
+//! {
 //! use iab_specs::adcom::media::Ad;
 //! # use std::error::Error;
 //! # fn main() -> Result<(), Box<dyn Error>> {
@@ -109,6 +117,7 @@
 //!     .build()?;
 //! # Ok(())
 //! # }
+//! }
 //! ```
 //!
 //! # Implementing Custom Extension Types
