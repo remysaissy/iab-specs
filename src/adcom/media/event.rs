@@ -40,3 +40,74 @@ impl Event {
         EventBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_event_builder() {
+        let event = Event::builder()
+            .type_(Some(1))
+            .method(Some(1))
+            .url(Some(vec!["https://tracker.example.com/event".to_string()]))
+            .build()
+            .unwrap();
+
+        assert_eq!(event.type_, Some(1));
+        assert_eq!(event.method, Some(1));
+        assert_eq!(
+            event.url,
+            Some(vec!["https://tracker.example.com/event".to_string()])
+        );
+    }
+
+    #[test]
+    fn test_event_default() {
+        let event = Event::builder().build().unwrap();
+
+        assert!(event.type_.is_none());
+        assert!(event.method.is_none());
+        assert!(event.url.is_none());
+    }
+
+    #[test]
+    fn test_event_with_jstrk() {
+        let event = Event::builder()
+            .type_(Some(2))
+            .method(Some(2))
+            .jstrk(Some(vec!["<script>...</script>".to_string()]))
+            .build()
+            .unwrap();
+
+        assert_eq!(event.jstrk, Some(vec!["<script>...</script>".to_string()]));
+    }
+
+    #[test]
+    fn test_event_serialization() {
+        let event = Event::builder()
+            .type_(Some(1))
+            .method(Some(1))
+            .url(Some(vec!["https://track.com/pixel".to_string()]))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&event).unwrap();
+        assert!(json.contains("\"type_\":1"));
+        assert!(json.contains("\"method\":1"));
+        assert!(json.contains("\"url\":[\"https://track.com/pixel\"]"));
+    }
+
+    #[test]
+    fn test_event_deserialization() {
+        let json = r#"{"type_":1,"method":1,"url":["https://example.com/track"]}"#;
+        let event: Event = serde_json::from_str(json).unwrap();
+
+        assert_eq!(event.type_, Some(1));
+        assert_eq!(event.method, Some(1));
+        assert_eq!(
+            event.url,
+            Some(vec!["https://example.com/track".to_string()])
+        );
+    }
+}

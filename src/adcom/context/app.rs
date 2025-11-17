@@ -85,3 +85,100 @@ impl App {
         AppBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_app_builder() {
+        let app = App::builder()
+            .id(Some("app123".to_string()))
+            .name(Some("My Game".to_string()))
+            .bundle(Some("com.example.mygame".to_string()))
+            .ver(Some("1.0.0".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(app.id, Some("app123".to_string()));
+        assert_eq!(app.name, Some("My Game".to_string()));
+        assert_eq!(app.bundle, Some("com.example.mygame".to_string()));
+        assert_eq!(app.ver, Some("1.0.0".to_string()));
+    }
+
+    #[test]
+    fn test_app_default() {
+        let app = App::builder().build().unwrap();
+
+        assert!(app.id.is_none());
+        assert!(app.name.is_none());
+        assert!(app.bundle.is_none());
+        assert!(app.pub_.is_none());
+    }
+
+    #[test]
+    fn test_app_with_publisher() {
+        let publisher = Publisher::builder()
+            .id(Some("pub456".to_string()))
+            .name(Some("Game Studio".to_string()))
+            .build()
+            .unwrap();
+
+        let app = App::builder()
+            .id(Some("app789".to_string()))
+            .pub_(Some(Box::new(publisher)))
+            .build()
+            .unwrap();
+
+        assert!(app.pub_.is_some());
+        assert_eq!(app.pub_.as_ref().unwrap().id, Some("pub456".to_string()));
+    }
+
+    #[test]
+    fn test_app_serialization() {
+        let app = App::builder()
+            .id(Some("app999".to_string()))
+            .bundle(Some("com.example.app".to_string()))
+            .paid(Some(0))
+            .privacypolicy(Some(1))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&app).unwrap();
+        assert!(json.contains("\"id\":\"app999\""));
+        assert!(json.contains("\"bundle\":\"com.example.app\""));
+        assert!(json.contains("\"paid\":0"));
+    }
+
+    #[test]
+    fn test_app_deserialization() {
+        let json =
+            r#"{"id":"app111","name":"Puzzle Game","bundle":"com.puzzle.game","ver":"2.1.0"}"#;
+        let app: App = serde_json::from_str(json).unwrap();
+
+        assert_eq!(app.id, Some("app111".to_string()));
+        assert_eq!(app.name, Some("Puzzle Game".to_string()));
+        assert_eq!(app.bundle, Some("com.puzzle.game".to_string()));
+        assert_eq!(app.ver, Some("2.1.0".to_string()));
+    }
+
+    #[test]
+    fn test_app_with_store_url() {
+        let app = App::builder()
+            .id(Some("app222".to_string()))
+            .bundle(Some("com.social.app".to_string()))
+            .storeurl(Some(
+                "https://play.google.com/store/apps/details?id=com.social.app".to_string(),
+            ))
+            .build()
+            .unwrap();
+
+        assert!(app.storeurl.is_some());
+        assert!(
+            app.storeurl
+                .as_ref()
+                .unwrap()
+                .starts_with("https://play.google.com")
+        );
+    }
+}

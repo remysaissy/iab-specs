@@ -29,3 +29,60 @@ impl NativeFormat {
         NativeFormatBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_native_format_builder() {
+        let native = NativeFormat::builder().build().unwrap();
+
+        assert!(native.asset.is_none());
+    }
+
+    #[test]
+    fn test_native_format_default() {
+        let native = NativeFormat::builder().build().unwrap();
+
+        assert!(native.asset.is_none());
+        assert!(native.ext.is_none());
+    }
+
+    #[test]
+    fn test_native_format_with_assets() {
+        let asset1 = AssetFormat::builder().id(Some(1)).build().unwrap();
+
+        let asset2 = AssetFormat::builder().id(Some(2)).build().unwrap();
+
+        let native = NativeFormat::builder()
+            .asset(Some(vec![asset1, asset2]))
+            .build()
+            .unwrap();
+
+        assert!(native.asset.is_some());
+        assert_eq!(native.asset.as_ref().unwrap().len(), 2);
+    }
+
+    #[test]
+    fn test_native_format_serialization() {
+        let asset = AssetFormat::builder().id(Some(1)).build().unwrap();
+
+        let native = NativeFormat::builder()
+            .asset(Some(vec![asset]))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&native).unwrap();
+        assert!(json.contains("\"asset\""));
+    }
+
+    #[test]
+    fn test_native_format_deserialization() {
+        let json = r#"{"asset":[{"id":1},{"id":2}]}"#;
+        let native: NativeFormat = serde_json::from_str(json).unwrap();
+
+        assert!(native.asset.is_some());
+        assert_eq!(native.asset.as_ref().unwrap().len(), 2);
+    }
+}

@@ -44,3 +44,85 @@ impl EventSpec {
         EventSpecBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_event_spec_builder() {
+        let event = EventSpec::builder()
+            .type_(Some(1))
+            .method(Some(vec![1, 2]))
+            .build()
+            .unwrap();
+
+        assert_eq!(event.type_, Some(1));
+        assert_eq!(event.method, Some(vec![1, 2]));
+    }
+
+    #[test]
+    fn test_event_spec_default() {
+        let event = EventSpec::builder().build().unwrap();
+
+        assert!(event.type_.is_none());
+        assert!(event.method.is_none());
+        assert!(event.api.is_none());
+        assert!(event.jstrk.is_none());
+        assert!(event.url.is_none());
+    }
+
+    #[test]
+    fn test_event_spec_with_trackers() {
+        let event = EventSpec::builder()
+            .type_(Some(1))
+            .url(Some(vec![
+                "https://tracker.example.com/pixel".to_string(),
+                "https://analytics.example.com/event".to_string(),
+            ]))
+            .build()
+            .unwrap();
+
+        assert!(event.url.is_some());
+        assert_eq!(event.url.as_ref().unwrap().len(), 2);
+    }
+
+    #[test]
+    fn test_event_spec_with_javascript() {
+        let event = EventSpec::builder()
+            .type_(Some(2))
+            .jstrk(Some(vec![
+                "https://tracker.example.com/tracker.js".to_string(),
+            ]))
+            .build()
+            .unwrap();
+
+        assert_eq!(
+            event.jstrk,
+            Some(vec!["https://tracker.example.com/tracker.js".to_string()])
+        );
+    }
+
+    #[test]
+    fn test_event_spec_serialization() {
+        let event = EventSpec::builder()
+            .type_(Some(1))
+            .method(Some(vec![1, 2]))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&event).unwrap();
+        assert!(json.contains("\"type_\":1"));
+        assert!(json.contains("\"method\":[1,2]"));
+    }
+
+    #[test]
+    fn test_event_spec_deserialization() {
+        let json = r#"{"type_":1,"method":[1,2],"api":[5,6]}"#;
+        let event: EventSpec = serde_json::from_str(json).unwrap();
+
+        assert_eq!(event.type_, Some(1));
+        assert_eq!(event.method, Some(vec![1, 2]));
+        assert_eq!(event.api, Some(vec![5, 6]));
+    }
+}

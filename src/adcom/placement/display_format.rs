@@ -44,3 +44,78 @@ impl DisplayFormat {
         DisplayFormatBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_display_format_builder() {
+        let format = DisplayFormat::builder()
+            .w(Some(300))
+            .h(Some(250))
+            .build()
+            .unwrap();
+
+        assert_eq!(format.w, Some(300));
+        assert_eq!(format.h, Some(250));
+    }
+
+    #[test]
+    fn test_display_format_default() {
+        let format = DisplayFormat::builder().build().unwrap();
+
+        assert!(format.w.is_none());
+        assert!(format.h.is_none());
+        assert!(format.wratio.is_none());
+        assert!(format.hratio.is_none());
+    }
+
+    #[test]
+    fn test_display_format_with_ratio() {
+        let format = DisplayFormat::builder()
+            .wratio(Some(16))
+            .hratio(Some(9))
+            .build()
+            .unwrap();
+
+        assert_eq!(format.wratio, Some(16));
+        assert_eq!(format.hratio, Some(9));
+    }
+
+    #[test]
+    fn test_display_format_with_expansion() {
+        let format = DisplayFormat::builder()
+            .w(Some(300))
+            .h(Some(250))
+            .expdir(Some(vec![1, 2, 3, 4]))
+            .build()
+            .unwrap();
+
+        assert_eq!(format.expdir, Some(vec![1, 2, 3, 4]));
+    }
+
+    #[test]
+    fn test_display_format_serialization() {
+        let format = DisplayFormat::builder()
+            .w(Some(728))
+            .h(Some(90))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&format).unwrap();
+        assert!(json.contains("\"w\":728"));
+        assert!(json.contains("\"h\":90"));
+    }
+
+    #[test]
+    fn test_display_format_deserialization() {
+        let json = r#"{"w":300,"h":250,"wratio":16,"hratio":9}"#;
+        let format: DisplayFormat = serde_json::from_str(json).unwrap();
+
+        assert_eq!(format.w, Some(300));
+        assert_eq!(format.h, Some(250));
+        assert_eq!(format.wratio, Some(16));
+        assert_eq!(format.hratio, Some(9));
+    }
+}

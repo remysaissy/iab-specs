@@ -221,4 +221,96 @@ mod tests {
         assert_eq!(site.id, Some("site123".to_string()));
         assert_eq!(site.domain, Some("example.com".to_string()));
     }
+
+    // === Phase 2.2: Mutually Exclusive Field Tests (keywords vs kwarray) ===
+
+    #[test]
+    fn test_site_with_keywords_only() {
+        // Valid: Site with legacy keywords field (comma-separated string)
+        let site = Site::builder()
+            .id(Some("site123".to_string()))
+            .keywords(Some("technology,advertising,mobile".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(
+            site.keywords,
+            Some("technology,advertising,mobile".to_string())
+        );
+        assert!(site.kwarray.is_none());
+    }
+
+    #[test]
+    fn test_site_with_kwarray_only() {
+        // Valid: Site with kwarray field (array of strings)
+        let site = Site::builder()
+            .id(Some("site123".to_string()))
+            .kwarray(Some(vec![
+                "technology".to_string(),
+                "advertising".to_string(),
+                "mobile".to_string(),
+            ]))
+            .build()
+            .unwrap();
+
+        assert!(site.keywords.is_none());
+        assert_eq!(
+            site.kwarray,
+            Some(vec![
+                "technology".to_string(),
+                "advertising".to_string(),
+                "mobile".to_string()
+            ])
+        );
+    }
+
+    #[test]
+    fn test_site_with_both_keywords_and_kwarray() {
+        // Per spec: kwarray is mutually exclusive with keywords
+        // Test that having BOTH currently passes
+        let site = Site::builder()
+            .id(Some("site123".to_string()))
+            .keywords(Some("tech,ads".to_string()))
+            .kwarray(Some(vec!["mobile".to_string(), "video".to_string()]))
+            .build();
+
+        assert!(
+            site.is_ok(),
+            "Site with both keywords and kwarray currently passes"
+        );
+
+        let site = site.unwrap();
+        assert_eq!(site.keywords, Some("tech,ads".to_string()));
+        assert_eq!(
+            site.kwarray,
+            Some(vec!["mobile".to_string(), "video".to_string()])
+        );
+        // TODO: Per OpenRTB spec, kwarray is mutually exclusive with keywords
+        // Should be rejected when both are present
+    }
+
+    #[test]
+    fn test_site_deserialization_with_both_keyword_formats() {
+        // Test deserialization behavior when JSON contains both keyword formats
+        let json = r#"{
+            "id": "site123",
+            "keywords": "tech,ads",
+            "kwarray": ["mobile", "video"]
+        }"#;
+
+        let result: Result<Site, _> = serde_json::from_str(json);
+
+        assert!(
+            result.is_ok(),
+            "Deserialization with both keywords and kwarray currently passes"
+        );
+
+        let site = result.unwrap();
+        assert_eq!(site.keywords, Some("tech,ads".to_string()));
+        assert_eq!(
+            site.kwarray,
+            Some(vec!["mobile".to_string(), "video".to_string()])
+        );
+        // TODO: Should deserialization validate mutual exclusivity for keyword fields?
+    }
 }
