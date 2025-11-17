@@ -32,3 +32,48 @@ impl TitleAsset {
         TitleAssetBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_title_asset_builder() {
+        let title = TitleAsset::builder()
+            .text(Some("Best Product Ever".to_string()))
+            .len(Some(25))
+            .build()
+            .unwrap();
+
+        assert_eq!(title.text, Some("Best Product Ever".to_string()));
+        assert_eq!(title.len, Some(25));
+    }
+
+    #[test]
+    fn test_title_asset_default() {
+        let title = TitleAsset::builder().build().unwrap();
+
+        assert!(title.text.is_none());
+        assert!(title.len.is_none());
+    }
+
+    #[test]
+    fn test_title_asset_serialization() {
+        let title = TitleAsset::builder()
+            .text(Some("Sponsored Content".to_string()))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&title).unwrap();
+        assert!(json.contains("\"text\":\"Sponsored Content\""));
+    }
+
+    #[test]
+    fn test_title_asset_deserialization() {
+        let json = r#"{"text":"Amazing Deal","len":20}"#;
+        let title: TitleAsset = serde_json::from_str(json).unwrap();
+
+        assert_eq!(title.text, Some("Amazing Deal".to_string()));
+        assert_eq!(title.len, Some(20));
+    }
+}

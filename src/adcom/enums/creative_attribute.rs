@@ -58,3 +58,81 @@ pub enum CreativeAttribute {
     /// Adobe Flash
     AdobeFlash = 17,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_all_valid_values() {
+        // Test all valid CreativeAttribute values (1-17)
+        for value in 1..=17 {
+            let json = format!("{}", value);
+            let result: Result<CreativeAttribute, _> = serde_json::from_str(&json);
+            assert!(
+                result.is_ok(),
+                "Valid value {} should deserialize successfully",
+                value
+            );
+        }
+    }
+    #[test]
+    fn test_invalid_value_zero() {
+        let json = "0";
+        let result: Result<CreativeAttribute, _> = serde_json::from_str(json);
+        assert!(
+            result.is_err(),
+            "Value 0 is not a valid CreativeAttribute and should fail deserialization"
+        );
+    }
+    #[test]
+    fn test_invalid_value_out_of_range() {
+        let json = "99";
+        let result: Result<CreativeAttribute, _> = serde_json::from_str(json);
+        assert!(
+            result.is_err(),
+            "Value 99 is out of range and should fail deserialization"
+        );
+    }
+    #[test]
+    fn test_invalid_value_negative() {
+        let json = "-1";
+        let result: Result<CreativeAttribute, _> = serde_json::from_str(json);
+        assert!(
+            result.is_err(),
+            "Negative values should fail deserialization"
+        );
+    }
+    #[test]
+    fn test_serialization_roundtrip() {
+        let values = [
+            CreativeAttribute::AudioAuto,
+            CreativeAttribute::AudioUser,
+            CreativeAttribute::ExpandableAuto,
+            CreativeAttribute::ExpandableClick,
+            CreativeAttribute::ExpandableRollover,
+            CreativeAttribute::VideoBannerAuto,
+            CreativeAttribute::VideoBannerUser,
+            CreativeAttribute::Pop,
+            CreativeAttribute::Provocative,
+            CreativeAttribute::Annoying,
+            CreativeAttribute::Surveys,
+            CreativeAttribute::TextOnly,
+            CreativeAttribute::UserInteractive,
+            CreativeAttribute::Alert,
+            CreativeAttribute::AudioOnOffButton,
+            CreativeAttribute::Skippable,
+            CreativeAttribute::AdobeFlash,
+        ];
+
+        for original in values {
+            let json = serde_json::to_string(&original).unwrap();
+            let deserialized: CreativeAttribute = serde_json::from_str(&json).unwrap();
+            assert_eq!(
+                original, deserialized,
+                "Serialization roundtrip failed for {:?}",
+                original
+            );
+        }
+    }
+}

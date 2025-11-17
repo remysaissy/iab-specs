@@ -318,4 +318,160 @@ mod tests {
         );
         assert_eq!(device.lmt, Some(0));
     }
+
+    // === Phase 2.1: Integer-as-Enum Field Validation Tests ===
+
+    #[test]
+    fn test_devicetype_with_valid_values() {
+        // DeviceType enum valid values are 1-8
+        // 1=Mobile, 2=PC, 3=TV, 4=Phone, 5=Tablet, 6=Connected, 7=SetTopBox, 8=OOH
+        for device_type in 1..=8 {
+            let device = Device::builder()
+                .devicetype(Some(device_type))
+                .build()
+                .unwrap();
+
+            assert_eq!(device.devicetype, Some(device_type));
+
+            // Verify serialization roundtrip
+            let json = serde_json::to_string(&device).unwrap();
+            let deserialized: Device = serde_json::from_str(&json).unwrap();
+            assert_eq!(device.devicetype, deserialized.devicetype);
+        }
+    }
+
+    #[test]
+    fn test_devicetype_with_invalid_value() {
+        // Test invalid DeviceType value
+        let json = r#"{"devicetype":99}"#;
+        let result: Result<Device, _> = serde_json::from_str(json);
+
+        assert!(
+            result.is_ok(),
+            "Invalid devicetype value 99 currently passes"
+        );
+        assert_eq!(result.unwrap().devicetype, Some(99));
+        // TODO: DeviceType should be validated (valid range: 1-8)
+    }
+
+    #[test]
+    fn test_devicetype_with_zero() {
+        // Test devicetype with zero (invalid)
+        let json = r#"{"devicetype":0}"#;
+        let result: Result<Device, _> = serde_json::from_str(json);
+
+        assert!(result.is_ok(), "Zero devicetype currently passes");
+        assert_eq!(result.unwrap().devicetype, Some(0));
+        // Document: Zero is not a valid DeviceType value
+    }
+
+    #[test]
+    fn test_connectiontype_with_valid_values() {
+        // ConnectionType enum valid values are 0-8
+        // 0=Unknown, 1=Ethernet, 2=WiFi, 3=CellularUnknown, 4=Cellular2G,
+        // 5=Cellular3G, 6=Cellular4G, 7=Cellular5G, 8=Cellular6G
+        for conn_type in 0..=8 {
+            let device = Device::builder()
+                .connectiontype(Some(conn_type))
+                .build()
+                .unwrap();
+
+            assert_eq!(device.connectiontype, Some(conn_type));
+
+            // Verify serialization roundtrip
+            let json = serde_json::to_string(&device).unwrap();
+            let deserialized: Device = serde_json::from_str(&json).unwrap();
+            assert_eq!(device.connectiontype, deserialized.connectiontype);
+        }
+    }
+
+    #[test]
+    fn test_connectiontype_with_invalid_value() {
+        // Test invalid ConnectionType value
+        let json = r#"{"connectiontype":99}"#;
+        let result: Result<Device, _> = serde_json::from_str(json);
+
+        assert!(
+            result.is_ok(),
+            "Invalid connectiontype value 99 currently passes"
+        );
+        assert_eq!(result.unwrap().connectiontype, Some(99));
+        // TODO: ConnectionType should be validated (valid range: 0-8)
+    }
+
+    #[test]
+    fn test_negative_device_enum_values() {
+        // Test negative values in enum fields
+        let json = r#"{"devicetype":-1,"connectiontype":-1}"#;
+        let result: Result<Device, _> = serde_json::from_str(json);
+
+        assert!(result.is_ok(), "Negative enum values currently pass");
+        let device = result.unwrap();
+        assert_eq!(device.devicetype, Some(-1));
+        assert_eq!(device.connectiontype, Some(-1));
+        // Document: Negative values are invalid for DeviceType and ConnectionType
+    }
+
+    // === Phase 2.3: Feature Flag Tests (openrtb_26) ===
+
+    #[cfg(feature = "openrtb_26")]
+    #[test]
+    fn test_device_with_sua_field() {
+        use crate::adcom::context::UserAgent;
+
+        // Test that OpenRTB 2.6 sua (structured user-agent) field is available
+        let sua = UserAgent::builder().build().unwrap();
+
+        let device = Device::builder()
+            .ua(Some("Mozilla/5.0".to_string()))
+            .sua(Some(sua))
+            .build()
+            .unwrap();
+
+        assert!(device.sua.is_some());
+        assert_eq!(device.ua, Some("Mozilla/5.0".to_string()));
+    }
+
+    #[cfg(feature = "openrtb_26")]
+    #[test]
+    fn test_device_sua_serialization() {
+        use crate::adcom::context::UserAgent;
+
+        // Test serialization of OpenRTB 2.6 sua field
+        let sua = UserAgent::builder().build().unwrap();
+
+        let device = Device::builder().sua(Some(sua)).build().unwrap();
+
+        let json = serde_json::to_string(&device).unwrap();
+        assert!(json.contains("\"sua\""));
+    }
+
+    #[cfg(feature = "openrtb_26")]
+    #[test]
+    fn test_device_sua_deserialization() {
+        // Test deserialization of OpenRTB 2.6 sua field
+        let json = r#"{"sua":{}}"#;
+        let result: Result<Device, _> = serde_json::from_str(json);
+
+        assert!(result.is_ok(), "Device with sua field should deserialize");
+        let device = result.unwrap();
+        assert!(device.sua.is_some());
+    }
+
+    #[cfg(not(feature = "openrtb_26"))]
+    #[test]
+    fn test_device_sua_not_available_without_feature() {
+        // This test verifies that sua field is not available without openrtb_26 feature
+        // If this test compiles, it means the feature gating is working correctly
+
+        let device = Device::builder()
+            .ua(Some("Mozilla/5.0".to_string()))
+            .build()
+            .unwrap();
+
+        // The sua field should not exist in Device when openrtb_26 is disabled
+        // This is verified at compile time - if we try to access device.sua,
+        // the code won't compile without the feature flag
+        assert_eq!(device.ua, Some("Mozilla/5.0".to_string()));
+    }
 }

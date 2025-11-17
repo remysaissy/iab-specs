@@ -129,3 +129,120 @@ impl VideoPlacement {
         VideoPlacementBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_video_placement_builder() {
+        let video = VideoPlacement::builder()
+            .ptype(Some(1))
+            .w(Some(640))
+            .h(Some(480))
+            .pos(Some(1))
+            .build()
+            .unwrap();
+
+        assert_eq!(video.ptype, Some(1));
+        assert_eq!(video.w, Some(640));
+        assert_eq!(video.h, Some(480));
+        assert_eq!(video.pos, Some(1));
+    }
+
+    #[test]
+    fn test_video_placement_default() {
+        let video = VideoPlacement::builder().build().unwrap();
+
+        assert!(video.ptype.is_none());
+        assert!(video.w.is_none());
+        assert!(video.h.is_none());
+        assert!(video.mindur.is_none());
+        assert!(video.maxdur.is_none());
+    }
+
+    #[test]
+    fn test_video_placement_skippable() {
+        let video = VideoPlacement::builder()
+            .skip(Some(1))
+            .skipmin(Some(5))
+            .skipafter(Some(5))
+            .build()
+            .unwrap();
+
+        assert_eq!(video.skip, Some(1));
+        assert_eq!(video.skipmin, Some(5));
+        assert_eq!(video.skipafter, Some(5));
+    }
+
+    #[test]
+    fn test_video_placement_duration() {
+        let video = VideoPlacement::builder()
+            .mindur(Some(15))
+            .maxdur(Some(30))
+            .maxext(Some(60))
+            .build()
+            .unwrap();
+
+        assert_eq!(video.mindur, Some(15));
+        assert_eq!(video.maxdur, Some(30));
+        assert_eq!(video.maxext, Some(60));
+    }
+
+    #[test]
+    fn test_video_placement_bitrate() {
+        let video = VideoPlacement::builder()
+            .minbitrate(Some(300))
+            .maxbitrate(Some(1500))
+            .build()
+            .unwrap();
+
+        assert_eq!(video.minbitrate, Some(300));
+        assert_eq!(video.maxbitrate, Some(1500));
+    }
+
+    #[test]
+    fn test_video_placement_with_mime_and_api() {
+        let video = VideoPlacement::builder()
+            .mime(Some(vec![
+                "video/mp4".to_string(),
+                "video/webm".to_string(),
+            ]))
+            .api(Some(vec![1, 2, 5]))
+            .build()
+            .unwrap();
+
+        assert_eq!(
+            video.mime,
+            Some(vec!["video/mp4".to_string(), "video/webm".to_string()])
+        );
+        assert_eq!(video.api, Some(vec![1, 2, 5]));
+    }
+
+    #[test]
+    fn test_video_placement_serialization() {
+        let video = VideoPlacement::builder()
+            .ptype(Some(1))
+            .w(Some(640))
+            .h(Some(480))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&video).unwrap();
+        assert!(json.contains("\"ptype\":1"));
+        assert!(json.contains("\"w\":640"));
+        assert!(json.contains("\"h\":480"));
+    }
+
+    #[test]
+    fn test_video_placement_deserialization() {
+        let json = r#"{"ptype":1,"w":640,"h":480,"mindur":15,"maxdur":30}"#;
+        let video: VideoPlacement = serde_json::from_str(json).unwrap();
+
+        assert_eq!(video.ptype, Some(1));
+        assert_eq!(video.w, Some(640));
+        assert_eq!(video.h, Some(480));
+        assert_eq!(video.mindur, Some(15));
+        assert_eq!(video.maxdur, Some(30));
+    }
+}

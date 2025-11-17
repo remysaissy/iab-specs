@@ -85,3 +85,95 @@ impl Site {
         SiteBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_site_builder() {
+        let site = Site::builder()
+            .id(Some("site123".to_string()))
+            .name(Some("Example Site".to_string()))
+            .domain(Some("example.com".to_string()))
+            .page(Some("https://example.com/article".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(site.id, Some("site123".to_string()));
+        assert_eq!(site.name, Some("Example Site".to_string()));
+        assert_eq!(site.domain, Some("example.com".to_string()));
+        assert_eq!(site.page, Some("https://example.com/article".to_string()));
+    }
+
+    #[test]
+    fn test_site_default() {
+        let site = Site::builder().build().unwrap();
+
+        assert!(site.id.is_none());
+        assert!(site.name.is_none());
+        assert!(site.domain.is_none());
+        assert!(site.pub_.is_none());
+    }
+
+    #[test]
+    fn test_site_with_publisher() {
+        let publisher = Publisher::builder()
+            .id(Some("pub123".to_string()))
+            .name(Some("Publisher Inc".to_string()))
+            .build()
+            .unwrap();
+
+        let site = Site::builder()
+            .id(Some("site456".to_string()))
+            .pub_(Some(Box::new(publisher)))
+            .build()
+            .unwrap();
+
+        assert!(site.pub_.is_some());
+        assert_eq!(site.pub_.as_ref().unwrap().id, Some("pub123".to_string()));
+    }
+
+    #[test]
+    fn test_site_serialization() {
+        let site = Site::builder()
+            .id(Some("site789".to_string()))
+            .domain(Some("news.com".to_string()))
+            .mobile(Some(1))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&site).unwrap();
+        assert!(json.contains("\"id\":\"site789\""));
+        assert!(json.contains("\"domain\":\"news.com\""));
+        assert!(json.contains("\"mobile\":1"));
+    }
+
+    #[test]
+    fn test_site_deserialization() {
+        let json =
+            r#"{"id":"site999","name":"Tech Blog","domain":"techblog.com","privacypolicy":1}"#;
+        let site: Site = serde_json::from_str(json).unwrap();
+
+        assert_eq!(site.id, Some("site999".to_string()));
+        assert_eq!(site.name, Some("Tech Blog".to_string()));
+        assert_eq!(site.domain, Some("techblog.com".to_string()));
+        assert_eq!(site.privacypolicy, Some(1));
+    }
+
+    #[test]
+    fn test_site_with_categories() {
+        let site = Site::builder()
+            .id(Some("site111".to_string()))
+            .cat(Some(vec!["IAB12".to_string(), "IAB12-1".to_string()]))
+            .cattax(Some(1))
+            .build()
+            .unwrap();
+
+        assert_eq!(
+            site.cat,
+            Some(vec!["IAB12".to_string(), "IAB12-1".to_string()])
+        );
+        assert_eq!(site.cattax, Some(1));
+    }
+}

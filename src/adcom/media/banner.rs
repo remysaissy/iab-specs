@@ -33,3 +33,71 @@ impl Banner {
         BannerBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_banner_builder() {
+        let banner = Banner::builder()
+            .img(Some("https://cdn.example.com/banner.jpg".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(
+            banner.img,
+            Some("https://cdn.example.com/banner.jpg".to_string())
+        );
+    }
+
+    #[test]
+    fn test_banner_default() {
+        let banner = Banner::builder().build().unwrap();
+
+        assert!(banner.img.is_none());
+        assert!(banner.link.is_none());
+    }
+
+    #[test]
+    fn test_banner_with_link() {
+        let link = LinkAsset::builder()
+            .url(Some("https://advertiser.com/product".to_string()))
+            .build()
+            .unwrap();
+
+        let banner = Banner::builder()
+            .img(Some("https://cdn.example.com/ad.png".to_string()))
+            .link(Some(Box::new(link)))
+            .build()
+            .unwrap();
+
+        assert!(banner.link.is_some());
+        assert_eq!(
+            banner.link.as_ref().unwrap().url,
+            Some("https://advertiser.com/product".to_string())
+        );
+    }
+
+    #[test]
+    fn test_banner_serialization() {
+        let banner = Banner::builder()
+            .img(Some("https://example.com/image.jpg".to_string()))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&banner).unwrap();
+        assert!(json.contains("\"img\":\"https://example.com/image.jpg\""));
+    }
+
+    #[test]
+    fn test_banner_deserialization() {
+        let json = r#"{"img":"https://example.com/banner.png"}"#;
+        let banner: Banner = serde_json::from_str(json).unwrap();
+
+        assert_eq!(
+            banner.img,
+            Some("https://example.com/banner.png".to_string())
+        );
+    }
+}

@@ -36,3 +36,54 @@ impl DataAsset {
         DataAssetBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_data_asset_builder() {
+        let data = DataAsset::builder()
+            .value(Some("Sponsored by Brand".to_string()))
+            .len(Some(100))
+            .type_(Some(1))
+            .build()
+            .unwrap();
+
+        assert_eq!(data.value, Some("Sponsored by Brand".to_string()));
+        assert_eq!(data.len, Some(100));
+        assert_eq!(data.type_, Some(1));
+    }
+
+    #[test]
+    fn test_data_asset_default() {
+        let data = DataAsset::builder().build().unwrap();
+
+        assert!(data.value.is_none());
+        assert!(data.len.is_none());
+        assert!(data.type_.is_none());
+    }
+
+    #[test]
+    fn test_data_asset_serialization() {
+        let data = DataAsset::builder()
+            .value(Some("4.5 stars".to_string()))
+            .type_(Some(3))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&data).unwrap();
+        assert!(json.contains("\"value\":\"4.5 stars\""));
+        assert!(json.contains("\"type_\":3"));
+    }
+
+    #[test]
+    fn test_data_asset_deserialization() {
+        let json = r#"{"value":"Download Now","len":50,"type_":12}"#;
+        let data: DataAsset = serde_json::from_str(json).unwrap();
+
+        assert_eq!(data.value, Some("Download Now".to_string()));
+        assert_eq!(data.len, Some(50));
+        assert_eq!(data.type_, Some(12));
+    }
+}

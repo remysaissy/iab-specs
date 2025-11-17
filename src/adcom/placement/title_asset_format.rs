@@ -28,3 +28,39 @@ impl TitleAssetFormat {
         TitleAssetFormatBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_title_asset_format_builder() {
+        let title = TitleAssetFormat::builder().len(Some(25)).build().unwrap();
+
+        assert_eq!(title.len, Some(25));
+    }
+
+    #[test]
+    fn test_title_asset_format_default() {
+        let title = TitleAssetFormat::builder().build().unwrap();
+
+        assert!(title.len.is_none());
+        assert!(title.ext.is_none());
+    }
+
+    #[test]
+    fn test_title_asset_format_serialization() {
+        let title = TitleAssetFormat::builder().len(Some(90)).build().unwrap();
+
+        let json = serde_json::to_string(&title).unwrap();
+        assert!(json.contains("\"len\":90"));
+    }
+
+    #[test]
+    fn test_title_asset_format_deserialization() {
+        let json = r#"{"len":25}"#;
+        let title: TitleAssetFormat = serde_json::from_str(json).unwrap();
+
+        assert_eq!(title.len, Some(25));
+    }
+}

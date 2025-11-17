@@ -1011,4 +1011,265 @@ mod tests {
         assert_eq!(request.aurlsupport, Some(1));
         assert_eq!(request.durlsupport, Some(1));
     }
+
+    // === Phase 2.1: Integer-as-Enum Field Validation Tests ===
+
+    #[test]
+    fn test_context_with_invalid_value() {
+        // DisplayContextType valid values are 1-3
+        // Test that invalid values currently pass
+        let json = r#"{"context":99,"assets":[]}"#;
+        let result: Result<NativeRequest, _> = serde_json::from_str(json);
+
+        assert!(result.is_ok(), "Invalid context value 99 currently passes");
+        assert_eq!(result.unwrap().context, Some(99));
+        // TODO: DisplayContextType should be validated (valid range: 1-3)
+    }
+
+    #[test]
+    fn test_context_with_zero() {
+        // Test context with zero (invalid for DisplayContextType)
+        let json = r#"{"context":0,"assets":[]}"#;
+        let result: Result<NativeRequest, _> = serde_json::from_str(json);
+
+        assert!(result.is_ok(), "Zero context value currently passes");
+        assert_eq!(result.unwrap().context, Some(0));
+        // Document: Zero is not a valid DisplayContextType value
+    }
+
+    #[test]
+    fn test_contextsubtype_with_invalid_value() {
+        // Test invalid contextsubtype
+        let json = r#"{"contextsubtype":999,"assets":[]}"#;
+        let result: Result<NativeRequest, _> = serde_json::from_str(json);
+
+        assert!(result.is_ok(), "Invalid contextsubtype currently passes");
+        assert_eq!(result.unwrap().contextsubtype, Some(999));
+        // TODO: Consider validation for contextsubtype based on context value
+    }
+
+    #[test]
+    fn test_plcmttype_with_invalid_value() {
+        // DisplayPlacementType valid values are 1-4
+        // Test that invalid values currently pass
+        let json = r#"{"plcmttype":99,"assets":[]}"#;
+        let result: Result<NativeRequest, _> = serde_json::from_str(json);
+
+        assert!(
+            result.is_ok(),
+            "Invalid plcmttype value 99 currently passes"
+        );
+        assert_eq!(result.unwrap().plcmttype, Some(99));
+        // TODO: DisplayPlacementType should be validated (valid range: 1-4)
+    }
+
+    #[test]
+    fn test_plcmttype_with_zero() {
+        // Test plcmttype with zero (invalid)
+        let json = r#"{"plcmttype":0,"assets":[]}"#;
+        let result: Result<NativeRequest, _> = serde_json::from_str(json);
+
+        assert!(result.is_ok(), "Zero plcmttype value currently passes");
+        assert_eq!(result.unwrap().plcmttype, Some(0));
+        // Document: Zero is not a valid DisplayPlacementType value
+    }
+
+    #[test]
+    fn test_negative_enum_values() {
+        // Test negative values in native enum fields
+        let json = r#"{"context":-1,"plcmttype":-1,"assets":[]}"#;
+        let result: Result<NativeRequest, _> = serde_json::from_str(json);
+
+        assert!(result.is_ok(), "Negative enum values currently pass");
+        let request = result.unwrap();
+        assert_eq!(request.context, Some(-1));
+        assert_eq!(request.plcmttype, Some(-1));
+        // Document: Negative values are invalid for DisplayContextType and DisplayPlacementType
+    }
+
+    #[test]
+    fn test_valid_context_plcmttype_combinations() {
+        // Test all valid combinations of context and plcmttype
+        for context in 1..=3 {
+            for plcmttype in 1..=4 {
+                let request = NativeRequest::builder()
+                    .context(Some(context))
+                    .plcmttype(Some(plcmttype))
+                    .assets(vec![])
+                    .build()
+                    .unwrap();
+
+                assert_eq!(request.context, Some(context));
+                assert_eq!(request.plcmttype, Some(plcmttype));
+
+                // Verify serialization roundtrip
+                let json = serde_json::to_string(&request).unwrap();
+                let deserialized: NativeRequest = serde_json::from_str(&json).unwrap();
+                assert_eq!(request.context, deserialized.context);
+                assert_eq!(request.plcmttype, deserialized.plcmttype);
+            }
+        }
+    }
+
+    // === Phase 2.2: Mutually Exclusive Field Tests ===
+
+    #[test]
+    fn test_asset_with_no_type_fields() {
+        // Per spec: Asset must have exactly ONE of title/img/video/data
+        // Test that asset with NO type fields currently passes
+        let asset = Asset::builder().id(1).build();
+
+        assert!(asset.is_ok(), "Asset with no type fields currently passes");
+        let asset = asset.unwrap();
+        assert!(asset.title.is_none());
+        assert!(asset.img.is_none());
+        assert!(asset.video.is_none());
+        assert!(asset.data.is_none());
+        // TODO: Should be rejected - asset must have exactly one type field
+    }
+
+    #[test]
+    fn test_asset_with_multiple_type_fields_title_and_img() {
+        // Test that asset with BOTH title AND img currently passes
+        let title = Title::builder().len(90).build().unwrap();
+        let img = Image::builder().build().unwrap();
+
+        let asset = Asset::builder()
+            .id(1)
+            .title(Some(title))
+            .img(Some(img))
+            .build();
+
+        assert!(
+            asset.is_ok(),
+            "Asset with both title and img currently passes"
+        );
+        let asset = asset.unwrap();
+        assert!(asset.title.is_some());
+        assert!(asset.img.is_some());
+        // TODO: Should be rejected - violates mutually exclusive constraint
+    }
+
+    #[test]
+    fn test_asset_with_multiple_type_fields_all_four() {
+        // Test that asset with ALL four type fields currently passes
+        let title = Title::builder().len(90).build().unwrap();
+        let img = Image::builder().build().unwrap();
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .build()
+            .unwrap();
+        let data = Data::builder().type_(1).build().unwrap();
+
+        let asset = Asset::builder()
+            .id(1)
+            .title(Some(title))
+            .img(Some(img))
+            .video(Some(video))
+            .data(Some(data))
+            .build();
+
+        assert!(
+            asset.is_ok(),
+            "Asset with all four type fields currently passes"
+        );
+        let asset = asset.unwrap();
+        assert!(asset.title.is_some());
+        assert!(asset.img.is_some());
+        assert!(asset.video.is_some());
+        assert!(asset.data.is_some());
+        // TODO: Should be rejected - can only have ONE type field
+    }
+
+    #[test]
+    fn test_asset_with_title_only() {
+        // Valid: exactly one asset type
+        let title = Title::builder().len(90).build().unwrap();
+
+        let asset = Asset::builder().id(1).title(Some(title)).build().unwrap();
+
+        assert!(asset.title.is_some());
+        assert!(asset.img.is_none());
+        assert!(asset.video.is_none());
+        assert!(asset.data.is_none());
+    }
+
+    #[test]
+    fn test_asset_with_img_only() {
+        // Valid: exactly one asset type
+        let img = Image::builder().build().unwrap();
+
+        let asset = Asset::builder().id(1).img(Some(img)).build().unwrap();
+
+        assert!(asset.title.is_none());
+        assert!(asset.img.is_some());
+        assert!(asset.video.is_none());
+        assert!(asset.data.is_none());
+    }
+
+    #[test]
+    fn test_asset_with_video_only() {
+        // Valid: exactly one asset type
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .build()
+            .unwrap();
+
+        let asset = Asset::builder().id(1).video(Some(video)).build().unwrap();
+
+        assert!(asset.title.is_none());
+        assert!(asset.img.is_none());
+        assert!(asset.video.is_some());
+        assert!(asset.data.is_none());
+    }
+
+    #[test]
+    fn test_asset_with_data_only() {
+        // Valid: exactly one asset type
+        let data = Data::builder().type_(1).build().unwrap();
+
+        let asset = Asset::builder().id(1).data(Some(data)).build().unwrap();
+
+        assert!(asset.title.is_none());
+        assert!(asset.img.is_none());
+        assert!(asset.video.is_none());
+        assert!(asset.data.is_some());
+    }
+
+    #[test]
+    fn test_asset_deserialization_with_multiple_types() {
+        // Test deserialization of asset with multiple type fields
+        let json = r#"{
+            "id": 1,
+            "title": {"len": 90},
+            "img": {"w": 300, "h": 250}
+        }"#;
+
+        let result: Result<Asset, _> = serde_json::from_str(json);
+
+        assert!(
+            result.is_ok(),
+            "Asset with multiple types in JSON currently deserializes"
+        );
+        let asset = result.unwrap();
+        assert!(asset.title.is_some());
+        assert!(asset.img.is_some());
+        // TODO: Deserialization should reject mutually exclusive fields
+    }
+
+    #[test]
+    fn test_asset_deserialization_with_no_types() {
+        // Test deserialization of asset without any type fields
+        let json = r#"{"id": 1}"#;
+
+        let result: Result<Asset, _> = serde_json::from_str(json);
+
+        assert!(result.is_ok(), "Asset with no types currently deserializes");
+        let asset = result.unwrap();
+        assert!(asset.title.is_none());
+        assert!(asset.img.is_none());
+        assert!(asset.video.is_none());
+        assert!(asset.data.is_none());
+        // TODO: Should require at least one type field
+    }
 }

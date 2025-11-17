@@ -54,3 +54,80 @@ impl Asset {
         AssetBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_asset_builder() {
+        let asset = Asset::builder().id(Some(1)).req(Some(1)).build().unwrap();
+
+        assert_eq!(asset.id, Some(1));
+        assert_eq!(asset.req, Some(1));
+    }
+
+    #[test]
+    fn test_asset_default() {
+        let asset = Asset::builder().build().unwrap();
+
+        assert!(asset.id.is_none());
+        assert!(asset.req.is_none());
+        assert!(asset.title.is_none());
+        assert!(asset.img.is_none());
+    }
+
+    #[test]
+    fn test_asset_with_title() {
+        let title = TitleAsset::builder()
+            .text(Some("Sponsored Content".to_string()))
+            .build()
+            .unwrap();
+
+        let asset = Asset::builder()
+            .id(Some(1))
+            .title(Some(Box::new(title)))
+            .build()
+            .unwrap();
+
+        assert!(asset.title.is_some());
+        assert_eq!(
+            asset.title.as_ref().unwrap().text,
+            Some("Sponsored Content".to_string())
+        );
+    }
+
+    #[test]
+    fn test_asset_with_image() {
+        let img = ImageAsset::builder()
+            .url(Some("https://example.com/image.jpg".to_string()))
+            .build()
+            .unwrap();
+
+        let asset = Asset::builder()
+            .id(Some(2))
+            .img(Some(Box::new(img)))
+            .build()
+            .unwrap();
+
+        assert!(asset.img.is_some());
+    }
+
+    #[test]
+    fn test_asset_serialization() {
+        let asset = Asset::builder().id(Some(1)).req(Some(1)).build().unwrap();
+
+        let json = serde_json::to_string(&asset).unwrap();
+        assert!(json.contains("\"id\":1"));
+        assert!(json.contains("\"req\":1"));
+    }
+
+    #[test]
+    fn test_asset_deserialization() {
+        let json = r#"{"id":1,"req":1}"#;
+        let asset: Asset = serde_json::from_str(json).unwrap();
+
+        assert_eq!(asset.id, Some(1));
+        assert_eq!(asset.req, Some(1));
+    }
+}

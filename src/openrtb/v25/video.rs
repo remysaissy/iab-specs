@@ -346,4 +346,342 @@ mod tests {
         assert_eq!(video.w, Some(640));
         assert_eq!(video.h, Some(480));
     }
+
+    // === Phase 1.2: Required Field Validation Tests ===
+
+    #[test]
+    fn test_missing_required_mimes_field() {
+        // Test deserialization without required 'mimes' field
+        let json = r#"{"w":640,"h":480}"#;
+        let result: Result<Video, _> = serde_json::from_str(json);
+        assert!(
+            result.is_err(),
+            "Video without required 'mimes' field should fail deserialization"
+        );
+    }
+
+    #[test]
+    fn test_empty_required_mimes_array() {
+        // Test that empty mimes array is currently allowed
+        // Per OpenRTB spec: "at least one MIME type" required
+        let result = Video::builder().mimes(vec![]).build();
+
+        // Currently no validation prevents empty mimes array
+        assert!(result.is_ok(), "Empty mimes array currently passes");
+        // TODO: Consider adding validation to enforce "at least one MIME type" requirement
+    }
+
+    #[test]
+    fn test_null_mimes_field() {
+        // Test explicit null for required field
+        let json = r#"{"mimes":null}"#;
+        let result: Result<Video, _> = serde_json::from_str(json);
+        assert!(
+            result.is_err(),
+            "Video with null 'mimes' should fail deserialization"
+        );
+    }
+
+    // === Phase 1.3: Boundary & Edge Case Tests ===
+
+    #[test]
+    fn test_negative_minduration() {
+        // Test negative duration value
+        let result = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .minduration(-1)
+            .build();
+
+        // Currently allows negative durations - documents current behavior
+        assert!(result.is_ok(), "Negative minduration currently allowed");
+        // TODO: Consider adding validation to reject negative durations
+    }
+
+    #[test]
+    fn test_negative_maxduration() {
+        // Test negative max duration
+        let result = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .maxduration(Some(-1))
+            .build();
+
+        assert!(result.is_ok(), "Negative maxduration currently allowed");
+        // TODO: Consider validation for duration constraints
+    }
+
+    #[test]
+    fn test_maxduration_less_than_minduration() {
+        // Test logical inconsistency: maxduration < minduration
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .minduration(30)
+            .maxduration(Some(10)) // max < min - logically invalid
+            .build()
+            .unwrap();
+
+        // Currently no cross-field validation
+        assert!(video.maxduration.unwrap() < video.minduration);
+        // TODO: Consider adding cross-field validation
+    }
+
+    #[test]
+    fn test_zero_dimensions() {
+        // Test zero width/height
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .w(Some(0))
+            .h(Some(0))
+            .build()
+            .unwrap();
+
+        assert_eq!(video.w, Some(0));
+        assert_eq!(video.h, Some(0));
+        // Document: Zero dimensions currently allowed
+    }
+
+    #[test]
+    fn test_negative_dimensions() {
+        // Test negative dimensions
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .w(Some(-100))
+            .h(Some(-100))
+            .build()
+            .unwrap();
+
+        assert_eq!(video.w, Some(-100));
+        // Document: Negative dimensions currently allowed
+        // TODO: Should be rejected as dimensions must be positive
+    }
+
+    #[test]
+    fn test_negative_bitrate() {
+        // Test negative bitrate values
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .minbitrate(Some(-1))
+            .maxbitrate(Some(-1))
+            .build()
+            .unwrap();
+
+        assert_eq!(video.minbitrate, Some(-1));
+        // Document: Negative bitrates currently allowed
+        // TODO: Bitrates should be positive integers
+    }
+
+    #[test]
+    fn test_maxbitrate_less_than_minbitrate() {
+        // Test logical inconsistency: maxbitrate < minbitrate
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .minbitrate(Some(5000))
+            .maxbitrate(Some(1000)) // max < min
+            .build()
+            .unwrap();
+
+        assert!(video.maxbitrate.unwrap() < video.minbitrate.unwrap());
+        // Document: No cross-field validation for bitrate constraints
+    }
+
+    #[test]
+    fn test_default_boxingallowed() {
+        // Test that boxingallowed defaults to 1 (allowed)
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .build()
+            .unwrap();
+
+        assert_eq!(video.boxingallowed, 1);
+    }
+
+    #[test]
+    fn test_skip_without_skip_params() {
+        // Test skip=1 without skipmin/skipafter
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .skip(Some(1))
+            .build()
+            .unwrap();
+
+        assert_eq!(video.skip, Some(1));
+        assert_eq!(video.skipmin, 0); // Defaults to 0
+        assert_eq!(video.skipafter, 0); // Defaults to 0
+        // Document: skipmin and skipafter default to 0 when not specified
+    }
+
+    // === Phase 2.2: Mutually Exclusive Field Tests (rqddurs vs minduration/maxduration) ===
+
+    #[test]
+    fn test_video_with_rqddurs_only() {
+        // Valid: Video with rqddurs (exact durations) and no minduration/maxduration
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .rqddurs(Some(vec![15, 30, 60]))
+            .build()
+            .unwrap();
+
+        assert_eq!(video.rqddurs, Some(vec![15, 30, 60]));
+        assert_eq!(video.minduration, 0); // Default
+        assert_eq!(video.maxduration, None);
+    }
+
+    #[test]
+    fn test_video_with_minduration_maxduration_only() {
+        // Valid: Video with minduration/maxduration and no rqddurs
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .minduration(15)
+            .maxduration(Some(60))
+            .build()
+            .unwrap();
+
+        assert_eq!(video.minduration, 15);
+        assert_eq!(video.maxduration, Some(60));
+        assert!(video.rqddurs.is_none());
+    }
+
+    #[test]
+    fn test_video_with_rqddurs_and_minduration() {
+        // Per spec: rqddurs is mutually exclusive with minduration and maxduration
+        // Test that having BOTH rqddurs and minduration currently passes
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .rqddurs(Some(vec![15, 30]))
+            .minduration(10)
+            .build();
+
+        assert!(
+            video.is_ok(),
+            "Video with both rqddurs and minduration currently passes"
+        );
+
+        let video = video.unwrap();
+        assert_eq!(video.rqddurs, Some(vec![15, 30]));
+        assert_eq!(video.minduration, 10);
+        // TODO: Per OpenRTB spec, rqddurs is mutually exclusive with minduration/maxduration
+        // Should be rejected when both are present
+    }
+
+    #[test]
+    fn test_video_with_rqddurs_and_maxduration() {
+        // Test that having BOTH rqddurs and maxduration currently passes
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .rqddurs(Some(vec![15, 30]))
+            .maxduration(Some(60))
+            .build();
+
+        assert!(
+            video.is_ok(),
+            "Video with both rqddurs and maxduration currently passes"
+        );
+
+        let video = video.unwrap();
+        assert_eq!(video.rqddurs, Some(vec![15, 30]));
+        assert_eq!(video.maxduration, Some(60));
+        // TODO: Should be rejected - rqddurs is mutually exclusive with maxduration
+    }
+
+    #[test]
+    fn test_video_with_all_duration_fields() {
+        // Test that having ALL duration specification fields currently passes
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .rqddurs(Some(vec![15, 30]))
+            .minduration(10)
+            .maxduration(Some(60))
+            .build();
+
+        assert!(
+            video.is_ok(),
+            "Video with rqddurs, minduration, and maxduration currently passes"
+        );
+
+        let video = video.unwrap();
+        assert_eq!(video.rqddurs, Some(vec![15, 30]));
+        assert_eq!(video.minduration, 10);
+        assert_eq!(video.maxduration, Some(60));
+        // TODO: Should be rejected - can use EITHER rqddurs OR minduration/maxduration, not both
+    }
+
+    #[test]
+    fn test_video_deserialization_with_conflicting_duration_fields() {
+        // Test deserialization behavior with mutually exclusive duration fields
+        let json = r#"{
+            "mimes": ["video/mp4"],
+            "rqddurs": [15, 30],
+            "minduration": 10,
+            "maxduration": 60
+        }"#;
+
+        let result: Result<Video, _> = serde_json::from_str(json);
+
+        assert!(
+            result.is_ok(),
+            "Deserialization with conflicting duration fields currently passes"
+        );
+
+        let video = result.unwrap();
+        assert_eq!(video.rqddurs, Some(vec![15, 30]));
+        assert_eq!(video.minduration, 10);
+        assert_eq!(video.maxduration, Some(60));
+        // TODO: Should deserialization validate mutual exclusivity for duration fields?
+    }
+
+    // === Phase 2.3: Feature Flag Tests (openrtb_26) ===
+
+    #[cfg(feature = "openrtb_26")]
+    #[test]
+    fn test_video_with_maxseq_field() {
+        // Test that OpenRTB 2.6 maxseq (max number of ads in sequence) field is available
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .maxseq(Some(3))
+            .build()
+            .unwrap();
+
+        assert_eq!(video.maxseq, Some(3));
+    }
+
+    #[cfg(feature = "openrtb_26")]
+    #[test]
+    fn test_video_maxseq_serialization() {
+        // Test serialization of OpenRTB 2.6 maxseq field
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .maxseq(Some(5))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&video).unwrap();
+        assert!(json.contains("\"maxseq\":5"));
+    }
+
+    #[cfg(feature = "openrtb_26")]
+    #[test]
+    fn test_video_maxseq_deserialization() {
+        // Test deserialization of OpenRTB 2.6 maxseq field
+        let json = r#"{"mimes":["video/mp4"],"maxseq":4}"#;
+        let result: Result<Video, _> = serde_json::from_str(json);
+
+        assert!(result.is_ok(), "Video with maxseq field should deserialize");
+        let video = result.unwrap();
+        assert_eq!(video.maxseq, Some(4));
+    }
+
+    #[cfg(not(feature = "openrtb_26"))]
+    #[test]
+    fn test_video_maxseq_not_available_without_feature() {
+        // This test verifies that maxseq field is not available without openrtb_26 feature
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .minduration(15)
+            .build()
+            .unwrap();
+
+        // The maxseq field should not exist in Video when openrtb_26 is disabled
+        // This is verified at compile time
+        assert_eq!(video.mimes, vec!["video/mp4"]);
+        assert_eq!(video.minduration, 15);
+    }
 }

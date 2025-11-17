@@ -302,4 +302,164 @@ mod tests {
         assert_eq!(imp.id, "imp1");
         assert_eq!(imp.bidfloor, 1.5);
     }
+
+    // === Phase 1.2: Required Field Validation Tests ===
+
+    #[test]
+    fn test_missing_required_id() {
+        // Test deserialization without required 'id' field
+        let json = r#"{"bidfloor":1.5}"#;
+        let result: Result<Imp, _> = serde_json::from_str(json);
+        assert!(
+            result.is_err(),
+            "Imp without required 'id' field should fail deserialization"
+        );
+    }
+
+    #[test]
+    fn test_empty_id() {
+        // Document that empty id string is currently allowed
+        let result = Imp::builder().id("".to_string()).build();
+        assert!(result.is_ok(), "Empty id string currently passes");
+        // TODO: Consider validation for empty required strings
+    }
+
+    #[test]
+    fn test_null_id() {
+        // Test explicit null for required field
+        let json = r#"{"id":null}"#;
+        let result: Result<Imp, _> = serde_json::from_str(json);
+        assert!(
+            result.is_err(),
+            "Imp with null 'id' should fail deserialization"
+        );
+    }
+
+    // === Phase 1.3: Boundary & Edge Case Tests ===
+
+    #[test]
+    fn test_negative_bidfloor() {
+        // Test negative bid floor
+        let imp = Imp::builder()
+            .id("imp1".to_string())
+            .bidfloor(-1.0)
+            .build()
+            .unwrap();
+
+        assert_eq!(imp.bidfloor, -1.0);
+        // Document: Negative bidfloor currently allowed
+        // TODO: Bid floors should be non-negative
+    }
+
+    #[test]
+    fn test_zero_bidfloor() {
+        // Test zero bid floor (valid - means no floor)
+        let imp = Imp::builder()
+            .id("imp1".to_string())
+            .bidfloor(0.0)
+            .build()
+            .unwrap();
+
+        assert_eq!(imp.bidfloor, 0.0);
+    }
+
+    #[test]
+    fn test_bidfloorcur_default() {
+        // Test bidfloorcur defaults to USD
+        let imp = Imp::builder().id("imp1".to_string()).build().unwrap();
+
+        assert_eq!(imp.bidfloorcur, "USD");
+    }
+
+    #[test]
+    fn test_invalid_bidfloorcur() {
+        // Test invalid currency code (not ISO-4217)
+        let imp = Imp::builder()
+            .id("imp1".to_string())
+            .bidfloorcur("INVALID".to_string())
+            .build()
+            .unwrap();
+
+        assert_eq!(imp.bidfloorcur, "INVALID");
+        // Document: No validation for ISO-4217 currency codes
+        // TODO: Consider validating currency codes
+    }
+
+    // === Phase 2.3: Feature Flag Tests (openrtb_26) ===
+
+    #[cfg(feature = "openrtb_26")]
+    #[test]
+    fn test_imp_with_qty_field() {
+        use crate::openrtb::v26::Qty;
+
+        // Test that OpenRTB 2.6 qty field is available and strongly typed
+        let qty = Qty::builder().multiplier(Some(10.0)).build().unwrap();
+
+        let imp = Imp::builder()
+            .id("imp1".to_string())
+            .qty(Some(qty))
+            .build()
+            .unwrap();
+
+        assert!(imp.qty.is_some());
+        assert_eq!(imp.qty.as_ref().unwrap().multiplier, Some(10.0));
+    }
+
+    #[cfg(feature = "openrtb_26")]
+    #[test]
+    fn test_imp_with_refresh_field() {
+        use crate::openrtb::v26::Refresh;
+
+        // Test that OpenRTB 2.6 refresh field is available and strongly typed
+        let refresh = Refresh::builder().build().unwrap();
+
+        let imp = Imp::builder()
+            .id("imp1".to_string())
+            .refresh(Some(refresh))
+            .build()
+            .unwrap();
+
+        assert!(imp.refresh.is_some());
+    }
+
+    #[cfg(feature = "openrtb_26")]
+    #[test]
+    fn test_imp_openrtb_26_serialization() {
+        use crate::openrtb::v26::{Qty, Refresh};
+
+        // Test serialization of OpenRTB 2.6 fields
+        let qty = Qty::builder().multiplier(Some(5.0)).build().unwrap();
+        let refresh = Refresh::builder().build().unwrap();
+
+        let imp = Imp::builder()
+            .id("imp1".to_string())
+            .qty(Some(qty))
+            .refresh(Some(refresh))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&imp).unwrap();
+        assert!(json.contains("\"qty\""));
+        assert!(json.contains("\"refresh\""));
+        assert!(json.contains("\"multiplier\""));
+    }
+
+    #[cfg(not(feature = "openrtb_26"))]
+    #[test]
+    fn test_imp_qty_and_refresh_as_generic_json_without_feature() {
+        // Without openrtb_26 feature, qty and refresh are generic serde_json::Value
+        let qty_json = serde_json::json!({"multiplier": 5.0});
+        let refresh_json = serde_json::json!({"count": 3});
+
+        let imp = Imp::builder()
+            .id("imp1".to_string())
+            .qty(Some(qty_json.clone()))
+            .refresh(Some(refresh_json.clone()))
+            .build()
+            .unwrap();
+
+        assert_eq!(imp.qty, Some(qty_json));
+        assert_eq!(imp.refresh, Some(refresh_json));
+        // Without the feature flag, these fields accept any JSON value
+    }
 }

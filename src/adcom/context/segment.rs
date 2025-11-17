@@ -36,3 +36,54 @@ impl Segment {
         SegmentBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_segment_builder() {
+        let segment = Segment::builder()
+            .id(Some("seg123".to_string()))
+            .name(Some("Demographics".to_string()))
+            .value(Some("25-34".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(segment.id, Some("seg123".to_string()));
+        assert_eq!(segment.name, Some("Demographics".to_string()));
+        assert_eq!(segment.value, Some("25-34".to_string()));
+    }
+
+    #[test]
+    fn test_segment_default() {
+        let segment = Segment::builder().build().unwrap();
+
+        assert!(segment.id.is_none());
+        assert!(segment.name.is_none());
+        assert!(segment.value.is_none());
+    }
+
+    #[test]
+    fn test_segment_serialization() {
+        let segment = Segment::builder()
+            .id(Some("seg456".to_string()))
+            .name(Some("Interest".to_string()))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&segment).unwrap();
+        assert!(json.contains("\"id\":\"seg456\""));
+        assert!(json.contains("\"name\":\"Interest\""));
+    }
+
+    #[test]
+    fn test_segment_deserialization() {
+        let json = r#"{"id":"seg789","name":"Behavioral","value":"high_intent"}"#;
+        let segment: Segment = serde_json::from_str(json).unwrap();
+
+        assert_eq!(segment.id, Some("seg789".to_string()));
+        assert_eq!(segment.name, Some("Behavioral".to_string()));
+        assert_eq!(segment.value, Some("high_intent".to_string()));
+    }
+}

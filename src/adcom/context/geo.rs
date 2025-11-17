@@ -72,3 +72,82 @@ impl Geo {
         GeoBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_geo_builder() {
+        let geo = Geo::builder()
+            .lat(Some(37.7749))
+            .lon(Some(-122.4194))
+            .country(Some("USA".to_string()))
+            .city(Some("San Francisco".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(geo.lat, Some(37.7749));
+        assert_eq!(geo.lon, Some(-122.4194));
+        assert_eq!(geo.country, Some("USA".to_string()));
+        assert_eq!(geo.city, Some("San Francisco".to_string()));
+    }
+
+    #[test]
+    fn test_geo_default() {
+        let geo = Geo::builder().build().unwrap();
+
+        assert!(geo.lat.is_none());
+        assert!(geo.lon.is_none());
+        assert!(geo.country.is_none());
+    }
+
+    #[test]
+    fn test_geo_serialization() {
+        let geo = Geo::builder()
+            .lat(Some(37.7749))
+            .lon(Some(-122.4194))
+            .country(Some("USA".to_string()))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&geo).unwrap();
+        assert!(json.contains("\"lat\":37.7749"));
+        assert!(json.contains("\"lon\":-122.4194"));
+        assert!(json.contains("\"country\":\"USA\""));
+    }
+
+    #[test]
+    fn test_geo_deserialization() {
+        let json = r#"{"lat":37.7749,"lon":-122.4194,"country":"USA"}"#;
+        let geo: Geo = serde_json::from_str(json).unwrap();
+
+        assert_eq!(geo.lat, Some(37.7749));
+        assert_eq!(geo.lon, Some(-122.4194));
+        assert_eq!(geo.country, Some("USA".to_string()));
+    }
+
+    #[test]
+    fn test_geo_with_all_fields() {
+        let geo = Geo::builder()
+            .type_(Some(1))
+            .lat(Some(40.7128))
+            .lon(Some(-74.0060))
+            .accur(Some(100))
+            .lastfix(Some(1609459200))
+            .ipserv(Some(3))
+            .country(Some("USA".to_string()))
+            .region(Some("NY".to_string()))
+            .metro(Some("501".to_string()))
+            .city(Some("New York".to_string()))
+            .zip(Some("10001".to_string()))
+            .utcoffset(Some(-300))
+            .build()
+            .unwrap();
+
+        assert_eq!(geo.type_, Some(1));
+        assert_eq!(geo.lat, Some(40.7128));
+        assert_eq!(geo.country, Some("USA".to_string()));
+        assert_eq!(geo.zip, Some("10001".to_string()));
+    }
+}

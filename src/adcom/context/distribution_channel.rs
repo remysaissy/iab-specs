@@ -43,3 +43,98 @@ impl DistributionChannel {
         DistributionChannelBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_distribution_channel_builder() {
+        let dc = DistributionChannel::builder()
+            .id(Some("dc123".to_string()))
+            .name(Some("Premium Content Network".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(dc.id, Some("dc123".to_string()));
+        assert_eq!(dc.name, Some("Premium Content Network".to_string()));
+    }
+
+    #[test]
+    fn test_distribution_channel_default() {
+        let dc = DistributionChannel::builder().build().unwrap();
+
+        assert!(dc.id.is_none());
+        assert!(dc.name.is_none());
+        assert!(dc.pub_.is_none());
+        assert!(dc.content.is_none());
+    }
+
+    #[test]
+    fn test_distribution_channel_with_publisher() {
+        let publisher = Publisher::builder()
+            .id(Some("pub123".to_string()))
+            .name(Some("Media Company".to_string()))
+            .domain(Some("mediacompany.com".to_string()))
+            .build()
+            .unwrap();
+
+        let dc = DistributionChannel::builder()
+            .id(Some("dc456".to_string()))
+            .pub_(Some(Box::new(publisher)))
+            .build()
+            .unwrap();
+
+        assert!(dc.pub_.is_some());
+        assert_eq!(dc.pub_.as_ref().unwrap().id, Some("pub123".to_string()));
+        assert_eq!(
+            dc.pub_.as_ref().unwrap().name,
+            Some("Media Company".to_string())
+        );
+    }
+
+    #[test]
+    fn test_distribution_channel_with_content() {
+        let content = Content::builder()
+            .id(Some("content123".to_string()))
+            .title(Some("Live Stream".to_string()))
+            .livestream(Some(1))
+            .build()
+            .unwrap();
+
+        let dc = DistributionChannel::builder()
+            .id(Some("dc789".to_string()))
+            .content(Some(Box::new(content)))
+            .build()
+            .unwrap();
+
+        assert!(dc.content.is_some());
+        assert_eq!(
+            dc.content.as_ref().unwrap().id,
+            Some("content123".to_string())
+        );
+        assert_eq!(dc.content.as_ref().unwrap().livestream, Some(1));
+    }
+
+    #[test]
+    fn test_distribution_channel_serialization() {
+        let dc = DistributionChannel::builder()
+            .id(Some("dc999".to_string()))
+            .name(Some("Video Platform".to_string()))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&dc).unwrap();
+        assert!(json.contains("\"id\":\"dc999\""));
+        assert!(json.contains("\"name\":\"Video Platform\""));
+    }
+
+    #[test]
+    fn test_distribution_channel_deserialization() {
+        let json = r#"{"id":"dc111","name":"Streaming Service"}"#;
+        let dc: DistributionChannel = serde_json::from_str(json).unwrap();
+
+        assert_eq!(dc.id, Some("dc111".to_string()));
+        assert_eq!(dc.name, Some("Streaming Service".to_string()));
+    }
+}

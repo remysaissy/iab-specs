@@ -94,3 +94,98 @@ impl Ad {
         AdBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_ad_builder() {
+        let ad = Ad::builder()
+            .id(Some("ad123".to_string()))
+            .adomain(Some(vec!["advertiser.com".to_string()]))
+            .lang(Some("en".to_string()))
+            .secure(Some(1))
+            .build()
+            .unwrap();
+
+        assert_eq!(ad.id, Some("ad123".to_string()));
+        assert_eq!(ad.adomain, Some(vec!["advertiser.com".to_string()]));
+        assert_eq!(ad.lang, Some("en".to_string()));
+        assert_eq!(ad.secure, Some(1));
+    }
+
+    #[test]
+    fn test_ad_default() {
+        let ad = Ad::builder().build().unwrap();
+
+        assert!(ad.id.is_none());
+        assert!(ad.adomain.is_none());
+        assert!(ad.display.is_none());
+        assert!(ad.video.is_none());
+        assert!(ad.audio.is_none());
+    }
+
+    #[test]
+    fn test_ad_with_categories() {
+        let ad = Ad::builder()
+            .id(Some("ad456".to_string()))
+            .cat(Some(vec!["IAB1".to_string(), "IAB1-1".to_string()]))
+            .cattax(Some(1))
+            .build()
+            .unwrap();
+
+        assert_eq!(ad.cat, Some(vec!["IAB1".to_string(), "IAB1-1".to_string()]));
+        assert_eq!(ad.cattax, Some(1));
+    }
+
+    #[test]
+    fn test_ad_with_bundle() {
+        let ad = Ad::builder()
+            .id(Some("ad789".to_string()))
+            .bundle(Some(vec!["com.example.app".to_string()]))
+            .build()
+            .unwrap();
+
+        assert_eq!(ad.bundle, Some(vec!["com.example.app".to_string()]));
+    }
+
+    #[test]
+    fn test_ad_serialization() {
+        let ad = Ad::builder()
+            .id(Some("ad999".to_string()))
+            .adomain(Some(vec!["example.com".to_string()]))
+            .secure(Some(1))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&ad).unwrap();
+        assert!(json.contains("\"id\":\"ad999\""));
+        assert!(json.contains("\"adomain\":[\"example.com\"]"));
+        assert!(json.contains("\"secure\":1"));
+    }
+
+    #[test]
+    fn test_ad_deserialization() {
+        let json = r#"{"id":"ad111","adomain":["test.com"],"lang":"en","secure":1}"#;
+        let ad: Ad = serde_json::from_str(json).unwrap();
+
+        assert_eq!(ad.id, Some("ad111".to_string()));
+        assert_eq!(ad.adomain, Some(vec!["test.com".to_string()]));
+        assert_eq!(ad.lang, Some("en".to_string()));
+        assert_eq!(ad.secure, Some(1));
+    }
+
+    #[test]
+    fn test_ad_with_timestamps() {
+        let ad = Ad::builder()
+            .id(Some("ad222".to_string()))
+            .init(Some(1234567890))
+            .lastmod(Some(1234567900))
+            .build()
+            .unwrap();
+
+        assert_eq!(ad.init, Some(1234567890));
+        assert_eq!(ad.lastmod, Some(1234567900));
+    }
+}

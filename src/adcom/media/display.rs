@@ -78,3 +78,97 @@ impl Display {
         DisplayBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_display_builder() {
+        let display = Display::builder()
+            .mime(Some("image/jpeg".to_string()))
+            .w(Some(300))
+            .h(Some(250))
+            .ctype(Some(1))
+            .build()
+            .unwrap();
+
+        assert_eq!(display.mime, Some("image/jpeg".to_string()));
+        assert_eq!(display.w, Some(300));
+        assert_eq!(display.h, Some(250));
+        assert_eq!(display.ctype, Some(1));
+    }
+
+    #[test]
+    fn test_display_default() {
+        let display = Display::builder().build().unwrap();
+
+        assert!(display.mime.is_none());
+        assert!(display.w.is_none());
+        assert!(display.h.is_none());
+        assert!(display.banner.is_none());
+        assert!(display.native.is_none());
+    }
+
+    #[test]
+    fn test_display_with_ratio() {
+        let display = Display::builder()
+            .wratio(Some(16))
+            .hratio(Some(9))
+            .build()
+            .unwrap();
+
+        assert_eq!(display.wratio, Some(16));
+        assert_eq!(display.hratio, Some(9));
+    }
+
+    #[test]
+    fn test_display_with_api() {
+        let display = Display::builder()
+            .mime(Some("text/html".to_string()))
+            .api(Some(vec![3, 5, 6]))
+            .build()
+            .unwrap();
+
+        assert_eq!(display.api, Some(vec![3, 5, 6]));
+    }
+
+    #[test]
+    fn test_display_serialization() {
+        let display = Display::builder()
+            .mime(Some("image/png".to_string()))
+            .w(Some(728))
+            .h(Some(90))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&display).unwrap();
+        assert!(json.contains("\"mime\":\"image/png\""));
+        assert!(json.contains("\"w\":728"));
+        assert!(json.contains("\"h\":90"));
+    }
+
+    #[test]
+    fn test_display_deserialization() {
+        let json = r#"{"mime":"image/gif","w":160,"h":600,"ctype":2}"#;
+        let display: Display = serde_json::from_str(json).unwrap();
+
+        assert_eq!(display.mime, Some("image/gif".to_string()));
+        assert_eq!(display.w, Some(160));
+        assert_eq!(display.h, Some(600));
+        assert_eq!(display.ctype, Some(2));
+    }
+
+    #[test]
+    fn test_display_with_adm() {
+        let display = Display::builder()
+            .adm(Some(
+                "<a href='https://example.com'><img src='ad.jpg'/></a>".to_string(),
+            ))
+            .build()
+            .unwrap();
+
+        assert!(display.adm.is_some());
+        assert!(display.adm.as_ref().unwrap().contains("<img"));
+    }
+}

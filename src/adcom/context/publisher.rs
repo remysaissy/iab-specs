@@ -44,3 +44,71 @@ impl Publisher {
         PublisherBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_publisher_builder() {
+        let publisher = Publisher::builder()
+            .id(Some("pub123".to_string()))
+            .name(Some("Publisher Inc".to_string()))
+            .domain(Some("publisher.com".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(publisher.id, Some("pub123".to_string()));
+        assert_eq!(publisher.name, Some("Publisher Inc".to_string()));
+        assert_eq!(publisher.domain, Some("publisher.com".to_string()));
+    }
+
+    #[test]
+    fn test_publisher_default() {
+        let publisher = Publisher::builder().build().unwrap();
+
+        assert!(publisher.id.is_none());
+        assert!(publisher.name.is_none());
+        assert!(publisher.domain.is_none());
+    }
+
+    #[test]
+    fn test_publisher_serialization() {
+        let publisher = Publisher::builder()
+            .id(Some("pub456".to_string()))
+            .name(Some("Test Publisher".to_string()))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&publisher).unwrap();
+        assert!(json.contains("\"id\":\"pub456\""));
+        assert!(json.contains("\"name\":\"Test Publisher\""));
+    }
+
+    #[test]
+    fn test_publisher_deserialization() {
+        let json = r#"{"id":"pub789","name":"Example Publisher","domain":"example.com"}"#;
+        let publisher: Publisher = serde_json::from_str(json).unwrap();
+
+        assert_eq!(publisher.id, Some("pub789".to_string()));
+        assert_eq!(publisher.name, Some("Example Publisher".to_string()));
+        assert_eq!(publisher.domain, Some("example.com".to_string()));
+    }
+
+    #[test]
+    fn test_publisher_with_categories() {
+        let publisher = Publisher::builder()
+            .id(Some("pub999".to_string()))
+            .name(Some("News Publisher".to_string()))
+            .cat(Some(vec!["IAB12".to_string(), "IAB12-1".to_string()]))
+            .cattax(Some(1))
+            .build()
+            .unwrap();
+
+        assert_eq!(
+            publisher.cat,
+            Some(vec!["IAB12".to_string(), "IAB12-1".to_string()])
+        );
+        assert_eq!(publisher.cattax, Some(1));
+    }
+}

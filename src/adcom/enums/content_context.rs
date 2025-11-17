@@ -27,3 +27,71 @@ pub enum ContentContext {
     /// Unknown
     Unknown = 7,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_all_valid_values() {
+        // Test all valid ContentContext values (1-7)
+        for value in 1..=7 {
+            let json = format!("{}", value);
+            let result: Result<ContentContext, _> = serde_json::from_str(&json);
+            assert!(
+                result.is_ok(),
+                "Valid value {} should deserialize successfully",
+                value
+            );
+        }
+    }
+    #[test]
+    fn test_invalid_value_zero() {
+        let json = "0";
+        let result: Result<ContentContext, _> = serde_json::from_str(json);
+        assert!(
+            result.is_err(),
+            "Value 0 is not a valid ContentContext and should fail deserialization"
+        );
+    }
+    #[test]
+    fn test_invalid_value_out_of_range() {
+        let json = "99";
+        let result: Result<ContentContext, _> = serde_json::from_str(json);
+        assert!(
+            result.is_err(),
+            "Value 99 is out of range and should fail deserialization"
+        );
+    }
+    #[test]
+    fn test_invalid_value_negative() {
+        let json = "-1";
+        let result: Result<ContentContext, _> = serde_json::from_str(json);
+        assert!(
+            result.is_err(),
+            "Negative values should fail deserialization"
+        );
+    }
+    #[test]
+    fn test_serialization_roundtrip() {
+        let values = [
+            ContentContext::Video,
+            ContentContext::Game,
+            ContentContext::Music,
+            ContentContext::Application,
+            ContentContext::Text,
+            ContentContext::Other,
+            ContentContext::Unknown,
+        ];
+
+        for original in values {
+            let json = serde_json::to_string(&original).unwrap();
+            let deserialized: ContentContext = serde_json::from_str(&json).unwrap();
+            assert_eq!(
+                original, deserialized,
+                "Serialization roundtrip failed for {:?}",
+                original
+            );
+        }
+    }
+}

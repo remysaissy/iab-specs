@@ -121,3 +121,129 @@ impl Content {
         ContentBuilder::create_empty()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_content_builder() {
+        let content = Content::builder()
+            .id(Some("content123".to_string()))
+            .title(Some("Breaking News".to_string()))
+            .url(Some("https://example.com/video".to_string()))
+            .language(Some("en".to_string()))
+            .len(Some(300))
+            .build()
+            .unwrap();
+
+        assert_eq!(content.id, Some("content123".to_string()));
+        assert_eq!(content.title, Some("Breaking News".to_string()));
+        assert_eq!(content.url, Some("https://example.com/video".to_string()));
+        assert_eq!(content.language, Some("en".to_string()));
+        assert_eq!(content.len, Some(300));
+    }
+
+    #[test]
+    fn test_content_default() {
+        let content = Content::builder().build().unwrap();
+
+        assert!(content.id.is_none());
+        assert!(content.title.is_none());
+        assert!(content.url.is_none());
+        assert!(content.producer.is_none());
+        assert!(content.cat.is_none());
+    }
+
+    #[test]
+    fn test_content_with_producer() {
+        let producer = Producer::builder()
+            .id(Some("prod123".to_string()))
+            .name(Some("ABC Studios".to_string()))
+            .build()
+            .unwrap();
+
+        let content = Content::builder()
+            .id(Some("content456".to_string()))
+            .title(Some("Documentary".to_string()))
+            .producer(Some(Box::new(producer)))
+            .build()
+            .unwrap();
+
+        assert!(content.producer.is_some());
+        assert_eq!(
+            content.producer.as_ref().unwrap().id,
+            Some("prod123".to_string())
+        );
+        assert_eq!(
+            content.producer.as_ref().unwrap().name,
+            Some("ABC Studios".to_string())
+        );
+    }
+
+    #[test]
+    fn test_content_serialization() {
+        let content = Content::builder()
+            .id(Some("content789".to_string()))
+            .title(Some("Action Movie".to_string()))
+            .genre(Some("Action".to_string()))
+            .len(Some(7200))
+            .livestream(Some(0))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&content).unwrap();
+        assert!(json.contains("\"id\":\"content789\""));
+        assert!(json.contains("\"title\":\"Action Movie\""));
+        assert!(json.contains("\"genre\":\"Action\""));
+        assert!(json.contains("\"len\":7200"));
+    }
+
+    #[test]
+    fn test_content_deserialization() {
+        let json = r#"{"id":"content999","title":"Sports Event","livestream":1,"len":10800}"#;
+        let content: Content = serde_json::from_str(json).unwrap();
+
+        assert_eq!(content.id, Some("content999".to_string()));
+        assert_eq!(content.title, Some("Sports Event".to_string()));
+        assert_eq!(content.livestream, Some(1));
+        assert_eq!(content.len, Some(10800));
+    }
+
+    #[test]
+    fn test_content_with_media_fields() {
+        let content = Content::builder()
+            .id(Some("content555".to_string()))
+            .series(Some("Breaking Bad".to_string()))
+            .season(Some("S05".to_string()))
+            .episode(Some(16))
+            .title(Some("Felina".to_string()))
+            .artist(Some("Vince Gilligan".to_string()))
+            .contentrating(Some("TV-MA".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(content.series, Some("Breaking Bad".to_string()));
+        assert_eq!(content.season, Some("S05".to_string()));
+        assert_eq!(content.episode, Some(16));
+        assert_eq!(content.title, Some("Felina".to_string()));
+        assert_eq!(content.contentrating, Some("TV-MA".to_string()));
+    }
+
+    #[test]
+    fn test_content_with_categories() {
+        let content = Content::builder()
+            .id(Some("content111".to_string()))
+            .title(Some("Tech Tutorial".to_string()))
+            .cat(Some(vec!["IAB19".to_string(), "IAB19-6".to_string()]))
+            .cattax(Some(1))
+            .build()
+            .unwrap();
+
+        assert_eq!(
+            content.cat,
+            Some(vec!["IAB19".to_string(), "IAB19-6".to_string()])
+        );
+        assert_eq!(content.cattax, Some(1));
+    }
+}

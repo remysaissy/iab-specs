@@ -56,3 +56,80 @@ pub enum Protocol {
     /// VAST 4.3 Wrapper
     Vast4_3Wrapper = 16,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_all_valid_values() {
+        // Test all valid Protocol values (1-16)
+        for value in 1..=16 {
+            let json = format!("{}", value);
+            let result: Result<Protocol, _> = serde_json::from_str(&json);
+            assert!(
+                result.is_ok(),
+                "Valid value {} should deserialize successfully",
+                value
+            );
+        }
+    }
+    #[test]
+    fn test_invalid_value_zero() {
+        let json = "0";
+        let result: Result<Protocol, _> = serde_json::from_str(json);
+        assert!(
+            result.is_err(),
+            "Value 0 is not a valid Protocol and should fail deserialization"
+        );
+    }
+    #[test]
+    fn test_invalid_value_out_of_range() {
+        let json = "99";
+        let result: Result<Protocol, _> = serde_json::from_str(json);
+        assert!(
+            result.is_err(),
+            "Value 99 is out of range and should fail deserialization"
+        );
+    }
+    #[test]
+    fn test_invalid_value_negative() {
+        let json = "-1";
+        let result: Result<Protocol, _> = serde_json::from_str(json);
+        assert!(
+            result.is_err(),
+            "Negative values should fail deserialization"
+        );
+    }
+    #[test]
+    fn test_serialization_roundtrip() {
+        let values = [
+            Protocol::Vast1,
+            Protocol::Vast2,
+            Protocol::Vast3,
+            Protocol::Vast1Wrapper,
+            Protocol::Vast2Wrapper,
+            Protocol::Vast3Wrapper,
+            Protocol::Vast4,
+            Protocol::Vast4Wrapper,
+            Protocol::Daast1,
+            Protocol::Daast1Wrapper,
+            Protocol::Vast4_1,
+            Protocol::Vast4_1Wrapper,
+            Protocol::Vast4_2,
+            Protocol::Vast4_2Wrapper,
+            Protocol::Vast4_3,
+            Protocol::Vast4_3Wrapper,
+        ];
+
+        for original in values {
+            let json = serde_json::to_string(&original).unwrap();
+            let deserialized: Protocol = serde_json::from_str(&json).unwrap();
+            assert_eq!(
+                original, deserialized,
+                "Serialization roundtrip failed for {:?}",
+                original
+            );
+        }
+    }
+}
