@@ -20,6 +20,7 @@ pub enum ContentQuality {
     UserGenerated = 3,
 }
 
+#[allow(deprecated)]
 #[cfg(test)]
 mod tests {
     use super::*;
