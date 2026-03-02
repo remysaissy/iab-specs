@@ -1,6 +1,3 @@
-// Allow ambiguous glob re-exports since v26 intentionally extends v25
-#![allow(ambiguous_glob_reexports)]
-
 /// OpenRTB 2.6 Protocol Implementation
 ///
 /// This module implements the complete OpenRTB 2.6 specification as defined by the IAB.
@@ -15,7 +12,8 @@
 /// ## Example: CTV Ad Pod Configuration
 ///
 /// ```rust
-/// use iab_specs::openrtb::v26::{Video, DurFloors};
+/// use iab_specs::openrtb::v25::Video;
+/// use iab_specs::openrtb::v26::DurFloors;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let video = Video::builder()
@@ -46,7 +44,8 @@
 /// ## Example: DOOH with Viewer Multiplier
 ///
 /// ```rust
-/// use iab_specs::openrtb::v26::{Imp, Qty};
+/// use iab_specs::openrtb::v25::Imp;
+/// use iab_specs::openrtb::v26::Qty;
 ///
 /// # fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 /// let imp = Imp::builder()
@@ -91,16 +90,13 @@
 /// OpenRTB 2.6 Specification:
 /// <https://github.com/InteractiveAdvertisingBureau/openrtb2.x/blob/main/2.6.md>
 // OpenRTB 2.6 specific objects
-pub mod durfloors;
-pub mod qty;
-pub mod ref_settings;
-pub mod refresh;
+mod durfloors;
+mod qty;
+mod ref_settings;
+mod refresh;
 
-// Re-export 2.6-specific objects
+// Re-export 2.6-specific types
 pub use durfloors::DurFloors;
 pub use qty::Qty;
 pub use ref_settings::RefSettings;
 pub use refresh::Refresh;
-
-// Re-export OpenRTB 2.5 types (2.6 extends 2.5)
-pub use crate::openrtb::v25::*;
