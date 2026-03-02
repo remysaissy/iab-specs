@@ -20,6 +20,7 @@ An unofficial Rust implementation of various IAB (Interactive Advertising Bureau
 - **[Ads.txt 1.1](https://iabtechlab.com/wp-content/uploads/2022/04/Ads.txt-1.1.pdf)** - Authorized Digital Sellers declaration for websites
 - **[App-ads.txt 1.0](https://iabtechlab.com/wp-content/uploads/2019/03/app-ads.txt-v1.0-final-.pdf)** - Authorized Digital Sellers declaration for mobile and CTV apps
 - **[Sellers.json 1.0](https://iabtechlab.com/wp-content/uploads/2019/07/Sellers.json_Final.pdf)** - Supply chain transparency
+- **[Agentic RTB Framework 1.0](https://github.com/IABTechLab/agentic-rtb-framework)** - Autonomous agent bidstream processing via the OpenRTB Patch Protocol
 
 ## Installation
 
@@ -28,17 +29,17 @@ Add `iab-specs` to your `Cargo.toml` with the features you need:
 ```toml
 [dependencies]
 # Enable all specifications
-iab-specs = { version = "0.2", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json"] }
+iab-specs = { version = "0.3", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10"] }
 
 # Or enable only what you need
-iab-specs = { version = "0.2", features = ["openrtb_30"] }
+iab-specs = { version = "0.3", features = ["openrtb_30"] }
 ```
 
 Or use cargo:
 
 ```bash
 # Enable all specifications
-cargo add iab-specs --features adcom,openrtb_25,openrtb_26,openrtb_30,openrtb_native_12,ads_txt,app_ads_txt,sellers_json
+cargo add iab-specs --features adcom,openrtb_25,openrtb_26,openrtb_30,openrtb_native_12,ads_txt,app_ads_txt,sellers_json,artb_10
 
 # Or enable only what you need
 cargo add iab-specs --features openrtb_30
@@ -58,37 +59,41 @@ The library uses cargo features to enable/disable specifications:
 - `ads_txt` - Ads.txt 1.1 support
 - `app_ads_txt` - App-ads.txt 1.0 support (automatically includes `ads_txt`)
 - `sellers_json` - Sellers.json 1.0 support
+- `artb_10` - Agentic RTB Framework 1.0 support (autonomous agent bidstream processing)
 
 ### Feature Selection Examples
 
 ```toml
 [dependencies]
 # Only AdCOM support
-iab-specs = { version = "0.2", features = ["adcom"] }
+iab-specs = { version = "0.3", features = ["adcom"] }
 
 # Only OpenRTB 2.5 support (automatically includes adcom)
-iab-specs = { version = "0.2", features = ["openrtb_25"] }
+iab-specs = { version = "0.3", features = ["openrtb_25"] }
 
 # Only OpenRTB 2.6 support (automatically includes openrtb_25 and adcom)
-iab-specs = { version = "0.2", features = ["openrtb_26"] }
+iab-specs = { version = "0.3", features = ["openrtb_26"] }
 
 # Only OpenRTB 3.0 support (automatically includes adcom)
-iab-specs = { version = "0.2", features = ["openrtb_30"] }
+iab-specs = { version = "0.3", features = ["openrtb_30"] }
 
 # Only ads.txt support
-iab-specs = { version = "0.2", features = ["ads_txt"] }
+iab-specs = { version = "0.3", features = ["ads_txt"] }
 
 # Only app-ads.txt support (automatically includes ads_txt)
-iab-specs = { version = "0.2", features = ["app_ads_txt"] }
+iab-specs = { version = "0.3", features = ["app_ads_txt"] }
 
 # Only sellers.json support
-iab-specs = { version = "0.2", features = ["sellers_json"] }
+iab-specs = { version = "0.3", features = ["sellers_json"] }
 
 # OpenRTB 3.0 with ads.txt and sellers.json
-iab-specs = { version = "0.2", features = ["openrtb_30", "ads_txt", "sellers_json"] }
+iab-specs = { version = "0.3", features = ["openrtb_30", "ads_txt", "sellers_json"] }
+
+# Only ARTB 1.0 support (autonomous agent bidstream processing)
+iab-specs = { version = "0.3", features = ["artb_10"] }
 
 # All specifications
-iab-specs = { version = "0.2", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "ads_txt", "app_ads_txt", "sellers_json"] }
+iab-specs = { version = "0.3", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10"] }
 ```
 
 **Why no default features?**
@@ -581,6 +586,69 @@ let bid_request = BidRequest::builder()
 - DCO (Dynamic Creative Optimization) URL support
 - AdCOM integration for standardized enumerations
 
+### Agentic RTB Framework 1.0
+
+Process OpenRTB bidstream with autonomous agents using the ARTB Patch Protocol:
+
+```rust
+use iab_specs::artb::v10::{
+    RTBRequest, RTBResponse, Mutation, Metadata, Originator,
+    Lifecycle, Intent, Operation, IDsPayload, OriginatorType,
+};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Orchestrator creates a request for the agent
+    let request = RTBRequest::builder()
+        .lifecycle(Lifecycle::PublisherBidRequest)
+        .id("req-12345")
+        .tmax(Some(100))
+        .bid_request(Some(serde_json::json!({
+            "id": "auction-1",
+            "imp": [{"id": "imp-1"}]
+        })))
+        .originator(Some(Originator::builder()
+            .type_(OriginatorType::Ssp)
+            .name("Example SSP")
+            .build()?))
+        .applicable_intents(vec![
+            Intent::ActivateSegments,
+            Intent::ActivateDeals,
+        ])
+        .build()?;
+
+    // Agent processes and returns mutations
+    let response = RTBResponse::builder()
+        .id("req-12345")
+        .mutations(vec![
+            Mutation::builder()
+                .intent(Intent::ActivateSegments)
+                .op(Operation::Add)
+                .path("/user/data/segment".to_string())
+                .ids(Some(IDsPayload::builder()
+                    .id(vec!["seg-001".to_string(), "seg-002".to_string()])
+                    .build()?))
+                .build()?,
+        ])
+        .metadata(Some(Metadata::builder()
+            .api_version("1.0")
+            .model_version("v0.10.0")
+            .build()?))
+        .build()?;
+
+    // Serialize to JSON
+    let json = serde_json::to_string_pretty(&response)?;
+    println!("{}", json);
+
+    Ok(())
+}
+```
+
+**Key ARTB 1.0 Features:**
+- Atomic, intent-declared mutations to OpenRTB bid requests and responses
+- Segment activation, deal management, bid shading, metrics, and content data
+- Agent metadata with API and model versioning
+- Extension support for custom agent-specific data
+
 ### Ads.txt
 
 Parse and generate ads.txt files:
@@ -760,6 +828,7 @@ All scripts support `--help` for more options.
 - [x] OpenRTB 2.6
 - [x] OpenRTB 3.0
 - [x] OpenRTB Native Ads 1.2
+- [x] Agentic RTB Framework 1.0
 - [ ] Additional IAB specifications (contributions welcome!)
 
 ## Contributing

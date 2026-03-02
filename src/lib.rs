@@ -7,6 +7,8 @@
 //!   - [`openrtb::v30`] - OpenRTB 3.0 with layered architecture
 //!   - [`openrtb::native`] - OpenRTB Native Ads 1.2 specification
 //!   - [`openrtb::common`] - Common objects shared between versions
+//! - [`artb`] - Agentic RTB Framework 1.0 specification
+//!   - [`artb::v10`] - ARTB 1.0 with OpenRTB Patch Protocol
 //! - [`ads_txt`] - Ads.txt 1.1 parser and generator
 //! - [`app_ads_txt`] - App-ads.txt 1.0 parser and generator
 //! - [`sellers_json`] - Sellers.json 1.0 parser and generator
@@ -100,6 +102,8 @@ pub mod adcom;
 pub mod ads_txt;
 #[cfg(feature = "app_ads_txt")]
 pub mod app_ads_txt;
+#[cfg(feature = "artb_10")]
+pub mod artb;
 mod errors;
 #[cfg(any(feature = "openrtb_25", feature = "openrtb_26", feature = "openrtb_30"))]
 pub mod openrtb;
