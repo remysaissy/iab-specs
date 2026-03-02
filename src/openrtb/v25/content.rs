@@ -24,9 +24,9 @@ fn default_gtax() -> i32 {
 ///
 /// # Generic Parameters
 ///
-/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
-/// * `NetworkExt` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
-/// * `ChannelExt` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to [`DefaultExt`](crate::DefaultExt).
+/// * `NetworkExt` - Extension object type (must implement [`Extension`]). Defaults to [`DefaultExt`](crate::DefaultExt).
+/// * `ChannelExt` - Extension object type (must implement [`Extension`]). Defaults to [`DefaultExt`](crate::DefaultExt).
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(
