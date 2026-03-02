@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Generic Parameters
 ///
-/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to [`DefaultExt`](crate::DefaultExt).
 ///
 /// # Example
 ///
@@ -133,7 +133,7 @@ impl NativeRequest {
 ///
 /// # Generic Parameters
 ///
-/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to [`DefaultExt`](crate::DefaultExt).
 ///
 /// # Example
 ///
@@ -208,7 +208,7 @@ impl Asset {
 ///
 /// # Generic Parameters
 ///
-/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to [`DefaultExt`](crate::DefaultExt).
 ///
 /// # Example
 ///
@@ -251,7 +251,7 @@ impl Title {
 ///
 /// # Generic Parameters
 ///
-/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to [`DefaultExt`](crate::DefaultExt).
 ///
 /// # Example
 ///
@@ -341,7 +341,7 @@ impl Image {
 ///
 /// # Generic Parameters
 ///
-/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to [`DefaultExt`](crate::DefaultExt).
 ///
 /// # Example
 ///
@@ -402,7 +402,7 @@ impl Video {
 ///
 /// # Generic Parameters
 ///
-/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to [`DefaultExt`](crate::DefaultExt).
 ///
 /// # Example
 ///
@@ -464,7 +464,7 @@ impl Data {
 ///
 /// # Generic Parameters
 ///
-/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to [`DefaultExt`](crate::DefaultExt).
 ///
 /// # Example
 ///
