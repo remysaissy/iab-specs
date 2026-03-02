@@ -2,20 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.3.0] - 2025-11-25
+## [0.4.0] - 2026-03-02
 
 ### 🚀 Features
 
 - Add Extension struct and refactor codebase to use it.
 - Add OpenRTB Native Ads 1.2 specification support
+- Add Agentic RTB Framework 1.0 specification support
+- Add proto feature for protobuf transport support
 
 ### 🚜 Refactor
 
 - Include openrtb_native_12 in github action test matrix.
+- Removes now useless file.
+- Enforce consistent module re-export convention
 
 ### 📚 Documentation
 
 - Enhance Extension trait documentation and standardize builder pattern
+- Update generic parameter defaults to reference DefaultExt
 
 ### 🧪 Testing
 
