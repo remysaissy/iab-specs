@@ -74,7 +74,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Openrtb<Ext: Extension = serde_json::Value> {
+pub struct Openrtb<Ext: Extension = crate::DefaultExt> {
     /// Version of the OpenRTB protocol (e.g., "3.0").
     /// REQUIRED by the specification.
     pub ver: String,

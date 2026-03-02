@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct DisplayFormat<Ext: Extension = serde_json::Value> {
+pub struct DisplayFormat<Ext: Extension = crate::DefaultExt> {
     /// Width in units specified by the parent DisplayPlacement.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]

@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Regs<Ext: Extension = serde_json::Value> {
+pub struct Regs<Ext: Extension = crate::DefaultExt> {
     /// COPPA compliance flag (1=yes, 0=no)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub coppa: Option<i32>,

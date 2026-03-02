@@ -29,7 +29,7 @@ use serde::{Deserialize, Serialize};
     serialize = "Ext: Extension, SpecExt: Extension",
     deserialize = "Ext: Extension, SpecExt: Extension"
 ))]
-pub struct Item<Ext: Extension = serde_json::Value, SpecExt: Extension = serde_json::Value> {
+pub struct Item<Ext: Extension = crate::DefaultExt, SpecExt: Extension = crate::DefaultExt> {
     /// Unique identifier for this item within the context of the request.
     /// REQUIRED by the specification.
     pub id: String,
@@ -237,6 +237,7 @@ mod tests {
         assert_eq!(item.dlvy, Some(2));
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_item_with_spec() {
         let spec = Box::new(serde_json::json!({

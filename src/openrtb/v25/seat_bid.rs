@@ -26,7 +26,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct SeatBid<Ext: Extension = serde_json::Value> {
+pub struct SeatBid<Ext: Extension = crate::DefaultExt> {
     /// Array of 1+ Bid objects
     #[builder(setter(into))]
     pub bid: Vec<Bid<Ext>>,
@@ -127,6 +127,7 @@ mod tests {
         assert!(json.contains("\"group\":0"));
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_seat_bid_with_ext() {
         let bid = Bid::builder()

@@ -36,7 +36,7 @@ use crate::openrtb::v26::DurFloors;
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Audio<Ext: Extension = serde_json::Value> {
+pub struct Audio<Ext: Extension = crate::DefaultExt> {
     /// Content MIME types supported (e.g., "audio/mp4", "audio/mpeg").
     /// **Required field** - at least one MIME type must be specified.
     #[builder(setter(into))]
@@ -186,7 +186,7 @@ pub struct Audio<Ext: Extension = serde_json::Value> {
     #[cfg(not(feature = "openrtb_26"))]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub durfloors: Option<Vec<serde_json::Value>>,
+    pub durfloors: Option<Vec<crate::DefaultExt>>,
 
     /// Extension object for exchange-specific extensions.
     #[serde(skip_serializing_if = "Option::is_none")]

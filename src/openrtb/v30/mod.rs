@@ -397,6 +397,7 @@ mod integration_tests {
         assert_eq!(parsed.seatbid.len(), 0);
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_multi_currency_request() {
         use spec::{DisplayFormat, DisplayPlacement};
@@ -453,6 +454,7 @@ mod integration_tests {
         assert_eq!(req.item[0].flrcur.as_ref().unwrap(), "EUR");
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_video_placement_integration() {
         use spec::VideoPlacement;
@@ -493,6 +495,7 @@ mod integration_tests {
         assert!(parsed.item[0].spec.is_some());
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_audio_placement_integration() {
         use spec::AudioPlacement;

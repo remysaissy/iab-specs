@@ -53,7 +53,7 @@ fn default_currency() -> String {
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct BidResponse<Ext: Extension = serde_json::Value> {
+pub struct BidResponse<Ext: Extension = crate::DefaultExt> {
     /// ID of the bid request to which this is a response.
     /// **Required field** - must match the request ID.
     #[builder(setter(into))]
@@ -268,6 +268,7 @@ mod tests {
         assert_eq!(response.customdata, Some("custom_bidder_data".to_string()));
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_bid_response_with_ext() {
         let ext_value = Box::new(serde_json::json!({"custom_field": "custom_value"}));

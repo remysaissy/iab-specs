@@ -12,11 +12,14 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Generic Parameters
 ///
-/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+/// * `P` - Payload type for bid request/response (must implement [`Extension`]). Defaults to [`DefaultExt`](crate::DefaultExt).
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to [`DefaultExt`](crate::DefaultExt).
 ///
 /// # Example
 ///
 /// ```
+/// #[cfg(all(feature = "json", not(feature = "proto")))]
+/// {
 /// use iab_specs::artb::v10::{RTBRequest, Lifecycle, Intent, Originator, OriginatorType};
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -39,11 +42,15 @@ use serde::{Deserialize, Serialize};
 ///     .build()?;
 /// # Ok(())
 /// # }
+/// }
 /// ```
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
-#[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct RTBRequest<Ext: Extension = serde_json::Value> {
+#[serde(bound(
+    serialize = "P: Extension, Ext: Extension",
+    deserialize = "P: Extension, Ext: Extension"
+))]
+pub struct RTBRequest<P: Extension = crate::DefaultExt, Ext: Extension = crate::DefaultExt> {
     /// The auction lifecycle stage when this request is being made.
     pub lifecycle: Lifecycle,
 
@@ -61,13 +68,13 @@ pub struct RTBRequest<Ext: Extension = serde_json::Value> {
     /// Present during `Lifecycle::PublisherBidRequest` and `Lifecycle::DspBidResponse`.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub bid_request: Option<serde_json::Value>,
+    pub bid_request: Option<P>,
 
     /// Full OpenRTB bid response payload.
     /// Present only during `Lifecycle::DspBidResponse`.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub bid_response: Option<serde_json::Value>,
+    pub bid_response: Option<P>,
 
     /// The business entity that owns the bid request/response.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -88,7 +95,7 @@ pub struct RTBRequest<Ext: Extension = serde_json::Value> {
 
 impl RTBRequest {
     /// Convenience method to create a new instance using the builder pattern.
-    pub fn builder() -> RTBRequestBuilder {
+    pub fn builder() -> RTBRequestBuilder<crate::DefaultExt, crate::DefaultExt> {
         RTBRequestBuilder::create_empty()
     }
 }
@@ -98,6 +105,7 @@ mod tests {
     use super::*;
     use crate::artb::v10::enums::OriginatorType;
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_rtb_request_creation() {
         let request = RTBRequest::builder()
@@ -117,6 +125,7 @@ mod tests {
         assert_eq!(request.applicable_intents.len(), 2);
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_rtb_request_dsp_bid_response() {
         let request = RTBRequest::builder()
@@ -171,6 +180,7 @@ mod tests {
         assert!(json.contains("\"applicable_intents\":[1]"));
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_rtb_request_deserialization() {
         let json = r#"{
@@ -189,6 +199,7 @@ mod tests {
         assert_eq!(request.applicable_intents.len(), 3);
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_rtb_request_roundtrip() {
         let request = RTBRequest::builder()

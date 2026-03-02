@@ -210,9 +210,12 @@
 //! # Extension Support
 //!
 //! All objects support custom extensions via the generic `Ext` parameter.
-//! By default, extensions use `serde_json::Value` for flexible, untyped extensions:
+//! By default, extensions use [`DefaultExt`](crate::DefaultExt) (`serde_json::Value` with `json`,
+//! `Vec<u8>` with `proto`, `()` without any serialization feature):
 //!
 //! ```rust
+//! #[cfg(all(feature = "json", not(feature = "proto")))]
+//! {
 //! use iab_specs::openrtb::native::v12::NativeRequest;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -226,6 +229,7 @@
 //!     .build()?;
 //! # Ok(())
 //! # }
+//! }
 //! ```
 //!
 //! # Specification Reference

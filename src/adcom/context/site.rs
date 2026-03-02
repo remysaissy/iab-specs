@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Site<Ext: Extension = serde_json::Value> {
+pub struct Site<Ext: Extension = crate::DefaultExt> {
     /// Vendor-specific unique site identifier
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
