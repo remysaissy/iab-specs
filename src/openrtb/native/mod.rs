@@ -44,6 +44,3 @@
 
 #[cfg(feature = "openrtb_native_12")]
 pub mod v12;
-
-#[cfg(feature = "openrtb_native_12")]
-pub use v12::*;

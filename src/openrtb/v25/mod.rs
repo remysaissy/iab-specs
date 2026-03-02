@@ -82,35 +82,35 @@
 ///
 /// OpenRTB 2.5 Specification:
 /// <https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf>
-// Core bid objects (Phase 2, Commit 3)
-pub mod bid;
-pub mod request;
-pub mod response;
-pub mod seat_bid;
+// Core bid objects
+mod bid;
+mod request;
+mod response;
+mod seat_bid;
 
-// Impression and media objects (Phase 2, Commit 4)
-pub mod audio;
-pub mod banner;
-pub mod format;
-pub mod imp;
-pub mod native;
-pub mod video;
+// Impression and media objects
+mod audio;
+mod banner;
+mod format;
+mod imp;
+mod native;
+mod video;
 
-// Context objects (Phase 2, Commit 5)
-pub mod app;
-pub mod content;
-pub mod producer;
-pub mod publisher;
-pub mod site;
+// Context objects
+mod app;
+mod content;
+mod producer;
+mod publisher;
+mod site;
 
-// User and device objects (Phase 2, Commit 6)
-pub mod device;
-pub mod geo;
-pub mod user;
+// User and device objects
+mod device;
+mod geo;
+mod user;
 
-// Regulatory and source objects (Phase 2, Commit 7)
-pub mod regs;
-pub mod source;
+// Regulatory and source objects
+mod regs;
+mod source;
 
 // Re-export core bid types for convenient access
 pub use bid::Bid;

@@ -345,7 +345,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 OpenRTB 2.6 adds support for CTV ad pods, DOOH multipliers, and more:
 
 ```rust
-use iab_specs::openrtb::v26::{Video, Qty, DurFloors};
+use iab_specs::openrtb::v25::Video;
+use iab_specs::openrtb::v26::{Qty, DurFloors};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // CTV ad pod with duration-based pricing

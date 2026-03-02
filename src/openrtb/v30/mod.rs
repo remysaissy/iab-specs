@@ -140,8 +140,6 @@ pub use request::Request;
 pub use response::Response;
 pub use seat_bid::SeatBid;
 pub use source::{Source, SupplyChain, SupplyChainNode};
-pub use spec::{AudioPlacement, DisplayFormat, DisplayPlacement, VideoPlacement};
-
 #[cfg(test)]
 mod integration_tests {
     use super::*;
