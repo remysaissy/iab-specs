@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Native<Ext: Extension = serde_json::Value> {
+pub struct Native<Ext: Extension = crate::DefaultExt> {
     /// Default destination link
     #[serde(skip_serializing_if = "Option::is_none")]
     pub link: Option<Box<LinkAsset>>,

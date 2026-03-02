@@ -9,7 +9,9 @@ use crate::Extension;
 use crate::openrtb::SupplyChainNode;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "json")]
 use std::fmt::{Display, Formatter};
+#[cfg(feature = "json")]
 use std::str::FromStr;
 
 /// Supply chain object.
@@ -25,6 +27,8 @@ use std::str::FromStr;
 /// ## Example
 ///
 /// ```
+/// #[cfg(feature = "json")]
+/// {
 /// use iab_specs::openrtb::{SupplyChain, SupplyChainNode};
 /// use std::str::FromStr;
 ///
@@ -41,11 +45,12 @@ use std::str::FromStr;
 /// let schain = SupplyChain::from_str(json).unwrap();
 /// assert_eq!(schain.complete, Some(1));
 /// assert_eq!(schain.nodes.len(), 1);
+/// }
 /// ```
 #[derive(Builder, Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct SupplyChain<Ext: Extension = serde_json::Value> {
+pub struct SupplyChain<Ext: Extension = crate::DefaultExt> {
     /// Flag indicating whether the chain contains all nodes involved in the transaction
     /// leading back to the owner of the site, app or other medium of the inventory.
     ///
@@ -84,6 +89,7 @@ impl SupplyChain {
     }
 }
 
+#[cfg(feature = "json")]
 impl Display for SupplyChain {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match serde_json::to_string(&self) {
@@ -93,6 +99,7 @@ impl Display for SupplyChain {
     }
 }
 
+#[cfg(feature = "json")]
 impl FromStr for SupplyChain {
     type Err = crate::Error;
 
@@ -105,6 +112,7 @@ impl FromStr for SupplyChain {
 mod tests {
     use super::*;
 
+    #[cfg(feature = "json")]
     #[test]
     fn test_supply_chain_minimal() {
         let json = r#"{
@@ -123,6 +131,7 @@ mod tests {
         assert_eq!(schain.nodes[0].asi, "example.com");
     }
 
+    #[cfg(feature = "json")]
     #[test]
     fn test_supply_chain_complete() {
         let json = r#"{
@@ -157,6 +166,7 @@ mod tests {
         assert_eq!(schain.nodes[1].hp, 0);
     }
 
+    #[cfg(feature = "json")]
     #[test]
     fn test_supply_chain_missing_required_field() {
         // Missing 'nodes' field
@@ -165,6 +175,7 @@ mod tests {
         assert!(result.is_err());
     }
 
+    #[cfg(feature = "json")]
     #[test]
     fn test_supply_chain_serialization() {
         let schain = SupplyChain::builder()
@@ -187,6 +198,7 @@ mod tests {
         assert_eq!(schain, schain2);
     }
 
+    #[cfg(feature = "json")]
     #[test]
     fn test_supply_chain_display() {
         let schain = SupplyChain::builder()
@@ -205,6 +217,7 @@ mod tests {
         assert!(display_str.contains("123"));
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_supply_chain_with_extension() {
         let ext_value = Box::new(serde_json::json!({"custom": "value"}));
@@ -218,6 +231,7 @@ mod tests {
         assert_eq!(schain.ext, Some(ext_value));
     }
 
+    #[cfg(feature = "json")]
     #[test]
     fn test_supply_chain_complete_values() {
         let json_complete_0 = r#"{"nodes":[],"complete":0}"#;
@@ -229,6 +243,7 @@ mod tests {
         assert_eq!(sc1.complete, Some(1));
     }
 
+    #[cfg(feature = "json")]
     #[test]
     fn test_supply_chain_empty_nodes() {
         let schain = SupplyChain::builder().nodes(vec![]).build().unwrap();

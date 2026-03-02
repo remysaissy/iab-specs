@@ -28,7 +28,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Qty<Ext: Extension = serde_json::Value> {
+pub struct Qty<Ext: Extension = crate::DefaultExt> {
     /// Quantity multiplier (e.g., number of people viewing)
     /// For DOOH: estimated number of impressions delivered
     #[serde(skip_serializing_if = "Option::is_none")]

@@ -22,9 +22,9 @@ use serde::{Deserialize, Serialize};
     deserialize = "Ext: Extension, MediaExt: Extension, MacroExt: Extension"
 ))]
 pub struct Bid<
-    Ext: Extension = serde_json::Value,
-    MediaExt: Extension = serde_json::Value,
-    MacroExt: Extension = serde_json::Value,
+    Ext: Extension = crate::DefaultExt,
+    MediaExt: Extension = crate::DefaultExt,
+    MacroExt: Extension = crate::DefaultExt,
 > {
     /// Bidder-generated bid identifier.
     /// Used for logging and tracking.

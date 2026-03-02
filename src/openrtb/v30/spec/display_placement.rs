@@ -23,9 +23,9 @@ use serde::{Deserialize, Serialize};
     deserialize = "Ext: Extension, EventExt: Extension, NativeFmtExt: Extension"
 ))]
 pub struct DisplayPlacement<
-    Ext: Extension = serde_json::Value,
-    EventExt: Extension = serde_json::Value,
-    NativeFmtExt: Extension = serde_json::Value,
+    Ext: Extension = crate::DefaultExt,
+    EventExt: Extension = crate::DefaultExt,
+    NativeFmtExt: Extension = crate::DefaultExt,
 > {
     /// Placement position on screen:
     /// - 0 = Unknown

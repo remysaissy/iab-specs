@@ -38,7 +38,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Refresh<Ext: Extension = serde_json::Value> {
+pub struct Refresh<Ext: Extension = crate::DefaultExt> {
     /// Array of refresh setting objects
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refsettings: Option<Vec<RefSettings<Ext>>>,

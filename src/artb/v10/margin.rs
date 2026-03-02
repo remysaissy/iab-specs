@@ -28,7 +28,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Margin<Ext: Extension = serde_json::Value> {
+pub struct Margin<Ext: Extension = crate::DefaultExt> {
     /// The margin value.
     /// Interpretation depends on `calculation_type`:
     /// - CPM: absolute margin in currency units

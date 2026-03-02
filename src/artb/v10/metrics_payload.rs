@@ -10,11 +10,14 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Generic Parameters
 ///
-/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+/// * `P` - Payload type for metric objects (must implement [`Extension`]). Defaults to [`DefaultExt`](crate::DefaultExt).
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to [`DefaultExt`](crate::DefaultExt).
 ///
 /// # Example
 ///
 /// ```
+/// #[cfg(all(feature = "json", not(feature = "proto")))]
+/// {
 /// use iab_specs::artb::v10::MetricsPayload;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -29,15 +32,19 @@ use serde::{Deserialize, Serialize};
 ///     .build()?;
 /// # Ok(())
 /// # }
+/// }
 /// ```
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
-#[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct MetricsPayload<Ext: Extension = serde_json::Value> {
+#[serde(bound(
+    serialize = "P: Extension, Ext: Extension",
+    deserialize = "P: Extension, Ext: Extension"
+))]
+pub struct MetricsPayload<P: Extension = crate::DefaultExt, Ext: Extension = crate::DefaultExt> {
     /// Array of OpenRTB Metric objects.
     /// Each metric describes a measurement the exchange supports for this item.
     #[builder(default, setter(into))]
-    pub metric: Vec<serde_json::Value>,
+    pub metric: Vec<P>,
 
     /// Extension object for exchange-specific extensions.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -47,7 +54,7 @@ pub struct MetricsPayload<Ext: Extension = serde_json::Value> {
 
 impl MetricsPayload {
     /// Convenience method to create a new instance using the builder pattern.
-    pub fn builder() -> MetricsPayloadBuilder {
+    pub fn builder() -> MetricsPayloadBuilder<crate::DefaultExt, crate::DefaultExt> {
         MetricsPayloadBuilder::create_empty()
     }
 }
@@ -56,6 +63,7 @@ impl MetricsPayload {
 mod tests {
     use super::*;
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_metrics_payload_creation() {
         let payload = MetricsPayload::builder()
@@ -76,6 +84,7 @@ mod tests {
         assert!(payload.metric.is_empty());
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_metrics_payload_serialization() {
         let payload = MetricsPayload::builder()
@@ -90,6 +99,7 @@ mod tests {
         assert!(json.contains("\"value\":0.7"));
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_metrics_payload_deserialization() {
         let json = r#"{"metric":[{"type":"attention","value":0.65,"vendor":"vendor.com"}]}"#;
@@ -99,6 +109,7 @@ mod tests {
         assert_eq!(payload.metric[0]["type"], "attention");
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_metrics_payload_roundtrip() {
         let payload = MetricsPayload::builder()
@@ -114,6 +125,7 @@ mod tests {
         assert_eq!(payload, parsed);
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_metrics_payload_multiple_metrics() {
         let payload = MetricsPayload::builder()

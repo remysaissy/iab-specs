@@ -42,7 +42,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Response<Ext: Extension = serde_json::Value> {
+pub struct Response<Ext: Extension = crate::DefaultExt> {
     /// ID of the bid request to which this is a response.
     /// REQUIRED by the specification.
     pub id: String,

@@ -60,7 +60,7 @@ fn default_auction_type() -> i32 {
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct BidRequest<Ext: Extension = serde_json::Value> {
+pub struct BidRequest<Ext: Extension = crate::DefaultExt> {
     /// Unique ID of the bid request, provided by the exchange.
     /// **Required field**.
     #[builder(setter(into))]

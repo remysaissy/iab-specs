@@ -41,7 +41,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct NativeRequest<Ext: Extension = serde_json::Value> {
+pub struct NativeRequest<Ext: Extension = crate::DefaultExt> {
     /// Version of the Native Markup. Highly recommended.
     /// Default: "1.2"
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -156,7 +156,7 @@ impl NativeRequest {
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Asset<Ext: Extension = serde_json::Value> {
+pub struct Asset<Ext: Extension = crate::DefaultExt> {
     /// Unique asset ID within the request.
     /// Used to map response assets to request assets.
     /// **Required field**
@@ -225,7 +225,7 @@ impl Asset {
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Title<Ext: Extension = serde_json::Value> {
+pub struct Title<Ext: Extension = crate::DefaultExt> {
     /// Maximum length of the title text in characters.
     /// Recommended lengths: 25, 90, or 140 characters.
     /// **Required field**
@@ -275,7 +275,7 @@ impl Title {
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Image<Ext: Extension = serde_json::Value> {
+pub struct Image<Ext: Extension = crate::DefaultExt> {
     /// Type of image asset.
     /// Refer to `NativeImageAssetType` enumeration:
     /// - 1 = Icon (typically small, square)
@@ -361,7 +361,7 @@ impl Image {
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Video<Ext: Extension = serde_json::Value> {
+pub struct Video<Ext: Extension = crate::DefaultExt> {
     /// Whitelist of content MIME types supported.
     /// **Required field**
     #[builder(default, setter(into))]
@@ -420,7 +420,7 @@ impl Video {
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Data<Ext: Extension = serde_json::Value> {
+pub struct Data<Ext: Extension = crate::DefaultExt> {
     /// Type of data element.
     /// **Required field**
     /// Refer to `NativeDataAssetType` enumeration:
@@ -482,7 +482,7 @@ impl Data {
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct EventTracker<Ext: Extension = serde_json::Value> {
+pub struct EventTracker<Ext: Extension = crate::DefaultExt> {
     /// Type of event to track.
     /// **Required field**
     /// Refer to `EventType` enumeration:

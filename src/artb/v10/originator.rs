@@ -28,7 +28,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Originator<Ext: Extension = serde_json::Value> {
+pub struct Originator<Ext: Extension = crate::DefaultExt> {
     /// The type of business entity.
     #[serde(rename = "type")]
     pub type_: OriginatorType,

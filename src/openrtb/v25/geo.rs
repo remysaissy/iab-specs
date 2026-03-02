@@ -39,7 +39,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Geo<Ext: Extension = serde_json::Value> {
+pub struct Geo<Ext: Extension = crate::DefaultExt> {
     /// Latitude from -90.0 to +90.0, where negative is south.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]

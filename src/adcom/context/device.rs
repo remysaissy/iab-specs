@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Device<Ext: Extension = serde_json::Value> {
+pub struct Device<Ext: Extension = crate::DefaultExt> {
     /// Device type (mobile, tablet, desktop, etc.)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub type_: Option<i32>,

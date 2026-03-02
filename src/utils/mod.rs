@@ -1,5 +1,5 @@
 mod extension;
-pub use extension::Extension;
+pub use extension::{DefaultExt, Extension};
 
 #[macro_export]
 macro_rules! slice_up_to {

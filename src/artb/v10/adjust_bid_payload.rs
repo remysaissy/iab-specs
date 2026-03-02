@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct AdjustBidPayload<Ext: Extension = serde_json::Value> {
+pub struct AdjustBidPayload<Ext: Extension = crate::DefaultExt> {
     /// The adjusted bid price.
     pub price: f64,
 
