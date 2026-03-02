@@ -10,11 +10,14 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Generic Parameters
 ///
-/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to `serde_json::Value`.
+/// * `P` - Payload type for data objects (must implement [`Extension`]). Defaults to [`DefaultExt`](crate::DefaultExt).
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to [`DefaultExt`](crate::DefaultExt).
 ///
 /// # Example
 ///
 /// ```
+/// #[cfg(all(feature = "json", not(feature = "proto")))]
+/// {
 /// use iab_specs::artb::v10::DataPayload;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -29,14 +32,18 @@ use serde::{Deserialize, Serialize};
 ///     .build()?;
 /// # Ok(())
 /// # }
+/// }
 /// ```
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
-#[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct DataPayload<Ext: Extension = serde_json::Value> {
+#[serde(bound(
+    serialize = "P: Extension, Ext: Extension",
+    deserialize = "P: Extension, Ext: Extension"
+))]
+pub struct DataPayload<P: Extension = crate::DefaultExt, Ext: Extension = crate::DefaultExt> {
     /// Array of OpenRTB Data objects containing content classification data.
     #[builder(default, setter(into))]
-    pub data: Vec<serde_json::Value>,
+    pub data: Vec<P>,
 
     /// Extension object for exchange-specific extensions.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -46,7 +53,7 @@ pub struct DataPayload<Ext: Extension = serde_json::Value> {
 
 impl DataPayload {
     /// Convenience method to create a new instance using the builder pattern.
-    pub fn builder() -> DataPayloadBuilder {
+    pub fn builder() -> DataPayloadBuilder<crate::DefaultExt, crate::DefaultExt> {
         DataPayloadBuilder::create_empty()
     }
 }
@@ -55,6 +62,7 @@ impl DataPayload {
 mod tests {
     use super::*;
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_data_payload_creation() {
         let payload = DataPayload::builder()
@@ -75,6 +83,7 @@ mod tests {
         assert!(payload.data.is_empty());
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_data_payload_serialization() {
         let payload = DataPayload::builder()
@@ -86,6 +95,7 @@ mod tests {
         assert!(json.contains("\"id\":\"dp-1\""));
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_data_payload_deserialization() {
         let json =
@@ -96,6 +106,7 @@ mod tests {
         assert_eq!(payload.data[0]["id"], "dp-1");
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_data_payload_roundtrip() {
         let payload = DataPayload::builder()

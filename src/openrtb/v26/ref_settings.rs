@@ -27,7 +27,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct RefSettings<Ext: Extension = serde_json::Value> {
+pub struct RefSettings<Ext: Extension = crate::DefaultExt> {
     /// Type of refresh
     /// 1 = User-initiated
     /// 2 = Automatic (time-based)

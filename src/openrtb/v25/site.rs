@@ -23,7 +23,7 @@ fn default_cattax() -> i32 {
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Site<Ext: Extension = serde_json::Value> {
+pub struct Site<Ext: Extension = crate::DefaultExt> {
     /// Exchange-specific site ID.
     /// Recommended by the OpenRTB specification.
     #[serde(skip_serializing_if = "Option::is_none")]

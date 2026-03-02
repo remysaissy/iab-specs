@@ -32,7 +32,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Metric<Ext: Extension = serde_json::Value> {
+pub struct Metric<Ext: Extension = crate::DefaultExt> {
     /// Type of metric being specified.
     /// Common values include:
     /// - "viewability" - Ad viewability

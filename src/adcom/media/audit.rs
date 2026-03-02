@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Audit<Ext: Extension = serde_json::Value> {
+pub struct Audit<Ext: Extension = crate::DefaultExt> {
     /// Audit status code (required)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status: Option<i32>,

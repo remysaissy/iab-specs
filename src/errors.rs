@@ -6,8 +6,17 @@ pub enum Error {
     #[error("{0}")]
     UninitializedFieldError(&'static str),
 
+    #[cfg(feature = "json")]
     #[error("{0}")]
     SerdeJsonError(#[from] serde_json::Error),
+
+    #[cfg(feature = "proto")]
+    #[error("{0}")]
+    ProstDecodeError(#[from] prost::DecodeError),
+
+    #[cfg(feature = "proto")]
+    #[error("{0}")]
+    ProstEncodeError(#[from] prost::EncodeError),
 
     #[error("{0}")]
     SerdePlainError(#[from] serde_plain::Error),
@@ -23,7 +32,7 @@ impl From<derive_builder::UninitializedFieldError> for Error {
 }
 
 /// Alias for a `Result` with the error type `iab_specs::Error`.
-pub type Result<T> = result::Result<T, serde_json::Error>;
+pub type Result<T> = result::Result<T, Error>;
 
 #[cfg(test)]
 mod tests {
@@ -35,6 +44,7 @@ mod tests {
         assert_eq!(err.to_string(), "test_field");
     }
 
+    #[cfg(feature = "json")]
     #[test]
     fn test_serde_json_error() {
         let json_err = serde_json::from_str::<serde_json::Value>("invalid json");
@@ -57,5 +67,13 @@ mod tests {
         let builder_err = UninitializedFieldError::new("field_name");
         let err: Error = builder_err.into();
         assert_eq!(err.to_string(), "field_name");
+    }
+
+    #[cfg(feature = "proto")]
+    #[test]
+    fn test_prost_decode_error() {
+        let decode_err = prost::DecodeError::new("test decode error");
+        let err: Error = decode_err.into();
+        assert!(err.to_string().contains("test decode error"));
     }
 }

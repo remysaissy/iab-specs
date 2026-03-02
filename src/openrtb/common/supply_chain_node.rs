@@ -8,7 +8,9 @@
 use crate::Extension;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "json")]
 use std::fmt::{Display, Formatter};
+#[cfg(feature = "json")]
 use std::str::FromStr;
 
 /// Supply chain node.
@@ -40,7 +42,7 @@ use std::str::FromStr;
 #[derive(Builder, Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct SupplyChainNode<Ext: Extension = serde_json::Value> {
+pub struct SupplyChainNode<Ext: Extension = crate::DefaultExt> {
     /// The canonical domain name of the SSP, Exchange, Header Wrapper, etc system that bidders
     /// connect to. This may be the operational domain of the system, if that is different than
     /// the parent corporate domain, to facilitate WHOIS and reverse IP lookups to establish
@@ -102,6 +104,7 @@ impl SupplyChainNode {
     }
 }
 
+#[cfg(feature = "json")]
 impl Display for SupplyChainNode {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match serde_json::to_string(&self) {
@@ -111,6 +114,7 @@ impl Display for SupplyChainNode {
     }
 }
 
+#[cfg(feature = "json")]
 impl FromStr for SupplyChainNode {
     type Err = crate::Error;
 
@@ -155,6 +159,7 @@ mod tests {
         assert_eq!(node.name, Some("Example Publisher".to_string()));
     }
 
+    #[cfg(feature = "json")]
     #[test]
     fn test_supply_chain_node_serialization() {
         let node = SupplyChainNode::builder()
@@ -170,6 +175,7 @@ mod tests {
         assert_eq!(node, node2);
     }
 
+    #[cfg(feature = "json")]
     #[test]
     fn test_supply_chain_node_display() {
         let node = SupplyChainNode::builder()
@@ -184,6 +190,7 @@ mod tests {
         assert!(display_str.contains("pub-456"));
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_supply_chain_node_with_extension() {
         let ext_value = Box::new(serde_json::json!({"property": "data"}));
@@ -198,6 +205,7 @@ mod tests {
         assert_eq!(node.ext, Some(ext_value));
     }
 
+    #[cfg(feature = "json")]
     #[test]
     fn test_supply_chain_node_hp_values() {
         let json_hp_0 = r#"{"asi":"ex.com","sid":"123","hp":0}"#;

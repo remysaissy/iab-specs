@@ -36,9 +36,9 @@ fn default_bidfloorcur() -> String {
     deserialize = "Ext: Extension, MetricExt: Extension, PmpExt: Extension"
 ))]
 pub struct Imp<
-    Ext: Extension = serde_json::Value,
-    MetricExt: Extension = serde_json::Value,
-    PmpExt: Extension = serde_json::Value,
+    Ext: Extension = crate::DefaultExt,
+    MetricExt: Extension = crate::DefaultExt,
+    PmpExt: Extension = crate::DefaultExt,
 > {
     /// Unique identifier for this impression within the context of the bid request.
     /// **Required field**.
@@ -166,7 +166,7 @@ pub struct Imp<
     #[cfg(not(feature = "openrtb_26"))]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub qty: Option<serde_json::Value>,
+    pub qty: Option<crate::DefaultExt>,
 
     /// Unix timestamp for impression fulfillment.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -185,7 +185,7 @@ pub struct Imp<
     #[cfg(not(feature = "openrtb_26"))]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub refresh: Option<serde_json::Value>,
+    pub refresh: Option<crate::DefaultExt>,
 
     /// Extension object for exchange-specific extensions.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -445,6 +445,7 @@ mod tests {
     }
 
     #[cfg(not(feature = "openrtb_26"))]
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_imp_qty_and_refresh_as_generic_json_without_feature() {
         // Without openrtb_26 feature, qty and refresh are generic serde_json::Value

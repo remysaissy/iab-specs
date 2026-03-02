@@ -34,9 +34,9 @@ fn default_gtax() -> i32 {
     deserialize = "Ext: Extension, NetworkExt: Extension, ChannelExt: Extension"
 ))]
 pub struct Content<
-    Ext: Extension = serde_json::Value,
-    NetworkExt: Extension = serde_json::Value,
-    ChannelExt: Extension = serde_json::Value,
+    Ext: Extension = crate::DefaultExt,
+    NetworkExt: Extension = crate::DefaultExt,
+    ChannelExt: Extension = crate::DefaultExt,
 > {
     /// ID uniquely identifying the content.
     #[serde(skip_serializing_if = "Option::is_none")]

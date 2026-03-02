@@ -41,7 +41,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct NativeResponse<Ext: Extension = serde_json::Value> {
+pub struct NativeResponse<Ext: Extension = crate::DefaultExt> {
     /// Version of the Native Markup in use.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default, setter(into, strip_option))]
@@ -135,7 +135,7 @@ impl NativeResponse {
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct AssetResponse<Ext: Extension = serde_json::Value> {
+pub struct AssetResponse<Ext: Extension = crate::DefaultExt> {
     /// Unique asset ID, matching the request asset ID.
     /// **Required field**
     #[builder(setter(into))]
@@ -209,7 +209,7 @@ impl AssetResponse {
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct TitleResponse<Ext: Extension = serde_json::Value> {
+pub struct TitleResponse<Ext: Extension = crate::DefaultExt> {
     /// The title text.
     /// **Required field**
     #[builder(setter(into))]
@@ -258,7 +258,7 @@ impl TitleResponse {
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct ImageResponse<Ext: Extension = serde_json::Value> {
+pub struct ImageResponse<Ext: Extension = crate::DefaultExt> {
     /// URL of the image asset.
     /// **Required field**
     #[builder(setter(into))]
@@ -310,7 +310,7 @@ impl ImageResponse {
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct VideoResponse<Ext: Extension = serde_json::Value> {
+pub struct VideoResponse<Ext: Extension = crate::DefaultExt> {
     /// VAST XML markup for the video.
     /// **Required field**
     #[builder(setter(into))]
@@ -355,7 +355,7 @@ impl VideoResponse {
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct DataResponse<Ext: Extension = serde_json::Value> {
+pub struct DataResponse<Ext: Extension = crate::DefaultExt> {
     /// The data value.
     /// **Required field**
     #[builder(setter(into))]
@@ -432,7 +432,7 @@ impl DataResponse {
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Link<Ext: Extension = serde_json::Value> {
+pub struct Link<Ext: Extension = crate::DefaultExt> {
     /// Landing URL for the clickable link.
     /// **Required field**
     #[builder(setter(into))]
@@ -488,7 +488,7 @@ impl Link {
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct EventTrackerResponse<Ext: Extension = serde_json::Value> {
+pub struct EventTrackerResponse<Ext: Extension = crate::DefaultExt> {
     /// Type of event being tracked.
     /// **Required field**
     /// Refer to `EventType` enumeration:

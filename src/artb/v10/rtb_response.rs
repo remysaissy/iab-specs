@@ -44,8 +44,11 @@ use serde::{Deserialize, Serialize};
 /// ```
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
-#[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct RTBResponse<Ext: Extension = serde_json::Value> {
+#[serde(bound(
+    serialize = "P: Extension, Ext: Extension",
+    deserialize = "P: Extension, Ext: Extension"
+))]
+pub struct RTBResponse<P: Extension = crate::DefaultExt, Ext: Extension = crate::DefaultExt> {
     /// Must match the `id` from the corresponding `RTBRequest`.
     /// **Required field**
     #[builder(setter(into))]
@@ -53,7 +56,7 @@ pub struct RTBResponse<Ext: Extension = serde_json::Value> {
 
     /// List of proposed mutations to the OpenRTB payload.
     #[builder(default, setter(into))]
-    pub mutations: Vec<Mutation<Ext>>,
+    pub mutations: Vec<Mutation<P, Ext>>,
 
     /// Response metadata (API version, model version).
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -68,7 +71,7 @@ pub struct RTBResponse<Ext: Extension = serde_json::Value> {
 
 impl RTBResponse {
     /// Convenience method to create a new instance using the builder pattern.
-    pub fn builder() -> RTBResponseBuilder {
+    pub fn builder() -> RTBResponseBuilder<crate::DefaultExt, crate::DefaultExt> {
         RTBResponseBuilder::create_empty()
     }
 }

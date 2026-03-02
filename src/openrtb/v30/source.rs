@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct SupplyChainNode<Ext: Extension = serde_json::Value> {
+pub struct SupplyChainNode<Ext: Extension = crate::DefaultExt> {
     /// Advertising system identifier (domain of the system).
     /// REQUIRED by the specification.
     pub asi: String,
@@ -73,7 +73,7 @@ impl SupplyChainNode {
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct SupplyChain<Ext: Extension = serde_json::Value> {
+pub struct SupplyChain<Ext: Extension = crate::DefaultExt> {
     /// Indicates whether the chain is complete:
     /// - 0 = incomplete (more nodes exist)
     /// - 1 = complete (all nodes included)
@@ -115,7 +115,7 @@ impl SupplyChain {
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Source<Ext: Extension = serde_json::Value> {
+pub struct Source<Ext: Extension = crate::DefaultExt> {
     /// Transaction ID that must be common across all participants.
     /// Used for reconciliation and debugging.
     #[serde(skip_serializing_if = "Option::is_none")]

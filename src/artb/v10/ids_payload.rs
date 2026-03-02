@@ -26,7 +26,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct IDsPayload<Ext: Extension = serde_json::Value> {
+pub struct IDsPayload<Ext: Extension = crate::DefaultExt> {
     /// List of string identifiers (segment IDs, deal IDs, etc.).
     #[builder(default, setter(into))]
     pub id: Vec<String>,

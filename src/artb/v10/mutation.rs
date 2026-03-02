@@ -63,8 +63,11 @@ use serde::{Deserialize, Serialize};
 /// ```
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
-#[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Mutation<Ext: Extension = serde_json::Value> {
+#[serde(bound(
+    serialize = "P: Extension, Ext: Extension",
+    deserialize = "P: Extension, Ext: Extension"
+))]
+pub struct Mutation<P: Extension = crate::DefaultExt, Ext: Extension = crate::DefaultExt> {
     /// The declared purpose of this mutation.
     pub intent: Intent,
 
@@ -93,12 +96,12 @@ pub struct Mutation<Ext: Extension = serde_json::Value> {
     /// Payload for adding OpenRTB Metric objects.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub metrics: Option<MetricsPayload<Ext>>,
+    pub metrics: Option<MetricsPayload<P, Ext>>,
 
     /// Payload for adding OpenRTB Data objects (content data).
     #[serde(skip_serializing_if = "Option::is_none")]
     #[builder(default)]
-    pub content_data: Option<DataPayload<Ext>>,
+    pub content_data: Option<DataPayload<P, Ext>>,
 
     /// Extension object for exchange-specific extensions.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -108,7 +111,7 @@ pub struct Mutation<Ext: Extension = serde_json::Value> {
 
 impl Mutation {
     /// Convenience method to create a new instance using the builder pattern.
-    pub fn builder() -> MutationBuilder {
+    pub fn builder() -> MutationBuilder<crate::DefaultExt, crate::DefaultExt> {
         MutationBuilder::create_empty()
     }
 }
@@ -177,6 +180,7 @@ mod tests {
         assert_eq!(mutation.adjust_deal.as_ref().unwrap().bidfloor, 5.00);
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_mutation_add_metrics() {
         let mutation = Mutation::builder()

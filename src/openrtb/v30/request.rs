@@ -29,7 +29,7 @@ use serde::{Deserialize, Serialize};
     serialize = "Ext: Extension, ContextExt: Extension",
     deserialize = "Ext: Extension, ContextExt: Extension"
 ))]
-pub struct Request<Ext: Extension = serde_json::Value, ContextExt: Extension = serde_json::Value> {
+pub struct Request<Ext: Extension = crate::DefaultExt, ContextExt: Extension = crate::DefaultExt> {
     /// Unique ID of the bid request.
     /// REQUIRED by the specification.
     pub id: String,

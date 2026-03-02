@@ -47,7 +47,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct SeatBid<Ext: Extension = serde_json::Value> {
+pub struct SeatBid<Ext: Extension = crate::DefaultExt> {
     /// ID of the buyer seat on whose behalf this bid is made.
     /// This allows buyers to submit bids for multiple seats.
     #[serde(skip_serializing_if = "Option::is_none")]

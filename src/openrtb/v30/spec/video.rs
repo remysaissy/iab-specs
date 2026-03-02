@@ -21,8 +21,8 @@ use serde::{Deserialize, Serialize};
     deserialize = "Ext: Extension, CompExt: Extension"
 ))]
 pub struct VideoPlacement<
-    Ext: Extension = serde_json::Value,
-    CompExt: Extension = serde_json::Value,
+    Ext: Extension = crate::DefaultExt,
+    CompExt: Extension = crate::DefaultExt,
 > {
     /// Placement subtype:
     /// - 1 = In-stream (default)

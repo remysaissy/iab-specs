@@ -45,7 +45,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Bid<Ext: Extension = serde_json::Value> {
+pub struct Bid<Ext: Extension = crate::DefaultExt> {
     /// Bidder generated bid ID to assist with logging/tracking.
     /// Recommended by the OpenRTB specification.
     #[builder(setter(into))]

@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Asset<Ext: Extension = serde_json::Value> {
+pub struct Asset<Ext: Extension = crate::DefaultExt> {
     /// Asset format ID reference
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<i32>,

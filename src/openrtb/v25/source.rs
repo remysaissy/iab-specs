@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Source<Ext: Extension = serde_json::Value> {
+pub struct Source<Ext: Extension = crate::DefaultExt> {
     /// Entity responsible for the final impression sale decision:
     /// - 0 = exchange
     /// - 1 = upstream source

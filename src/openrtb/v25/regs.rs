@@ -27,7 +27,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Regs<Ext: Extension = serde_json::Value> {
+pub struct Regs<Ext: Extension = crate::DefaultExt> {
     /// Flag indicating if this request is subject to the COPPA regulations
     /// established by the USA FTC:
     /// - 0 = no
@@ -73,6 +73,7 @@ mod tests {
         assert_eq!(regs.coppa, Some(0));
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_regs_with_gdpr_extension() {
         let gdpr_ext = serde_json::json!({
@@ -115,6 +116,7 @@ mod tests {
         assert_eq!(regs.ext, None);
     }
 
+    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_regs_with_us_privacy() {
         let privacy_ext = serde_json::json!({

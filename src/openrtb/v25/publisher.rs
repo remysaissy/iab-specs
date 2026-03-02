@@ -34,7 +34,7 @@ fn default_cattax() -> i32 {
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Publisher<Ext: Extension = serde_json::Value> {
+pub struct Publisher<Ext: Extension = crate::DefaultExt> {
     /// Exchange-specific publisher ID.
     /// This ID maps to the `seller_id` in the ads.txt specification.
     #[serde(skip_serializing_if = "Option::is_none")]

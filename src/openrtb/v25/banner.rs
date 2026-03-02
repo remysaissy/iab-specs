@@ -34,7 +34,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Banner<Ext: Extension = serde_json::Value> {
+pub struct Banner<Ext: Extension = crate::DefaultExt> {
     /// Array of format objects representing the banner sizes permitted.
     /// If none are specified, the system will use the w and h attributes.
     #[serde(skip_serializing_if = "Option::is_none")]

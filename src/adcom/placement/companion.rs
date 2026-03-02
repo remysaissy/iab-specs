@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct Companion<Ext: Extension = serde_json::Value> {
+pub struct Companion<Ext: Extension = crate::DefaultExt> {
     /// Companion ad identifier
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,

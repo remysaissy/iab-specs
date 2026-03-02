@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Builder, Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 #[builder(build_fn(error = "crate::Error"), default)]
 #[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
-pub struct AudioPlacement<Ext: Extension = serde_json::Value> {
+pub struct AudioPlacement<Ext: Extension = crate::DefaultExt> {
     /// Start delay in seconds
     #[serde(skip_serializing_if = "Option::is_none")]
     pub delay: Option<i32>,

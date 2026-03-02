@@ -29,6 +29,8 @@
 //! ## Processing a Bid Request
 //!
 //! ```rust
+//! #[cfg(all(feature = "json", not(feature = "proto")))]
+//! {
 //! use iab_specs::artb::v10::{
 //!     RTBRequest, RTBResponse, Mutation, Metadata,
 //!     Lifecycle, Intent, Operation, IDsPayload, OriginatorType, Originator,
@@ -76,12 +78,21 @@
 //! assert_eq!(request.id, response.id);
 //! # Ok(())
 //! # }
+//! }
 //! ```
 //!
 //! # Extension Support
 //!
 //! All objects support custom extensions via the generic `Ext` parameter.
-//! By default, extensions use `serde_json::Value` for flexible, untyped extensions.
+//! By default, extensions use [`DefaultExt`](crate::DefaultExt).
+//! The `proto` feature takes priority over `json` when both are enabled:
+//! - `Vec<u8>` (opaque protobuf bytes) with `proto` (with or without `json`)
+//! - `serde_json::Value` with `json` only (without `proto`)
+//! - `()` without any serialization feature
+//!
+//! With the `proto` feature, ARTB payload fields (`bid_request`, `bid_response`,
+//! `metric`, `data`) default to `Vec<u8>`. Use `prost::Message` to decode typed OpenRTB
+//! messages from these bytes.
 //!
 //! # Specification Reference
 //!
@@ -120,7 +131,7 @@ pub use originator::{Originator, OriginatorBuilder};
 pub use rtb_request::{RTBRequest, RTBRequestBuilder};
 pub use rtb_response::{RTBResponse, RTBResponseBuilder};
 
-#[cfg(test)]
+#[cfg(all(test, feature = "json", not(feature = "proto")))]
 mod integration_tests {
     use super::*;
 
@@ -454,7 +465,7 @@ mod integration_tests {
             confidence: f64,
         }
 
-        let response: RTBResponse<CustomExt> = RTBResponseBuilder::default()
+        let response: RTBResponse<serde_json::Value, CustomExt> = RTBResponseBuilder::default()
             .id("req-ext-001".to_string())
             .mutations(vec![])
             .ext(Some(Box::new(CustomExt {
@@ -465,7 +476,8 @@ mod integration_tests {
             .unwrap();
 
         let json = serde_json::to_string(&response).unwrap();
-        let parsed: RTBResponse<CustomExt> = serde_json::from_str(&json).unwrap();
+        let parsed: RTBResponse<serde_json::Value, CustomExt> =
+            serde_json::from_str(&json).unwrap();
 
         assert_eq!(parsed.ext.as_ref().unwrap().agent_name, "fraud-detector");
         assert_eq!(parsed.ext.as_ref().unwrap().confidence, 0.95);
