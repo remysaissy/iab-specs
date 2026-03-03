@@ -268,12 +268,11 @@ mod tests {
         assert_eq!(response.customdata, Some("custom_bidder_data".to_string()));
     }
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_bid_response_with_ext() {
         let ext_value = Box::new(serde_json::json!({"custom_field": "custom_value"}));
 
-        let response = BidResponse::builder()
+        let response = BidResponseBuilder::<serde_json::Value>::default()
             .id("req123".to_string())
             .ext(Some(ext_value.clone()))
             .build()

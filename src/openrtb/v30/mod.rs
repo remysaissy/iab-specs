@@ -43,7 +43,7 @@ mod metric;
 ///
 /// ```toml
 /// [dependencies]
-/// iab-specs = { version = "0.2", features = ["openrtb_30"] }
+/// iab-specs = { version = "0.4", features = ["openrtb_30"] }
 /// ```
 ///
 /// # Quick Start
@@ -397,7 +397,6 @@ mod integration_tests {
         assert_eq!(parsed.seatbid.len(), 0);
     }
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_multi_currency_request() {
         use spec::{DisplayFormat, DisplayPlacement};
@@ -416,13 +415,16 @@ mod integration_tests {
             .build()
             .unwrap();
 
+        let spec_bytes = serde_json::to_vec(&serde_json::json!({
+            "placement": display_placement
+        }))
+        .unwrap();
+
         let item = Item::builder()
             .id("item1".to_string())
             .flr(Some(5.00))
             .flrcur(Some("EUR".to_string()))
-            .spec(Some(Box::new(serde_json::json!({
-                "placement": display_placement
-            }))))
+            .spec(Some(Box::new(spec_bytes)))
             .build()
             .unwrap();
 
@@ -454,7 +456,6 @@ mod integration_tests {
         assert_eq!(req.item[0].flrcur.as_ref().unwrap(), "EUR");
     }
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_video_placement_integration() {
         use spec::VideoPlacement;
@@ -475,11 +476,14 @@ mod integration_tests {
             .build()
             .unwrap();
 
+        let spec_bytes = serde_json::to_vec(&serde_json::json!({
+            "placement": video_placement
+        }))
+        .unwrap();
+
         let item = Item::builder()
             .id("item1".to_string())
-            .spec(Some(Box::new(serde_json::json!({
-                "placement": video_placement
-            }))))
+            .spec(Some(Box::new(spec_bytes)))
             .build()
             .unwrap();
 
@@ -495,7 +499,6 @@ mod integration_tests {
         assert!(parsed.item[0].spec.is_some());
     }
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_audio_placement_integration() {
         use spec::AudioPlacement;
@@ -509,11 +512,14 @@ mod integration_tests {
             .build()
             .unwrap();
 
+        let spec_bytes = serde_json::to_vec(&serde_json::json!({
+            "placement": audio_placement
+        }))
+        .unwrap();
+
         let item = Item::builder()
             .id("item1".to_string())
-            .spec(Some(Box::new(serde_json::json!({
-                "placement": audio_placement
-            }))))
+            .spec(Some(Box::new(spec_bytes)))
             .build()
             .unwrap();
 

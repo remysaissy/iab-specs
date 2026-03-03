@@ -237,7 +237,6 @@ mod tests {
         assert_eq!(item.dlvy, Some(2));
     }
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_item_with_spec() {
         let spec = Box::new(serde_json::json!({
@@ -247,7 +246,7 @@ mod tests {
             }
         }));
 
-        let item = Item::builder()
+        let item = ItemBuilder::<Vec<u8>, serde_json::Value>::default()
             .id("item1".to_string())
             .spec(Some(spec))
             .build()

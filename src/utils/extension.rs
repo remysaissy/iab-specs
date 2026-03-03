@@ -20,31 +20,24 @@
 //!
 //! # Usage Patterns
 //!
-//! ## Pattern 1: Default JSON Extensions (Most Flexible)
+//! ## Pattern 1: Opaque Bytes (Default)
 //!
-//! Use `serde_json::Value` for maximum flexibility when you don't need compile-time type safety:
+//! The default extension type is `Vec<u8>`, suitable for opaque binary payloads
+//! (e.g., protobuf-encoded extensions). Callers who want JSON extensions can use
+//! `serde_json::Value` as an explicit type parameter (see Pattern 3).
 //!
 //! ```
-//! #[cfg(all(feature = "adcom", feature = "json", not(feature = "proto")))]
+//! #[cfg(feature = "adcom")]
 //! {
 //! use iab_specs::adcom::media::Ad;
 //! # use std::error::Error;
 //! # fn main() -> Result<(), Box<dyn Error>> {
 //!
-//! // Use default serde_json::Value for flexible, untyped extensions
+//! // DefaultExt is Vec<u8> — opaque bytes
 //! let ad = Ad::builder()
 //!     .id(Some("ad123".to_string()))
-//!     .ext(Some(Box::new(serde_json::json!({
-//!         "vendor_field": "custom_value",
-//!         "internal_id": 12345,
-//!         "tracking_data": {
-//!             "campaign": "summer_sale"
-//!         }
-//!     }))))
+//!     .ext(Some(Box::new(vec![0x08, 0x96, 0x01])))
 //!     .build()?;
-//!
-//! // Serialize to JSON
-//! let json = serde_json::to_string(&ad)?;
 //! # Ok(())
 //! # }
 //! }
@@ -100,7 +93,30 @@
 //! }
 //! ```
 //!
-//! ## Pattern 3: No Extensions
+//! ## Pattern 3: JSON Extensions (Explicit)
+//!
+//! Use `serde_json::Value` as an explicit type parameter for flexible, untyped JSON extensions:
+//!
+//! ```
+//! #[cfg(feature = "adcom")]
+//! {
+//! use iab_specs::adcom::media::AdBuilder;
+//! # use std::error::Error;
+//! # fn main() -> Result<(), Box<dyn Error>> {
+//!
+//! let ad = AdBuilder::<serde_json::Value>::default()
+//!     .id(Some("ad123".to_string()))
+//!     .ext(Some(Box::new(serde_json::json!({
+//!         "vendor_field": "custom_value",
+//!         "internal_id": 12345
+//!     }))))
+//!     .build()?;
+//! # Ok(())
+//! # }
+//! }
+//! ```
+//!
+//! ## Pattern 4: No Extensions
 //!
 //! Use the unit type `()` when you don't need extensions at all:
 //!
@@ -114,28 +130,6 @@
 //! // Omit the ext field when you don't need extensions
 //! let ad = Ad::builder()
 //!     .id(Some("ad789".to_string()))
-//!     .build()?;
-//! # Ok(())
-//! # }
-//! }
-//! ```
-//!
-//! ## Pattern 4: Protobuf Extensions (Binary Transport)
-//!
-//! With the `proto` feature, `DefaultExt` is `Vec<u8>` for opaque protobuf bytes.
-//! Use `prost::Message` to encode/decode typed messages into these bytes:
-//!
-//! ```
-//! #[cfg(all(feature = "adcom", feature = "proto"))]
-//! {
-//! use iab_specs::adcom::media::Ad;
-//! # use std::error::Error;
-//! # fn main() -> Result<(), Box<dyn Error>> {
-//!
-//! // DefaultExt is Vec<u8> with proto feature
-//! let ad = Ad::builder()
-//!     .id(Some("ad123".to_string()))
-//!     .ext(Some(Box::new(vec![0x08, 0x96, 0x01]))) // encoded protobuf bytes
 //!     .build()?;
 //! # Ok(())
 //! # }
@@ -237,30 +231,11 @@ impl<T> Extension for T where
 
 /// Default extension type.
 ///
-/// The `proto` feature takes priority over `json` when both are enabled:
-/// - With `proto` (with or without `json`): `Vec<u8>` (opaque protobuf bytes)
-/// - With `json` only (without `proto`): `serde_json::Value` (flexible untyped JSON extensions)
-/// - Without any serialization feature: `()` (no extension data)
-#[cfg(feature = "proto")]
+/// `Vec<u8>` is used as the default extension type, representing opaque bytes.
+/// This is serde-agnostic: callers choose the serialization format by specifying
+/// an explicit type parameter (e.g., `serde_json::Value` for JSON, or a custom
+/// protobuf-decoded type) when they need typed extensions.
 pub type DefaultExt = Vec<u8>;
-
-/// Default extension type (JSON variant).
-///
-/// The `proto` feature takes priority over `json` when both are enabled:
-/// - With `proto` (with or without `json`): `Vec<u8>` (opaque protobuf bytes)
-/// - With `json` only (without `proto`): `serde_json::Value` (flexible untyped JSON extensions)
-/// - Without any serialization feature: `()` (no extension data)
-#[cfg(all(feature = "json", not(feature = "proto")))]
-pub type DefaultExt = serde_json::Value;
-
-/// Default extension type (no serialization feature).
-///
-/// The `proto` feature takes priority over `json` when both are enabled:
-/// - With `proto` (with or without `json`): `Vec<u8>` (opaque protobuf bytes)
-/// - With `json` only (without `proto`): `serde_json::Value` (flexible untyped JSON extensions)
-/// - Without any serialization feature: `()` (no extension data)
-#[cfg(not(any(feature = "json", feature = "proto")))]
-pub type DefaultExt = ();
 
 #[cfg(test)]
 mod tests {
@@ -315,18 +290,10 @@ mod tests {
         requires_extension(ext);
     }
 
-    #[cfg(feature = "proto")]
     #[test]
-    fn test_default_ext_is_vec_u8_for_proto() {
+    fn test_default_ext_is_vec_u8() {
         let ext = crate::DefaultExt::default();
         assert!(ext.is_empty());
         assert_eq!(ext, Vec::<u8>::new());
-    }
-
-    #[cfg(all(feature = "json", not(feature = "proto")))]
-    #[test]
-    fn test_default_ext_is_json_value_for_json_only() {
-        let ext = crate::DefaultExt::default();
-        assert_eq!(ext, serde_json::Value::Null);
     }
 }

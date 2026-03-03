@@ -445,22 +445,20 @@ mod tests {
     }
 
     #[cfg(not(feature = "openrtb_26"))]
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
-    fn test_imp_qty_and_refresh_as_generic_json_without_feature() {
-        // Without openrtb_26 feature, qty and refresh are generic serde_json::Value
-        let qty_json = serde_json::json!({"multiplier": 5.0});
-        let refresh_json = serde_json::json!({"count": 3});
+    fn test_imp_qty_and_refresh_as_opaque_bytes_without_feature() {
+        // Without openrtb_26 feature, qty and refresh are opaque Vec<u8>
+        let qty_bytes = serde_json::to_vec(&serde_json::json!({"multiplier": 5.0})).unwrap();
+        let refresh_bytes = serde_json::to_vec(&serde_json::json!({"count": 3})).unwrap();
 
         let imp = Imp::builder()
             .id("imp1".to_string())
-            .qty(Some(qty_json.clone()))
-            .refresh(Some(refresh_json.clone()))
+            .qty(Some(qty_bytes.clone()))
+            .refresh(Some(refresh_bytes.clone()))
             .build()
             .unwrap();
 
-        assert_eq!(imp.qty, Some(qty_json));
-        assert_eq!(imp.refresh, Some(refresh_json));
-        // Without the feature flag, these fields accept any JSON value
+        assert_eq!(imp.qty, Some(qty_bytes));
+        assert_eq!(imp.refresh, Some(refresh_bytes));
     }
 }
