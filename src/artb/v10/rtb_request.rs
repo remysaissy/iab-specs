@@ -18,12 +18,12 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// #[cfg(all(feature = "json", not(feature = "proto")))]
+/// #[cfg(feature = "artb_10")]
 /// {
-/// use iab_specs::artb::v10::{RTBRequest, Lifecycle, Intent, Originator, OriginatorType};
+/// use iab_specs::artb::v10::{RTBRequestBuilder, Lifecycle, Intent, Originator, OriginatorType};
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-/// let request = RTBRequest::builder()
+/// let request = RTBRequestBuilder::<serde_json::Value, Vec<u8>>::default()
 ///     .lifecycle(Lifecycle::PublisherBidRequest)
 ///     .id("req-12345".to_string())
 ///     .tmax(Some(100))
@@ -105,10 +105,9 @@ mod tests {
     use super::*;
     use crate::artb::v10::enums::OriginatorType;
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_rtb_request_creation() {
-        let request = RTBRequest::builder()
+        let request = RTBRequestBuilder::<serde_json::Value, Vec<u8>>::default()
             .lifecycle(Lifecycle::PublisherBidRequest)
             .id("req-001".to_string())
             .tmax(Some(100))
@@ -125,10 +124,9 @@ mod tests {
         assert_eq!(request.applicable_intents.len(), 2);
     }
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_rtb_request_dsp_bid_response() {
-        let request = RTBRequest::builder()
+        let request = RTBRequestBuilder::<serde_json::Value, Vec<u8>>::default()
             .lifecycle(Lifecycle::DspBidResponse)
             .id("req-002".to_string())
             .bid_request(Some(serde_json::json!({"id": "auction-1"})))
@@ -180,7 +178,6 @@ mod tests {
         assert!(json.contains("\"applicable_intents\":[1]"));
     }
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_rtb_request_deserialization() {
         let json = r#"{
@@ -191,7 +188,7 @@ mod tests {
             "applicable_intents": [1, 2, 6]
         }"#;
 
-        let request: RTBRequest = serde_json::from_str(json).unwrap();
+        let request: RTBRequest<serde_json::Value> = serde_json::from_str(json).unwrap();
         assert_eq!(request.lifecycle, Lifecycle::PublisherBidRequest);
         assert_eq!(request.id, "req-005");
         assert_eq!(request.tmax, Some(75));
@@ -199,10 +196,9 @@ mod tests {
         assert_eq!(request.applicable_intents.len(), 3);
     }
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_rtb_request_roundtrip() {
-        let request = RTBRequest::builder()
+        let request = RTBRequestBuilder::<serde_json::Value, Vec<u8>>::default()
             .lifecycle(Lifecycle::PublisherBidRequest)
             .id("req-006".to_string())
             .tmax(Some(100))
@@ -212,7 +208,7 @@ mod tests {
             .unwrap();
 
         let json = serde_json::to_string(&request).unwrap();
-        let parsed: RTBRequest = serde_json::from_str(&json).unwrap();
+        let parsed: RTBRequest<serde_json::Value> = serde_json::from_str(&json).unwrap();
         assert_eq!(request, parsed);
     }
 

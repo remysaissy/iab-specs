@@ -29,16 +29,17 @@
 //! ## Processing a Bid Request
 //!
 //! ```rust
-//! #[cfg(all(feature = "json", not(feature = "proto")))]
+//! #[cfg(feature = "artb_10")]
 //! {
 //! use iab_specs::artb::v10::{
-//!     RTBRequest, RTBResponse, Mutation, Metadata,
+//!     RTBRequest, RTBRequestBuilder, RTBResponse, RTBResponseBuilder,
+//!     Mutation, MutationBuilder, Metadata,
 //!     Lifecycle, Intent, Operation, IDsPayload, OriginatorType, Originator,
 //! };
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! // Orchestrator creates a request for the agent
-//! let request = RTBRequest::builder()
+//! // Orchestrator creates a request for the agent (using serde_json::Value for payloads)
+//! let request = RTBRequestBuilder::<serde_json::Value, Vec<u8>>::default()
 //!     .lifecycle(Lifecycle::PublisherBidRequest)
 //!     .id("req-12345")
 //!     .tmax(Some(100))
@@ -57,10 +58,10 @@
 //!     .build()?;
 //!
 //! // Agent processes and returns mutations
-//! let response = RTBResponse::builder()
+//! let response = RTBResponseBuilder::<serde_json::Value, Vec<u8>>::default()
 //!     .id("req-12345")
 //!     .mutations(vec![
-//!         Mutation::builder()
+//!         MutationBuilder::<serde_json::Value, Vec<u8>>::default()
 //!             .intent(Intent::ActivateSegments)
 //!             .op(Operation::Add)
 //!             .path("/user/data/segment".to_string())
@@ -84,15 +85,8 @@
 //! # Extension Support
 //!
 //! All objects support custom extensions via the generic `Ext` parameter.
-//! By default, extensions use [`DefaultExt`](crate::DefaultExt).
-//! The `proto` feature takes priority over `json` when both are enabled:
-//! - `Vec<u8>` (opaque protobuf bytes) with `proto` (with or without `json`)
-//! - `serde_json::Value` with `json` only (without `proto`)
-//! - `()` without any serialization feature
-//!
-//! With the `proto` feature, ARTB payload fields (`bid_request`, `bid_response`,
-//! `metric`, `data`) default to `Vec<u8>`. Use `prost::Message` to decode typed OpenRTB
-//! messages from these bytes.
+//! By default, extensions use [`DefaultExt`](crate::DefaultExt) which is `Vec<u8>` (opaque bytes).
+//! Callers can use `serde_json::Value` or custom types as explicit type parameters.
 //!
 //! # Specification Reference
 //!
@@ -131,14 +125,14 @@ pub use originator::{Originator, OriginatorBuilder};
 pub use rtb_request::{RTBRequest, RTBRequestBuilder};
 pub use rtb_response::{RTBResponse, RTBResponseBuilder};
 
-#[cfg(all(test, feature = "json", not(feature = "proto")))]
+#[cfg(test)]
 mod integration_tests {
     use super::*;
 
     #[test]
     fn test_complete_request_response_cycle() {
         // Create a bid request processing scenario
-        let request = RTBRequest::builder()
+        let request = RTBRequestBuilder::<serde_json::Value, Vec<u8>>::default()
             .lifecycle(Lifecycle::PublisherBidRequest)
             .id("req-integration-001".to_string())
             .tmax(Some(100))
@@ -165,11 +159,11 @@ mod integration_tests {
             .unwrap();
 
         // Agent returns multiple mutations
-        let response = RTBResponse::builder()
+        let response = RTBResponseBuilder::<serde_json::Value, Vec<u8>>::default()
             .id(request.id.clone())
             .mutations(vec![
                 // Activate user segments
-                Mutation::builder()
+                MutationBuilder::<serde_json::Value, Vec<u8>>::default()
                     .intent(Intent::ActivateSegments)
                     .op(Operation::Add)
                     .path("/user/data/segment".to_string())
@@ -185,7 +179,7 @@ mod integration_tests {
                     .build()
                     .unwrap(),
                 // Activate a deal
-                Mutation::builder()
+                MutationBuilder::<serde_json::Value, Vec<u8>>::default()
                     .intent(Intent::ActivateDeals)
                     .op(Operation::Add)
                     .path("/imp/imp-1".to_string())
@@ -198,7 +192,7 @@ mod integration_tests {
                     .build()
                     .unwrap(),
                 // Adjust deal floor
-                Mutation::builder()
+                MutationBuilder::<serde_json::Value, Vec<u8>>::default()
                     .intent(Intent::AdjustDealFloor)
                     .op(Operation::Replace)
                     .path("/imp/imp-1/pmp/deals/premium-deal-500".to_string())
@@ -239,18 +233,20 @@ mod integration_tests {
 
         // Verify serialization roundtrip
         let request_json = serde_json::to_string(&request).unwrap();
-        let parsed_request: RTBRequest = serde_json::from_str(&request_json).unwrap();
+        let parsed_request: RTBRequest<serde_json::Value> =
+            serde_json::from_str(&request_json).unwrap();
         assert_eq!(request, parsed_request);
 
         let response_json = serde_json::to_string(&response).unwrap();
-        let parsed_response: RTBResponse = serde_json::from_str(&response_json).unwrap();
+        let parsed_response: RTBResponse<serde_json::Value> =
+            serde_json::from_str(&response_json).unwrap();
         assert_eq!(response, parsed_response);
     }
 
     #[test]
     fn test_bid_shading_flow() {
         // DSP bid response processing scenario
-        let request = RTBRequest::builder()
+        let request = RTBRequestBuilder::<serde_json::Value, Vec<u8>>::default()
             .lifecycle(Lifecycle::DspBidResponse)
             .id("req-shade-001".to_string())
             .tmax(Some(50))
@@ -269,10 +265,10 @@ mod integration_tests {
             .build()
             .unwrap();
 
-        let response = RTBResponse::builder()
+        let response = RTBResponseBuilder::<serde_json::Value, Vec<u8>>::default()
             .id(request.id.clone())
             .mutations(vec![
-                Mutation::builder()
+                MutationBuilder::<serde_json::Value, Vec<u8>>::default()
                     .intent(Intent::BidShade)
                     .op(Operation::Replace)
                     .path("/seatbid/dsp-1/bid/bid-1".to_string())
@@ -306,14 +302,14 @@ mod integration_tests {
             .build()
             .unwrap();
 
-        let response = RTBResponse::builder()
+        let response = RTBResponseBuilder::<serde_json::Value, Vec<u8>>::default()
             .id(request.id.clone())
-            .mutations(vec![Mutation::builder()
+            .mutations(vec![MutationBuilder::<serde_json::Value, Vec<u8>>::default()
                 .intent(Intent::AddMetrics)
                 .op(Operation::Add)
                 .path("/imp/imp-1/metric".to_string())
                 .metrics(Some(
-                    MetricsPayload::builder()
+                    MetricsPayloadBuilder::<serde_json::Value, Vec<u8>>::default()
                         .metric(vec![
                             serde_json::json!({"type": "viewability", "value": 0.85, "vendor": "iab.com"}),
                             serde_json::json!({"type": "attention", "value": 0.70}),
@@ -425,12 +421,12 @@ mod integration_tests {
         assert!(m.adjust_bid.is_some());
 
         // AddMetrics -> MetricsPayload
-        let m = Mutation::builder()
+        let m = MutationBuilder::<serde_json::Value, Vec<u8>>::default()
             .intent(Intent::AddMetrics)
             .op(Operation::Add)
             .path("/imp/1/metric".to_string())
             .metrics(Some(
-                MetricsPayload::builder()
+                MetricsPayloadBuilder::<serde_json::Value, Vec<u8>>::default()
                     .metric(vec![
                         serde_json::json!({"type": "viewability", "value": 0.8}),
                     ])
@@ -442,12 +438,12 @@ mod integration_tests {
         assert!(m.metrics.is_some());
 
         // AddCids -> DataPayload
-        let m = Mutation::builder()
+        let m = MutationBuilder::<serde_json::Value, Vec<u8>>::default()
             .intent(Intent::AddCids)
             .op(Operation::Add)
             .path("/user/data".to_string())
             .content_data(Some(
-                DataPayload::builder()
+                DataPayloadBuilder::<serde_json::Value, Vec<u8>>::default()
                     .data(vec![serde_json::json!({"id": "dp-1"})])
                     .build()
                     .unwrap(),

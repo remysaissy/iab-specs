@@ -4,6 +4,8 @@ use super::data_payload::DataPayload;
 use super::enums::{Intent, Operation};
 use super::ids_payload::IDsPayload;
 use super::metrics_payload::MetricsPayload;
+#[cfg(test)]
+use super::metrics_payload::MetricsPayloadBuilder;
 use crate::Extension;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
@@ -180,15 +182,14 @@ mod tests {
         assert_eq!(mutation.adjust_deal.as_ref().unwrap().bidfloor, 5.00);
     }
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_mutation_add_metrics() {
-        let mutation = Mutation::builder()
+        let mutation = MutationBuilder::<serde_json::Value, Vec<u8>>::default()
             .intent(Intent::AddMetrics)
             .op(Operation::Add)
             .path("/imp/imp-1/metric".to_string())
             .metrics(Some(
-                MetricsPayload::builder()
+                MetricsPayloadBuilder::<serde_json::Value, Vec<u8>>::default()
                     .metric(vec![
                         serde_json::json!({"type": "viewability", "value": 0.80}),
                     ])

@@ -55,6 +55,7 @@ impl SeatBid {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::openrtb::v25::bid::BidBuilder;
 
     #[test]
     fn test_seat_bid_creation() {
@@ -127,10 +128,9 @@ mod tests {
         assert!(json.contains("\"group\":0"));
     }
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_seat_bid_with_ext() {
-        let bid = Bid::builder()
+        let bid = BidBuilder::<serde_json::Value>::default()
             .id("bid1".to_string())
             .impid("imp1".to_string())
             .price(1.0)
@@ -139,7 +139,7 @@ mod tests {
 
         let ext_value = Box::new(serde_json::json!({"custom": "value"}));
 
-        let seat_bid = SeatBid::builder()
+        let seat_bid = SeatBidBuilder::<serde_json::Value>::default()
             .bid(vec![bid])
             .seat(Some("seat1".to_string()))
             .group(0)

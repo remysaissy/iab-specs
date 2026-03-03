@@ -16,12 +16,12 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// #[cfg(all(feature = "json", not(feature = "proto")))]
+/// #[cfg(feature = "artb_10")]
 /// {
-/// use iab_specs::artb::v10::DataPayload;
+/// use iab_specs::artb::v10::DataPayloadBuilder;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-/// let payload = DataPayload::builder()
+/// let payload = DataPayloadBuilder::<serde_json::Value, Vec<u8>>::default()
 ///     .data(vec![
 ///         serde_json::json!({
 ///             "id": "data-provider-1",
@@ -62,10 +62,9 @@ impl DataPayload {
 mod tests {
     use super::*;
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_data_payload_creation() {
-        let payload = DataPayload::builder()
+        let payload = DataPayloadBuilder::<serde_json::Value, Vec<u8>>::default()
             .data(vec![serde_json::json!({
                 "id": "provider-1",
                 "name": "Taxonomy",
@@ -83,10 +82,9 @@ mod tests {
         assert!(payload.data.is_empty());
     }
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_data_payload_serialization() {
-        let payload = DataPayload::builder()
+        let payload = DataPayloadBuilder::<serde_json::Value, Vec<u8>>::default()
             .data(vec![serde_json::json!({"id": "dp-1", "name": "Provider"})])
             .build()
             .unwrap();
@@ -95,21 +93,19 @@ mod tests {
         assert!(json.contains("\"id\":\"dp-1\""));
     }
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_data_payload_deserialization() {
         let json =
             r#"{"data":[{"id":"dp-1","name":"Provider","segment":[{"id":"s1","value":"v1"}]}]}"#;
-        let payload: DataPayload = serde_json::from_str(json).unwrap();
+        let payload: DataPayload<serde_json::Value> = serde_json::from_str(json).unwrap();
 
         assert_eq!(payload.data.len(), 1);
         assert_eq!(payload.data[0]["id"], "dp-1");
     }
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_data_payload_roundtrip() {
-        let payload = DataPayload::builder()
+        let payload = DataPayloadBuilder::<serde_json::Value, Vec<u8>>::default()
             .data(vec![
                 serde_json::json!({"id": "dp-1", "name": "Provider 1"}),
                 serde_json::json!({"id": "dp-2", "name": "Provider 2"}),
@@ -118,7 +114,7 @@ mod tests {
             .unwrap();
 
         let json = serde_json::to_string(&payload).unwrap();
-        let parsed: DataPayload = serde_json::from_str(&json).unwrap();
+        let parsed: DataPayload<serde_json::Value> = serde_json::from_str(&json).unwrap();
         assert_eq!(payload, parsed);
     }
 }
