@@ -60,5 +60,4 @@ mod tests {
         let err: Error = builder_err.into();
         assert_eq!(err.to_string(), "field_name");
     }
-
 }
