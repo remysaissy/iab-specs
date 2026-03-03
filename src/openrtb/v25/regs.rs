@@ -73,7 +73,6 @@ mod tests {
         assert_eq!(regs.coppa, Some(0));
     }
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_regs_with_gdpr_extension() {
         let gdpr_ext = serde_json::json!({
@@ -81,7 +80,7 @@ mod tests {
             "consent": "consent_string_here"
         });
 
-        let regs = Regs::builder()
+        let regs = RegsBuilder::<serde_json::Value>::default()
             .coppa(Some(0))
             .ext(Some(Box::new(gdpr_ext)))
             .build()
@@ -116,14 +115,13 @@ mod tests {
         assert_eq!(regs.ext, None);
     }
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_regs_with_us_privacy() {
         let privacy_ext = serde_json::json!({
             "us_privacy": "1YNN"
         });
 
-        let regs = Regs::builder()
+        let regs = RegsBuilder::<serde_json::Value>::default()
             .ext(Some(Box::new(privacy_ext)))
             .build()
             .unwrap();

@@ -35,40 +35,40 @@
 //!
 //! ### Quick Examples
 //!
-//! **Using default JSON extensions:**
+//! **Using default `Vec<u8>` extensions (opaque bytes):**
 //!
 //! ```
-//! #[cfg(all(feature = "adcom", feature = "json", not(feature = "proto")))]
+//! #[cfg(feature = "adcom")]
 //! {
 //! use iab_specs::adcom::media::Ad;
 //! # use std::error::Error;
 //! # fn main() -> Result<(), Box<dyn Error>> {
 //!
+//! // DefaultExt is Vec<u8>
 //! let ad = Ad::builder()
 //!     .id(Some("ad123".to_string()))
-//!     .ext(Some(Box::new(serde_json::json!({
-//!         "vendor_id": "acme-123",
-//!         "campaign_type": "seasonal"
-//!     }))))
+//!     .ext(Some(Box::new(vec![0x08, 0x96, 0x01])))
 //!     .build()?;
 //! # Ok(())
 //! # }
 //! }
 //! ```
 //!
-//! **Using protobuf extensions** (requires `proto` feature)**:**
+//! **Using explicit JSON extensions:**
 //!
 //! ```
-//! #[cfg(all(feature = "adcom", feature = "proto"))]
+//! #[cfg(feature = "adcom")]
 //! {
-//! use iab_specs::adcom::media::Ad;
+//! use iab_specs::adcom::media::AdBuilder;
 //! # use std::error::Error;
 //! # fn main() -> Result<(), Box<dyn Error>> {
 //!
-//! // DefaultExt is Vec<u8> with proto feature
-//! let ad = Ad::builder()
+//! let ad = AdBuilder::<serde_json::Value>::default()
 //!     .id(Some("ad123".to_string()))
-//!     .ext(Some(Box::new(vec![0x08, 0x96, 0x01])))
+//!     .ext(Some(Box::new(serde_json::json!({
+//!         "vendor_id": "acme-123",
+//!         "campaign_type": "seasonal"
+//!     }))))
 //!     .build()?;
 //! # Ok(())
 //! # }

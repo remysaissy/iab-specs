@@ -16,12 +16,12 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// #[cfg(all(feature = "json", not(feature = "proto")))]
+/// #[cfg(feature = "artb_10")]
 /// {
-/// use iab_specs::artb::v10::MetricsPayload;
+/// use iab_specs::artb::v10::MetricsPayloadBuilder;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-/// let payload = MetricsPayload::builder()
+/// let payload = MetricsPayloadBuilder::<serde_json::Value, Vec<u8>>::default()
 ///     .metric(vec![
 ///         serde_json::json!({
 ///             "type": "viewability",
@@ -63,10 +63,9 @@ impl MetricsPayload {
 mod tests {
     use super::*;
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_metrics_payload_creation() {
-        let payload = MetricsPayload::builder()
+        let payload = MetricsPayloadBuilder::<serde_json::Value, Vec<u8>>::default()
             .metric(vec![serde_json::json!({
                 "type": "viewability",
                 "value": 0.80,
@@ -84,10 +83,9 @@ mod tests {
         assert!(payload.metric.is_empty());
     }
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_metrics_payload_serialization() {
-        let payload = MetricsPayload::builder()
+        let payload = MetricsPayloadBuilder::<serde_json::Value, Vec<u8>>::default()
             .metric(vec![
                 serde_json::json!({"type": "viewability", "value": 0.70}),
             ])
@@ -99,20 +97,18 @@ mod tests {
         assert!(json.contains("\"value\":0.7"));
     }
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_metrics_payload_deserialization() {
         let json = r#"{"metric":[{"type":"attention","value":0.65,"vendor":"vendor.com"}]}"#;
-        let payload: MetricsPayload = serde_json::from_str(json).unwrap();
+        let payload: MetricsPayload<serde_json::Value> = serde_json::from_str(json).unwrap();
 
         assert_eq!(payload.metric.len(), 1);
         assert_eq!(payload.metric[0]["type"], "attention");
     }
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_metrics_payload_roundtrip() {
-        let payload = MetricsPayload::builder()
+        let payload = MetricsPayloadBuilder::<serde_json::Value, Vec<u8>>::default()
             .metric(vec![
                 serde_json::json!({"type": "viewability", "value": 0.80}),
                 serde_json::json!({"type": "completion", "value": 0.90}),
@@ -121,14 +117,13 @@ mod tests {
             .unwrap();
 
         let json = serde_json::to_string(&payload).unwrap();
-        let parsed: MetricsPayload = serde_json::from_str(&json).unwrap();
+        let parsed: MetricsPayload<serde_json::Value> = serde_json::from_str(&json).unwrap();
         assert_eq!(payload, parsed);
     }
 
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_metrics_payload_multiple_metrics() {
-        let payload = MetricsPayload::builder()
+        let payload = MetricsPayloadBuilder::<serde_json::Value, Vec<u8>>::default()
             .metric(vec![
                 serde_json::json!({"type": "viewability", "value": 0.70}),
                 serde_json::json!({"type": "attention", "value": 0.60}),

@@ -8,7 +8,7 @@ An unofficial Rust implementation of various IAB (Interactive Advertising Bureau
 
 ## Overview
 
-`iab-specs` provides typed Rust data structures for working with IAB advertising specifications. Rather than being just a parser, this library wraps each specification's logic into idiomatic Rust types using `serde` for serialization/deserialization and `FromStr`/`Display` for string conversions.
+`iab-specs` provides typed Rust data structures for working with IAB advertising specifications. Rather than being just a parser, this library wraps each specification's logic into idiomatic Rust types using `serde` for serialization/deserialization.
 
 ### Currently Supported Specifications
 
@@ -29,23 +29,17 @@ Add `iab-specs` to your `Cargo.toml` with the features you need:
 ```toml
 [dependencies]
 # Enable all specifications
-iab-specs = { version = "0.3", features = ["json", "adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10"] }
+iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10"] }
 
 # Or enable only what you need
-iab-specs = { version = "0.3", features = ["openrtb_30"] }
-
-# With JSON extension support (serde_json::Value as default extension type)
-iab-specs = { version = "0.3", features = ["openrtb_30", "json"] }
-
-# With protobuf support (Vec<u8> as default extension type)
-iab-specs = { version = "0.3", features = ["openrtb_30", "proto"] }
+iab-specs = { version = "0.4", features = ["openrtb_30"] }
 ```
 
 Or use cargo:
 
 ```bash
-# Enable all specifications (with JSON)
-cargo add iab-specs --features json,adcom,openrtb_25,openrtb_26,openrtb_30,openrtb_native_12,ads_txt,app_ads_txt,sellers_json,artb_10
+# Enable all specifications
+cargo add iab-specs --features adcom,openrtb_25,openrtb_26,openrtb_30,openrtb_native_12,ads_txt,app_ads_txt,sellers_json,artb_10
 
 # Or enable only what you need
 cargo add iab-specs --features openrtb_30
@@ -57,12 +51,6 @@ cargo add iab-specs --features openrtb_30
 
 The library uses cargo features to enable/disable specifications:
 
-**Serialization:**
-- `json` - Enable `serde_json` support (`serde_json::Value` as default extension type, `Display`/`FromStr` for supply chain objects)
-- `proto` - Enable protobuf support via `prost` (`Vec<u8>` as default extension type for opaque protobuf bytes)
-
-> Both `json` and `proto` can be enabled simultaneously. When both are enabled, `proto` takes priority for `DefaultExt` (`Vec<u8>`), since OpenRTB/ARTB types using `DefaultExt` are intended for protobuf transport. The `json` feature remains available for `sellers_json` and explicit `serde_json::Value` usage. Without any serialization feature, the default extension type is `()`.
-
 **Specifications:**
 - `adcom` - AdCOM 1.0 support (Advertising Common Object Model enumerations)
 - `openrtb_25` - OpenRTB 2.5 support (automatically includes `adcom`)
@@ -71,7 +59,7 @@ The library uses cargo features to enable/disable specifications:
 - `openrtb_native_12` - OpenRTB Native Ads 1.2 support (automatically includes `adcom`)
 - `ads_txt` - Ads.txt 1.1 support
 - `app_ads_txt` - App-ads.txt 1.0 support (automatically includes `ads_txt`)
-- `sellers_json` - Sellers.json 1.0 support (automatically includes `json`)
+- `sellers_json` - Sellers.json 1.0 support (includes `serde_json`)
 - `artb_10` - Agentic RTB Framework 1.0 support (autonomous agent bidstream processing)
 
 ### Feature Selection Examples
@@ -79,49 +67,34 @@ The library uses cargo features to enable/disable specifications:
 ```toml
 [dependencies]
 # Only AdCOM support
-iab-specs = { version = "0.3", features = ["adcom"] }
+iab-specs = { version = "0.4", features = ["adcom"] }
 
 # Only OpenRTB 2.5 support (automatically includes adcom)
-iab-specs = { version = "0.3", features = ["openrtb_25"] }
+iab-specs = { version = "0.4", features = ["openrtb_25"] }
 
 # Only OpenRTB 2.6 support (automatically includes openrtb_25 and adcom)
-iab-specs = { version = "0.3", features = ["openrtb_26"] }
+iab-specs = { version = "0.4", features = ["openrtb_26"] }
 
 # Only OpenRTB 3.0 support (automatically includes adcom)
-iab-specs = { version = "0.3", features = ["openrtb_30"] }
+iab-specs = { version = "0.4", features = ["openrtb_30"] }
 
 # Only ads.txt support
-iab-specs = { version = "0.3", features = ["ads_txt"] }
+iab-specs = { version = "0.4", features = ["ads_txt"] }
 
 # Only app-ads.txt support (automatically includes ads_txt)
-iab-specs = { version = "0.3", features = ["app_ads_txt"] }
+iab-specs = { version = "0.4", features = ["app_ads_txt"] }
 
 # Only sellers.json support
-iab-specs = { version = "0.3", features = ["sellers_json"] }
+iab-specs = { version = "0.4", features = ["sellers_json"] }
 
 # OpenRTB 3.0 with ads.txt and sellers.json
-iab-specs = { version = "0.3", features = ["openrtb_30", "ads_txt", "sellers_json"] }
+iab-specs = { version = "0.4", features = ["openrtb_30", "ads_txt", "sellers_json"] }
 
 # Only ARTB 1.0 support (autonomous agent bidstream processing)
-iab-specs = { version = "0.3", features = ["artb_10"] }
+iab-specs = { version = "0.4", features = ["artb_10"] }
 
-# ARTB 1.0 with JSON payloads
-iab-specs = { version = "0.3", features = ["artb_10", "json"] }
-
-# ARTB 1.0 with protobuf transport
-iab-specs = { version = "0.3", features = ["artb_10", "proto"] }
-
-# OpenRTB 3.0 with protobuf transport
-iab-specs = { version = "0.3", features = ["openrtb_30", "proto"] }
-
-# All specifications (JSON only — DefaultExt = serde_json::Value)
-iab-specs = { version = "0.3", features = ["json", "adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10"] }
-
-# All specifications (proto only — DefaultExt = Vec<u8>)
-iab-specs = { version = "0.3", features = ["proto", "adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "artb_10"] }
-
-# All specifications (json + proto — DefaultExt = Vec<u8>, proto takes priority)
-iab-specs = { version = "0.3", features = ["json", "proto", "adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10"] }
+# All specifications
+iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10"] }
 ```
 
 **Why no default features?**
@@ -136,13 +109,13 @@ This design allows you to:
 
 All types derive `serde::Serialize` and `serde::Deserialize`, making the library transport-agnostic. You can use any serde-compatible format:
 
-- **JSON** — Enable the `json` feature for `serde_json::Value` as the default extension type
-- **Protobuf** — Enable the `proto` feature for `Vec<u8>` as default extension type. Use `prost` to encode/decode typed messages
-- **MessagePack** — Use `rmp-serde` for compact binary serialization (no feature needed, just add the serde format crate)
-- **CBOR** — Use `ciborium` for CBOR encoding (no feature needed)
+- **JSON** — Use `serde_json` for human-readable JSON serialization
+- **Protobuf** — Use `prost` to encode/decode typed messages with `Vec<u8>` extension fields
+- **MessagePack** — Use `rmp-serde` for compact binary serialization
+- **CBOR** — Use `ciborium` for CBOR encoding
 - **Any serde format** — Plug in any serializer/deserializer that works with serde
 
-When `proto` is enabled (with or without `json`), extension fields default to `Vec<u8>`. When only `json` is enabled, they default to `serde_json::Value`. Without any serialization feature, extension fields default to `()` (no data). You can always provide your own types implementing the `Extension` trait.
+Extension fields default to `Vec<u8>` (opaque bytes), making the library serde-agnostic out of the box. You can use explicit type parameters like `BidRequest<serde_json::Value>` for JSON extensions, or provide your own types implementing the `Extension` trait.
 
 ## Quick Start
 
@@ -249,7 +222,7 @@ The `Extension` trait provides a flexible mechanism for adding custom fields to 
 
 **Key Features:**
 - Type-safe extension handling with generics
-- Default to `Vec<u8>` with `proto`, `serde_json::Value` with `json` only, or `()` without (transport-agnostic)
+- Default to `Vec<u8>` (opaque bytes, serde-agnostic)
 - Support for custom strongly-typed extensions
 - Thread-safe (Send + Sync)
 - Format-neutral serde support (JSON, MessagePack, CBOR, protobuf via prost, etc.)
@@ -261,15 +234,15 @@ The Extension trait is used throughout the crate on many types:
 - **OpenRTB 2.5/2.6 types**: `BidRequest`, `BidResponse`, `Imp`, `Banner`, `Video`, `Audio`, `Site`, `App`, `Device`, `User`, `Geo`, `Publisher`, `Content`, `Source`, `SeatBid`, `Bid`, and many more
 - **OpenRTB 3.0 types**: `Request`, `Response`, `Item`, `Bid`, `SeatBid`, `Source`, `SupplyChain`, `SupplyChainNode`, `Deal`, `Metric`, and many more
 
-**Using default JSON extensions** (requires `json` feature)**:**
+**Using JSON extensions** (with explicit `serde_json::Value` type parameter)**:**
 
 ```rust
-use iab_specs::adcom::media::Ad;
+use iab_specs::adcom::media::AdBuilder;
 # use std::error::Error;
 # fn main() -> Result<(), Box<dyn Error>> {
 
 // Use serde_json::Value for flexible, untyped extensions
-let ad = Ad::builder()
+let ad = AdBuilder::<serde_json::Value>::default()
     .id(Some("ad123".to_string()))
     .ext(Some(Box::new(serde_json::json!({
         "vendor_field": "custom_value",
@@ -631,20 +604,21 @@ let bid_request = BidRequest::builder()
 
 Process OpenRTB bidstream with autonomous agents using the ARTB Patch Protocol.
 
-> **Note:** The example below uses JSON payloads and requires `features = ["artb_10", "json"]` without `proto`.
-> With `proto` (with or without `json`), ARTB payload fields (`bid_request`, `bid_response`, `metric`, `data`) default to `Vec<u8>` (opaque protobuf bytes). Without any serialization feature, they default to `()`.
+> **Note:** The example below uses `serde_json::Value` for JSON payloads via explicit type parameters.
+> The default payload type is `Vec<u8>` (opaque bytes). Use explicit type parameters like
+> `RTBRequestBuilder::<serde_json::Value, Vec<u8>>::default()` for JSON payloads.
 
 ```rust
 use iab_specs::artb::v10::{
-    RTBRequest, RTBResponse, Mutation, Metadata, Originator,
+    RTBRequestBuilder, RTBResponseBuilder, Mutation, Metadata, Originator,
     Lifecycle, Intent, Operation, IDsPayload, OriginatorType,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Orchestrator creates a request for the agent
-    let request = RTBRequest::builder()
+    // Orchestrator creates a request for the agent (with JSON payloads)
+    let request = RTBRequestBuilder::<serde_json::Value, Vec<u8>>::default()
         .lifecycle(Lifecycle::PublisherBidRequest)
-        .id("req-12345")
+        .id("req-12345".to_string())
         .tmax(Some(100))
         .bid_request(Some(serde_json::json!({
             "id": "auction-1",
@@ -661,8 +635,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .build()?;
 
     // Agent processes and returns mutations
-    let response = RTBResponse::builder()
-        .id("req-12345")
+    let response = RTBResponseBuilder::<serde_json::Value, Vec<u8>>::default()
+        .id("req-12345".to_string())
         .mutations(vec![
             Mutation::builder()
                 .intent(Intent::ActivateSegments)

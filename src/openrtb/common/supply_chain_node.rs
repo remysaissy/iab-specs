@@ -8,10 +8,6 @@
 use crate::Extension;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "json")]
-use std::fmt::{Display, Formatter};
-#[cfg(feature = "json")]
-use std::str::FromStr;
 
 /// Supply chain node.
 ///
@@ -104,25 +100,6 @@ impl SupplyChainNode {
     }
 }
 
-#[cfg(feature = "json")]
-impl Display for SupplyChainNode {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match serde_json::to_string(&self) {
-            Ok(v) => write!(f, "{}", v),
-            Err(e) => write!(f, "<Serialize error: {e}>"),
-        }
-    }
-}
-
-#[cfg(feature = "json")]
-impl FromStr for SupplyChainNode {
-    type Err = crate::Error;
-
-    fn from_str(content: &str) -> Result<Self, Self::Err> {
-        serde_json::from_str::<SupplyChainNode>(content).map_err(|e| e.into())
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -159,7 +136,6 @@ mod tests {
         assert_eq!(node.name, Some("Example Publisher".to_string()));
     }
 
-    #[cfg(feature = "json")]
     #[test]
     fn test_supply_chain_node_serialization() {
         let node = SupplyChainNode::builder()
@@ -175,27 +151,11 @@ mod tests {
         assert_eq!(node, node2);
     }
 
-    #[cfg(feature = "json")]
-    #[test]
-    fn test_supply_chain_node_display() {
-        let node = SupplyChainNode::builder()
-            .asi("example.com".to_string())
-            .sid("pub-456".to_string())
-            .hp(1)
-            .build()
-            .unwrap();
-
-        let display_str = node.to_string();
-        assert!(display_str.contains("example.com"));
-        assert!(display_str.contains("pub-456"));
-    }
-
-    #[cfg(all(feature = "json", not(feature = "proto")))]
     #[test]
     fn test_supply_chain_node_with_extension() {
         let ext_value = Box::new(serde_json::json!({"property": "data"}));
 
-        let node = SupplyChainNode::builder()
+        let node = SupplyChainNodeBuilder::<serde_json::Value>::default()
             .asi("test.com".to_string())
             .sid("seller-1".to_string())
             .ext(Some(ext_value.clone()))
@@ -205,7 +165,6 @@ mod tests {
         assert_eq!(node.ext, Some(ext_value));
     }
 
-    #[cfg(feature = "json")]
     #[test]
     fn test_supply_chain_node_hp_values() {
         let json_hp_0 = r#"{"asi":"ex.com","sid":"123","hp":0}"#;
