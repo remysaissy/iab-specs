@@ -13,6 +13,84 @@ You can use this document to figure out how and where to start.
     - Including steps to reproduce when it is a bug.
     - Include the version of LOrm used.
 
+## Signing Your Commits
+
+This repository requires signed commits. We use [gitsign](https://github.com/sigstore/gitsign) for **keyless signing** via [Sigstore](https://www.sigstore.dev/), which means you don't need to manage GPG or SSH keys. You sign commits with your existing identity (GitHub, Google, or Microsoft account).
+
+### How It Works
+
+1. You make a commit
+2. Gitsign opens a browser for OIDC authentication (GitHub/Google/Microsoft)
+3. [Fulcio](https://github.com/sigstore/fulcio) issues a short-lived certificate (valid ~10 minutes)
+4. Your commit is signed with that certificate
+5. The signature is recorded in [Rekor](https://github.com/sigstore/rekor), a public transparency log
+
+The certificate expires quickly, but the signature remains verifiable because Rekor proves it was created during the certificate's validity period.
+
+### Setup
+
+Install gitsign:
+
+```bash
+# macOS
+brew install gitsign
+
+# Go install (any platform)
+go install github.com/sigstore/gitsign@latest
+
+# Other platforms: https://github.com/sigstore/gitsign#installation
+```
+
+Configure git to use gitsign for this repository:
+
+```bash
+cd iab-specs
+
+# Set gitsign as the signing program
+git config --local gpg.x509.program gitsign
+git config --local gpg.format x509
+
+# Enable automatic signing for commits and tags
+git config --local commit.gpgsign true
+git config --local tag.gpgsign true
+```
+
+> **Tip**: Use `--global` instead of `--local` to enable gitsign for all your repositories.
+
+### Verifying Your Setup
+
+```bash
+# Check your configuration
+git config --local --list | grep -E 'gpg|sign'
+
+# Expected output:
+# gpg.x509.program=gitsign
+# gpg.format=x509
+# commit.gpgsign=true
+# tag.gpgsign=true
+```
+
+Make a test commit. A browser window will open for authentication. After signing in, the commit is signed and the signature is logged in Rekor.
+
+### Verifying Signatures
+
+```bash
+# Verify the latest commit
+gitsign verify --certificate-identity=your-email@example.com \
+  --certificate-oidc-issuer=https://github.com/login/oauth HEAD
+
+# View signature details in the git log
+git log --show-signature -1
+```
+
+### Alternative: GPG or SSH Signing
+
+If you prefer traditional signing (e.g., in air-gapped environments), GPG and SSH signatures are also accepted. However, we recommend gitsign for its simplicity — no key management, no expiration, no revocation headaches.
+
+### CI Verification
+
+All pull requests are automatically checked for valid commit signatures via the `verify-signatures` CI workflow. Unsigned commits will cause the check to fail.
+
 ## Making changes
 
 - Fork the repository on GitHub.
@@ -20,9 +98,35 @@ You can use this document to figure out how and where to start.
     - You can usually base it on the `main` branch.
     - Make sure not to commit directly to `main`.
 - Make commits of logical and atomic units.
+- **Sign all your commits** (see [Signing Your Commits](#signing-your-commits) above).
+- **Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)** for all commit messages. This is enforced by CI on pull requests.
 - Make sure you have added the necessary tests for your changes.
 - Push your changes to a topic branch in your fork of the repository.
 - Submit a pull request to the original repository.
+
+### Commit Message Format
+
+All commits must follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification:
+
+```
+<type>(<optional scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+Common types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`.
+
+Examples:
+```
+feat(openrtb): add OpenRTB 2.7 support
+fix: prevent panic on empty ads.txt content
+docs: update README with sellers.json examples
+chore(deps): bump serde to 1.0.200
+```
+
+This format is used by [git-cliff](https://git-cliff.org/) to auto-generate the changelog.
 
 ## What to work on
 
@@ -190,6 +294,16 @@ When contributing:
 
 If you're unsure about your contribution or simply want to ask a question about anything, you can:
 - Discuss something directly in the [Github issue](https://github.com/remysaissy/iab-specs/issues).
+
+## Repository Rules
+
+This repository enforces the following policies via GitHub branch protection and CI:
+
+- **Signed commits required**: All commits pushed to `main` (and included in pull requests) must be cryptographically signed. We recommend [gitsign](#signing-your-commits) for keyless signing, but GPG and SSH signatures are also accepted.
+- **CI must pass**: Format, clippy, tests, coverage (≥ 80%), and signature verification checks must all pass before merging.
+- **Vigilant mode**: Repository maintainers use GitHub's vigilant mode, which marks all unsigned commits as "Unverified."
+
+If you're a first-time contributor and need help setting up commit signing, feel free to open an issue — we're happy to help.
 
 ## Code of Conduct
 

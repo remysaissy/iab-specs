@@ -865,6 +865,16 @@ Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on:
 - Code coverage requirements
 - Contribution workflow
 
+**Signed commits are required.** We use [gitsign](https://github.com/sigstore/gitsign) for keyless commit signing via [Sigstore](https://www.sigstore.dev/) — no GPG key management needed. See the [Signing Your Commits](CONTRIBUTING.md#signing-your-commits) section in CONTRIBUTING.md for setup instructions.
+
+### Verifying Release Artifacts
+
+Published crate artifacts include [GitHub Artifact Attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations) for supply chain verification:
+
+```bash
+gh attestation verify ./iab-specs-*.crate --repo remysaissy/iab-specs
+```
+
 ## License
 
 Licensed under Apache License, Version 2.0 ([LICENSE](LICENSE) or http://www.apache.org/licenses/LICENSE-2.0)
