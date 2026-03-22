@@ -92,6 +92,19 @@ jobs:
       - name: Test with ${{ matrix.features.name }}
         run: ./test.sh ${{ matrix.features.flags }}
 
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: [feature-matrix]
+    if: always()
+    steps:
+      - name: Check matrix results
+        run: |
+          if [ "${{ needs.feature-matrix.result }}" != "success" ]; then
+            echo "Feature matrix tests failed"
+            exit 1
+          fi
+
   coverage:
     name: Code Coverage
     runs-on: ubuntu-22.04

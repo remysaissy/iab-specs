@@ -15,81 +15,35 @@ You can use this document to figure out how and where to start.
 
 ## Signing Your Commits
 
-This repository requires signed commits. We use [gitsign](https://github.com/sigstore/gitsign) for **keyless signing** via [Sigstore](https://www.sigstore.dev/), which means you don't need to manage GPG or SSH keys. You sign commits with your existing identity (GitHub, Google, or Microsoft account).
+This repository requires signed commits. GitHub supports several signing methods — GPG, SSH, and S/MIME. Choose whichever works best for you.
 
-### How It Works
+For setup instructions, see GitHub's official documentation:
 
-1. You make a commit
-2. Gitsign opens a browser for OIDC authentication (GitHub/Google/Microsoft)
-3. [Fulcio](https://github.com/sigstore/fulcio) issues a short-lived certificate (valid ~10 minutes)
-4. Your commit is signed with that certificate
-5. The signature is recorded in [Rekor](https://github.com/sigstore/rekor), a public transparency log
+- **[Signing commits](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits)** — how to sign with GPG or SSH
+- **[Generating a new GPG key](https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key)** — if you don't have a GPG key yet
+- **[Adding a GPG key to your GitHub account](https://docs.github.com/en/authentication/managing-commit-signature-verification/adding-a-gpg-key-to-your-github-account)** — so GitHub can verify your signatures
+- **[Telling Git about your signing key](https://docs.github.com/en/authentication/managing-commit-signature-verification/telling-git-about-your-signing-key)** — configuring Git to sign automatically
 
-The certificate expires quickly, but the signature remains verifiable because Rekor proves it was created during the certificate's validity period.
+### Quick Setup (GPG)
 
-### Setup
-
-Install gitsign:
+Once your GPG key is configured with GitHub:
 
 ```bash
-# macOS
-brew install gitsign
-
-# Go install (any platform)
-go install github.com/sigstore/gitsign@latest
-
-# Other platforms: https://github.com/sigstore/gitsign#installation
-```
-
-Configure git to use gitsign for this repository:
-
-```bash
-cd iab-specs
-
-# Set gitsign as the signing program
-git config --local gpg.x509.program gitsign
-git config --local gpg.format x509
-
 # Enable automatic signing for commits and tags
 git config --local commit.gpgsign true
 git config --local tag.gpgsign true
 ```
 
-> **Tip**: Use `--global` instead of `--local` to enable gitsign for all your repositories.
-
-### Verifying Your Setup
-
-```bash
-# Check your configuration
-git config --local --list | grep -E 'gpg|sign'
-
-# Expected output:
-# gpg.x509.program=gitsign
-# gpg.format=x509
-# commit.gpgsign=true
-# tag.gpgsign=true
-```
-
-Make a test commit. A browser window will open for authentication. After signing in, the commit is signed and the signature is logged in Rekor.
-
 ### Verifying Signatures
 
 ```bash
-# Verify the latest commit
-gitsign verify --certificate-identity=your-email@example.com \
-  --certificate-oidc-issuer=https://github.com/login/oauth HEAD
-
 # View signature details in the git log
 git log --show-signature -1
 ```
 
-### Alternative: GPG or SSH Signing
-
-If you prefer traditional signing (e.g., in air-gapped environments), GPG and SSH signatures are also accepted. However, we recommend gitsign for its simplicity — no key management, no expiration, no revocation headaches.
-
 ### CI Verification
 
-All pull requests are automatically checked for valid commit signatures via the `verify-signatures` CI workflow. Unsigned commits will cause the check to fail.
+All pull requests are automatically checked for valid commit signatures. Unsigned commits will cause the check to fail.
 
 ## Making changes
 
@@ -299,7 +253,7 @@ If you're unsure about your contribution or simply want to ask a question about 
 
 This repository enforces the following policies via GitHub branch protection and CI:
 
-- **Signed commits required**: All commits pushed to `main` (and included in pull requests) must be cryptographically signed. We recommend [gitsign](#signing-your-commits) for keyless signing, but GPG and SSH signatures are also accepted.
+- **Signed commits required**: All commits pushed to `main` (and included in pull requests) must be cryptographically signed. See [Signing Your Commits](#signing-your-commits) for setup instructions.
 - **CI must pass**: Format, clippy, tests, coverage (≥ 80%), and signature verification checks must all pass before merging.
 - **Vigilant mode**: Repository maintainers use GitHub's vigilant mode, which marks all unsigned commits as "Unverified."
 

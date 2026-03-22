@@ -865,7 +865,7 @@ Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on:
 - Code coverage requirements
 - Contribution workflow
 
-**Signed commits are required.** We use [gitsign](https://github.com/sigstore/gitsign) for keyless commit signing via [Sigstore](https://www.sigstore.dev/) — no GPG key management needed. See the [Signing Your Commits](CONTRIBUTING.md#signing-your-commits) section in CONTRIBUTING.md for setup instructions.
+**Signed commits are required.** See the [Signing Your Commits](CONTRIBUTING.md#signing-your-commits) section in CONTRIBUTING.md for setup instructions using GPG, SSH, or other supported methods.
 
 ### Verifying Release Artifacts
 
