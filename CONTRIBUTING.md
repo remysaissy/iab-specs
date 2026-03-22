@@ -45,8 +45,6 @@ git log --show-signature -1
 
 All pull requests are automatically checked for valid commit signatures. Unsigned commits will cause the check to fail.
 
-Additionally, the `verify-gitsign-signatures` CI workflow provides [gitsign](https://github.com/sigstore/gitsign) (Sigstore) signature verification support for contributors who prefer keyless signing, until GitHub supports it natively.
-
 ## Making changes
 
 - Fork the repository on GitHub.
