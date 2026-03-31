@@ -1,14 +1,23 @@
 //! Agentic Direct v2.1 entities and data structures
 
 pub mod account;
+pub mod assignment;
 pub mod creative;
+pub mod line;
+pub mod line_state_machine;
 pub mod order;
 pub mod order_state_machine;
 pub mod organization;
 pub mod product;
 
 pub use account::{Account, AccountBuilder, AccountStatus};
+pub use assignment::{Assignment, AssignmentBuilder};
 pub use creative::{Creative, CreativeBuilder};
+pub use line::{FrequencyCap, FrequencyCapBuilder, Line, LineBuilder};
+pub use line_state_machine::{
+    can_transition_line, valid_line_transitions_from, LineTransition, LineTransitionBuilder,
+    VALID_LINE_TRANSITIONS,
+};
 pub use order::{Order, OrderBuilder};
 pub use order_state_machine::{
     can_transition_order, valid_order_transitions_from, OrderTransition, OrderTransitionBuilder,
