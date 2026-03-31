@@ -21,6 +21,7 @@ An unofficial Rust implementation of various IAB (Interactive Advertising Bureau
 - **[App-ads.txt 1.0](https://iabtechlab.com/wp-content/uploads/2019/03/app-ads.txt-v1.0-final-.pdf)** - Authorized Digital Sellers declaration for mobile and CTV apps
 - **[Sellers.json 1.0](https://iabtechlab.com/wp-content/uploads/2019/07/Sellers.json_Final.pdf)** - Supply chain transparency
 - **[Agentic RTB Framework 1.0](https://github.com/IABTechLab/agentic-rtb-framework)** - Autonomous agent bidstream processing via the OpenRTB Patch Protocol
+- **[Agentic Direct v2.1](https://github.com/IABTechLab/agentic-direct)** - OpenDirect v2.1 + A2A Protocol for agent-to-agent advertising transactions
 
 ## Installation
 
@@ -29,7 +30,7 @@ Add `iab-specs` to your `Cargo.toml` with the features you need:
 ```toml
 [dependencies]
 # Enable all specifications
-iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10"] }
+iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10", "agentic_direct_21"] }
 
 # Or enable only what you need
 iab-specs = { version = "0.4", features = ["openrtb_30"] }
@@ -39,7 +40,7 @@ Or use cargo:
 
 ```bash
 # Enable all specifications
-cargo add iab-specs --features adcom,openrtb_25,openrtb_26,openrtb_30,openrtb_native_12,ads_txt,app_ads_txt,sellers_json,artb_10
+cargo add iab-specs --features adcom,openrtb_25,openrtb_26,openrtb_30,openrtb_native_12,ads_txt,app_ads_txt,sellers_json,artb_10,agentic_direct_21
 
 # Or enable only what you need
 cargo add iab-specs --features openrtb_30
@@ -61,6 +62,7 @@ The library uses cargo features to enable/disable specifications:
 - `app_ads_txt` - App-ads.txt 1.0 support (automatically includes `ads_txt`)
 - `sellers_json` - Sellers.json 1.0 support (includes `serde_json`)
 - `artb_10` - Agentic RTB Framework 1.0 support (autonomous agent bidstream processing)
+- `agentic_direct_21` - Agentic Direct v2.1 support (OpenDirect + A2A Protocol for agent-to-agent advertising)
 
 ### Feature Selection Examples
 
@@ -93,8 +95,11 @@ iab-specs = { version = "0.4", features = ["openrtb_30", "ads_txt", "sellers_jso
 # Only ARTB 1.0 support (autonomous agent bidstream processing)
 iab-specs = { version = "0.4", features = ["artb_10"] }
 
+# Only Agentic Direct v2.1 support (agent-to-agent advertising transactions)
+iab-specs = { version = "0.4", features = ["agentic_direct_21"] }
+
 # All specifications
-iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10"] }
+iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10", "agentic_direct_21"] }
 ```
 
 **Why no default features?**
@@ -667,6 +672,78 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 - Agent metadata with API and model versioning
 - Extension support for custom agent-specific data
 
+### Agentic Direct v2.1
+
+Autonomous agent-to-agent advertising transactions combining OpenDirect v2.1 with the A2A Protocol.
+
+```rust
+use iab_specs::agentic_direct::v21::{
+    Order, OrderStatus, can_transition_order,
+    AgentCard, Skill, SkillInputMode, AgentCapabilities,
+    JsonRpcRequest, JsonRpcResponse, JsonRpcId,
+};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Create an advertising order
+    let order = Order::builder()
+        .name("Summer Campaign")
+        .account_id("acc-001")
+        .publisher_id("pub-001")
+        .currency("USD")
+        .status(OrderStatus::Draft)
+        .budget(Some(50000.0))
+        .build()?;
+
+    // Validate state transitions
+    assert!(can_transition_order(&OrderStatus::Draft, &OrderStatus::PendingReview));
+
+    // Create an A2A Agent Card for advertising negotiation
+    let agent = AgentCard::builder()
+        .name("Ad Negotiation Agent")
+        .version("1.0.0")
+        .protocol_version("0.3.0")
+        .url("https://agent.example.com")
+        .skills(vec![
+            Skill::builder()
+                .id("negotiate-order")
+                .name("Order Negotiation")
+                .input_modes(vec![SkillInputMode::Text, SkillInputMode::Data])
+                .build()?,
+        ])
+        .capabilities(Some(AgentCapabilities::builder()
+            .streaming(Some(true))
+            .build()?))
+        .build()?;
+
+    // Wrap in JSON-RPC for agent communication
+    let request = JsonRpcRequest::builder()
+        .jsonrpc("2.0")
+        .method("agent/negotiate")
+        .id(Some(JsonRpcId::String("req-1".into())))
+        .params(Some(serde_json::to_value(&order)?))
+        .build()?;
+
+    let response = JsonRpcResponse::builder()
+        .jsonrpc("2.0")
+        .id(JsonRpcId::String("req-1".into()))
+        .result(Some(serde_json::json!({"status": "accepted"})))
+        .build()?;
+
+    // Serialize — A2A types use camelCase, OpenDirect entities use snake_case
+    let agent_json = serde_json::to_string_pretty(&agent)?;
+    println!("{}", agent_json);
+
+    Ok(())
+}
+```
+
+**Key Agentic Direct v2.1 Features:**
+- OpenDirect v2.1 entities: Organization, Account, Product, Order, Line, Creative, Assignment
+- A2A Protocol: Agent Cards, Skills, Tasks with artifact support
+- JSON-RPC 2.0 message framing for agent-to-agent communication
+- State machines for Order, Line, and Task lifecycle management
+- Dual serialization: snake_case for OpenDirect, camelCase for A2A types
+
 ### Ads.txt
 
 Parse and generate ads.txt files:
@@ -847,6 +924,7 @@ All scripts support `--help` for more options.
 - [x] OpenRTB 3.0
 - [x] OpenRTB Native Ads 1.2
 - [x] Agentic RTB Framework 1.0
+- [x] Agentic Direct v2.1
 - [ ] Additional IAB specifications (contributions welcome!)
 
 ## Contributing
