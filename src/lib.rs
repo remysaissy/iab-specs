@@ -117,6 +117,8 @@
 
 #[cfg(feature = "adcom")]
 pub mod adcom;
+#[cfg(feature = "agentic_direct_21")]
+pub mod agentic_direct;
 #[cfg(feature = "ads_txt")]
 pub mod ads_txt;
 #[cfg(feature = "app_ads_txt")]

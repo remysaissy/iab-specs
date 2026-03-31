@@ -15,6 +15,9 @@ pub enum Error {
 
     #[error("{0}")]
     StdFmtError(#[from] std::fmt::Error),
+
+    #[error("Invalid transition from '{from}' to '{to}'")]
+    InvalidTransition { from: String, to: String },
 }
 
 impl From<derive_builder::UninitializedFieldError> for Error {
@@ -59,5 +62,17 @@ mod tests {
         let builder_err = UninitializedFieldError::new("field_name");
         let err: Error = builder_err.into();
         assert_eq!(err.to_string(), "field_name");
+    }
+
+    #[test]
+    fn test_invalid_transition() {
+        let err = Error::InvalidTransition {
+            from: "pending".to_string(),
+            to: "completed".to_string(),
+        };
+        assert_eq!(
+            err.to_string(),
+            "Invalid transition from 'pending' to 'completed'"
+        );
     }
 }
