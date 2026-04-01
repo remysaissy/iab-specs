@@ -21,7 +21,8 @@ An unofficial Rust implementation of various IAB (Interactive Advertising Bureau
 - **[App-ads.txt 1.0](https://iabtechlab.com/wp-content/uploads/2019/03/app-ads.txt-v1.0-final-.pdf)** - Authorized Digital Sellers declaration for mobile and CTV apps
 - **[Sellers.json 1.0](https://iabtechlab.com/wp-content/uploads/2019/07/Sellers.json_Final.pdf)** - Supply chain transparency
 - **[Agentic RTB Framework 1.0](https://github.com/IABTechLab/agentic-rtb-framework)** - Autonomous agent bidstream processing via the OpenRTB Patch Protocol
-- **[Agentic Direct v2.1](https://github.com/IABTechLab/agentic-direct)** - OpenDirect v2.1 + A2A Protocol for agent-to-agent advertising transactions
+- **[Agentic Direct 2.1](https://github.com/IABTechLab/agentic-direct)** — OpenDirect v2.1 + A2A Protocol for direct campaign management
+- **[Buyer Agent 1.0](https://github.com/IABTechLab/buyer-agent)** — Demand-side campaign planning, UCP embeddings, negotiation, booking workflows, 2 state machines
 
 ## Installation
 
@@ -30,7 +31,7 @@ Add `iab-specs` to your `Cargo.toml` with the features you need:
 ```toml
 [dependencies]
 # Enable all specifications
-iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10", "agentic_direct_21"] }
+iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10", "agentic_direct_21", "buyer_agent_10"] }
 
 # Or enable only what you need
 iab-specs = { version = "0.4", features = ["openrtb_30"] }
@@ -40,7 +41,7 @@ Or use cargo:
 
 ```bash
 # Enable all specifications
-cargo add iab-specs --features adcom,openrtb_25,openrtb_26,openrtb_30,openrtb_native_12,ads_txt,app_ads_txt,sellers_json,artb_10,agentic_direct_21
+cargo add iab-specs --features adcom,openrtb_25,openrtb_26,openrtb_30,openrtb_native_12,ads_txt,app_ads_txt,sellers_json,artb_10,agentic_direct_21,buyer_agent_10
 
 # Or enable only what you need
 cargo add iab-specs --features openrtb_30
@@ -62,7 +63,8 @@ The library uses cargo features to enable/disable specifications:
 - `app_ads_txt` - App-ads.txt 1.0 support (automatically includes `ads_txt`)
 - `sellers_json` - Sellers.json 1.0 support (includes `serde_json`)
 - `artb_10` - Agentic RTB Framework 1.0 support (autonomous agent bidstream processing)
-- `agentic_direct_21` - Agentic Direct v2.1 support (OpenDirect + A2A Protocol for agent-to-agent advertising)
+- `agentic_direct_21` - Agentic Direct 2.1 support (automatically includes `serde_json`)
+- `buyer_agent_10` - Buyer Agent 1.0 support (automatically includes `agentic_direct_21` and `serde_json`)
 
 ### Feature Selection Examples
 
@@ -98,8 +100,11 @@ iab-specs = { version = "0.4", features = ["artb_10"] }
 # Only Agentic Direct v2.1 support (agent-to-agent advertising transactions)
 iab-specs = { version = "0.4", features = ["agentic_direct_21"] }
 
+# Only Buyer Agent 1.0 support (automatically includes agentic_direct_21)
+iab-specs = { version = "0.4", features = ["buyer_agent_10"] }
+
 # All specifications
-iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10", "agentic_direct_21"] }
+iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10", "agentic_direct_21", "buyer_agent_10"] }
 ```
 
 **Why no default features?**
@@ -744,6 +749,85 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 - State machines for Order, Line, and Task lifecycle management
 - Dual serialization: snake_case for OpenDirect, camelCase for A2A types
 
+### Buyer Agent 1.0
+
+Plan campaigns, negotiate deals, and manage booking workflows with autonomous buyer agents.
+
+```rust
+use iab_specs::buyer_agent::v10::models::{
+    CampaignBrief, CampaignAllocation, NegotiationStrategy, NegotiationOffer,
+    BookingJob, BookingRecommendation, UCPEmbedding, AudiencePlan,
+};
+use iab_specs::buyer_agent::v10::enums::{CampaignStatus, DealStatus};
+use iab_specs::buyer_agent::v10::state_machines::{
+    can_transition_campaign, can_transition_deal,
+};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Create a campaign brief
+    let brief = CampaignBrief::builder()
+        .name("Q2 Brand Awareness Campaign")
+        .budget(50000.0)
+        .start_date("2026-04-01")
+        .end_date("2026-06-30")
+        .channels(vec!["display".to_string(), "video".to_string()])
+        .build()?;
+
+    // Allocate budget across channels
+    let alloc = CampaignAllocation::builder()
+        .channel("display")
+        .budget_share(0.6)
+        .priority(1)
+        .rationale("High-volume reach channel")
+        .build()?;
+
+    // Negotiate a deal
+    let strategy = NegotiationStrategy::builder()
+        .target_cpm(2.50)
+        .max_cpm(5.00)
+        .concession_step(0.25)
+        .max_rounds(5)
+        .build()?;
+
+    let offer = NegotiationOffer::builder()
+        .price(3.50)
+        .round(3)
+        .from_buyer(true)
+        .accepted(Some(true))
+        .build()?;
+
+    // Validate state machine transitions
+    assert!(can_transition_campaign(
+        &CampaignStatus::Initialized,
+        &CampaignStatus::BriefReceived
+    ));
+    assert!(can_transition_deal(
+        &DealStatus::Quoted,
+        &DealStatus::Negotiating
+    ));
+
+    // Approval rejection loops back to research
+    assert!(can_transition_campaign(
+        &CampaignStatus::AwaitingApproval,
+        &CampaignStatus::Researching
+    ));
+
+    // Serialize to JSON
+    let json = serde_json::to_string_pretty(&brief)?;
+    println!("{}", json);
+
+    Ok(())
+}
+```
+
+**Key Buyer Agent 1.0 Features:**
+- Campaign planning with CampaignBrief, CampaignAllocation, and BookingJob entities
+- Deal negotiation with NegotiationStrategy and NegotiationOffer types
+- UCP embedding support with 384-dimensional vectors and AudiencePlan targeting
+- Validated state machines for Campaign (9 states) and Deal (13 states) lifecycles
+- Approval rejection loop: AwaitingApproval → Researching for iterative refinement
+- Re-exports all Agentic Direct 2.1 types for seamless integration
+
 ### Ads.txt
 
 Parse and generate ads.txt files:
@@ -924,7 +1008,8 @@ All scripts support `--help` for more options.
 - [x] OpenRTB 3.0
 - [x] OpenRTB Native Ads 1.2
 - [x] Agentic RTB Framework 1.0
-- [x] Agentic Direct v2.1
+- [x] Agentic Direct 2.1
+- [x] Buyer Agent 1.0
 - [ ] Additional IAB specifications (contributions welcome!)
 
 ## Contributing
