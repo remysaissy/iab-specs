@@ -13,6 +13,6 @@ pub use task::{
     A2ATaskBuilder,
 };
 pub use task_state_machine::{
-    can_transition_task, valid_task_transitions_from, TaskTransition, TaskTransitionBuilder,
-    VALID_TASK_TRANSITIONS,
+    TaskTransition, TaskTransitionBuilder, VALID_TASK_TRANSITIONS, can_transition_task,
+    valid_task_transitions_from,
 };
