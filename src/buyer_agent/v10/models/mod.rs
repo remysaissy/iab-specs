@@ -1,1 +1,3 @@
-// Types will be added in subsequent tasks
+mod campaign;
+
+pub use campaign::{CampaignAllocation, CampaignBrief};
