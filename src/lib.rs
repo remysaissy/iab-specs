@@ -125,6 +125,8 @@ pub mod agentic_direct;
 pub mod app_ads_txt;
 #[cfg(feature = "artb_10")]
 pub mod artb;
+#[cfg(feature = "buyer_agent_10")]
+pub mod buyer_agent;
 mod errors;
 #[cfg(any(feature = "openrtb_25", feature = "openrtb_26", feature = "openrtb_30"))]
 pub mod openrtb;
