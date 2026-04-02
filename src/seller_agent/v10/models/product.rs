@@ -53,7 +53,7 @@ pub struct SellerProduct<Ext: Extension = crate::DefaultExt> {
 
     /// Collection of inventory segments that comprise this product.
     /// Segments define distinct advertising opportunities within the product.
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[builder(default)]
     pub segments: Vec<InventorySegment<Ext>>,
 
