@@ -23,6 +23,7 @@ An unofficial Rust implementation of various IAB (Interactive Advertising Bureau
 - **[Agentic RTB Framework 1.0](https://github.com/IABTechLab/agentic-rtb-framework)** - Autonomous agent bidstream processing via the OpenRTB Patch Protocol
 - **[Agentic Direct 2.1](https://github.com/IABTechLab/agentic-direct)** — OpenDirect v2.1 + A2A Protocol for direct campaign management
 - **[Buyer Agent 1.0](https://github.com/IABTechLab/buyer-agent)** — Demand-side campaign planning, UCP embeddings, negotiation, booking workflows, 2 state machines
+- **[Seller Agent 1.0](https://github.com/IABTechLab/seller-agent)** — Supply-side inventory management, proposals, tiered pricing, negotiation, order execution, 1 state machine
 
 ## Installation
 
@@ -31,7 +32,7 @@ Add `iab-specs` to your `Cargo.toml` with the features you need:
 ```toml
 [dependencies]
 # Enable all specifications
-iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10", "agentic_direct_21", "buyer_agent_10"] }
+iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10", "agentic_direct_21", "buyer_agent_10", "seller_agent_10"] }
 
 # Or enable only what you need
 iab-specs = { version = "0.4", features = ["openrtb_30"] }
@@ -41,7 +42,7 @@ Or use cargo:
 
 ```bash
 # Enable all specifications
-cargo add iab-specs --features adcom,openrtb_25,openrtb_26,openrtb_30,openrtb_native_12,ads_txt,app_ads_txt,sellers_json,artb_10,agentic_direct_21,buyer_agent_10
+cargo add iab-specs --features adcom,openrtb_25,openrtb_26,openrtb_30,openrtb_native_12,ads_txt,app_ads_txt,sellers_json,artb_10,agentic_direct_21,buyer_agent_10,seller_agent_10
 
 # Or enable only what you need
 cargo add iab-specs --features openrtb_30
@@ -65,6 +66,7 @@ The library uses cargo features to enable/disable specifications:
 - `artb_10` - Agentic RTB Framework 1.0 support (autonomous agent bidstream processing)
 - `agentic_direct_21` - Agentic Direct 2.1 support (automatically includes `serde_json`)
 - `buyer_agent_10` - Buyer Agent 1.0 support (automatically includes `agentic_direct_21` and `serde_json`)
+- `seller_agent_10` - Seller Agent 1.0 support (automatically includes `agentic_direct_21` and `serde_json`)
 
 ### Feature Selection Examples
 
@@ -103,8 +105,11 @@ iab-specs = { version = "0.4", features = ["agentic_direct_21"] }
 # Only Buyer Agent 1.0 support (automatically includes agentic_direct_21)
 iab-specs = { version = "0.4", features = ["buyer_agent_10"] }
 
+# Only Seller Agent 1.0 support (automatically includes agentic_direct_21)
+iab-specs = { version = "0.4", features = ["seller_agent_10"] }
+
 # All specifications
-iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10", "agentic_direct_21", "buyer_agent_10"] }
+iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10", "agentic_direct_21", "buyer_agent_10", "seller_agent_10"] }
 ```
 
 **Why no default features?**
@@ -828,6 +833,93 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 - Approval rejection loop: AwaitingApproval → Researching for iterative refinement
 - Re-exports all Agentic Direct 2.1 types for seamless integration
 
+### Seller Agent 1.0
+
+Manage inventory, generate proposals, negotiate pricing, and execute orders with autonomous seller agents.
+
+```rust
+use iab_specs::seller_agent::v10::models::{
+    Proposal, ProposalRevision, ProposalItem, TieredPricing, PricingTier,
+    NegotiationConfig, NegotiationRound,
+};
+use iab_specs::seller_agent::v10::enums::{
+    ProposalStatus, PricingTierType, SellerOrderStatus, NegotiationStrategyType,
+};
+use iab_specs::seller_agent::v10::state_machines::can_transition_seller_order;
+use iab_specs::agentic_direct::v21::enums::RateType;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Create a proposal
+    let proposal = Proposal::builder()
+        .id("prop-001")
+        .buyer_id("buyer-001")
+        .seller_id("seller-001")
+        .status(ProposalStatus::Submitted)
+        .build()?;
+
+    // Define tiered pricing
+    let pricing = TieredPricing::builder()
+        .tiers(vec![
+            PricingTier::builder()
+                .tier_type(PricingTierType::Public)
+                .discount_percent(0.0)
+                .negotiation_enabled(false)
+                .build()?,
+            PricingTier::builder()
+                .tier_type(PricingTierType::Agency)
+                .discount_percent(10.0)
+                .negotiation_enabled(true)
+                .min_spend(Some(5000.0))
+                .build()?,
+        ])
+        .build()?;
+
+    // Configure negotiation
+    let config = NegotiationConfig::builder()
+        .max_rounds(5)
+        .per_round_concession_cap(0.50)
+        .total_concession_cap(2.00)
+        .strategy(NegotiationStrategyType::Collaborative)
+        .build()?;
+
+    // Validate state machine transitions
+    assert!(can_transition_seller_order(
+        &SellerOrderStatus::Draft,
+        &SellerOrderStatus::Submitted
+    ));
+    assert!(can_transition_seller_order(
+        &SellerOrderStatus::Syncing,
+        &SellerOrderStatus::Booked
+    ));
+
+    // Pause/resume cycle
+    assert!(can_transition_seller_order(
+        &SellerOrderStatus::InProgress,
+        &SellerOrderStatus::Paused
+    ));
+    assert!(can_transition_seller_order(
+        &SellerOrderStatus::Paused,
+        &SellerOrderStatus::InProgress
+    ));
+
+    // Serialize to JSON
+    let json = serde_json::to_string_pretty(&proposal)?;
+    println!("{}", json);
+
+    Ok(())
+}
+```
+
+**Key Seller Agent 1.0 Features:**
+- Proposal management with Proposal, ProposalRevision, and ProposalItem entities
+- Tiered pricing with TieredPricing, PricingTier, and RateCard types
+- Negotiation configuration with NegotiationConfig and NegotiationRound types
+- Inventory packaging with MediaKit and Package types
+- Change management with ChangeRequest, ChangeType, and ChangeSeverity
+- Order execution with ExecutionOrder, DealDistribution, and DspIntegration
+- Validated state machine for SellerOrder (13 states) lifecycle with pause/resume support
+- Re-exports all Agentic Direct 2.1 types for seamless integration
+
 ### Ads.txt
 
 Parse and generate ads.txt files:
@@ -1010,6 +1102,7 @@ All scripts support `--help` for more options.
 - [x] Agentic RTB Framework 1.0
 - [x] Agentic Direct 2.1
 - [x] Buyer Agent 1.0
+- [x] Seller Agent 1.0
 - [ ] Additional IAB specifications (contributions welcome!)
 
 ## Contributing
