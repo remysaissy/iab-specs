@@ -3,6 +3,7 @@ use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
 use super::super::enums::TaskState;
+use super::message::A2AMessage;
 
 /// Part of an A2A artifact.
 #[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
@@ -82,6 +83,10 @@ pub struct A2ATask<Ext: Extension = crate::DefaultExt> {
     #[builder(default)]
     pub result: Option<serde_json::Value>,
 
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[builder(default)]
+    pub history: Vec<A2AMessage>,
+
     /// Artifacts produced by the task.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[builder(default)]
@@ -126,6 +131,7 @@ mod tests {
         assert_eq!(task.state, TaskState::Working);
         assert!(task.message.is_none());
         assert!(task.result.is_none());
+        assert!(task.history.is_empty());
         assert!(task.artifacts.is_empty());
         assert!(task.created_at.is_none());
         assert!(task.updated_at.is_none());
@@ -180,6 +186,7 @@ mod tests {
         assert_eq!(task.id, "task-005");
         assert_eq!(task.state, TaskState::Working);
         assert!(task.message.is_none());
+        assert!(task.history.is_empty());
         assert!(task.artifacts.is_empty());
     }
 
@@ -275,5 +282,35 @@ mod tests {
         let parsed: A2ATask = serde_json::from_str(&json).unwrap();
         assert_eq!(task, parsed);
         assert_eq!(parsed.artifacts.len(), 2);
+    }
+
+    #[test]
+    fn test_a2a_task_with_history() {
+        let task = A2ATask::builder()
+            .id("task-007")
+            .state(TaskState::Working)
+            .history(vec![
+                A2AMessage::builder()
+                    .role("user")
+                    .content("Please summarize the campaign status")
+                    .timestamp("2025-03-31T12:00:00Z")
+                    .build()
+                    .unwrap(),
+                A2AMessage::builder()
+                    .role("agent")
+                    .content("The campaign is pacing on target")
+                    .timestamp("2025-03-31T12:00:05Z")
+                    .build()
+                    .unwrap(),
+            ])
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&task).unwrap();
+        let parsed: A2ATask = serde_json::from_str(&json).unwrap();
+        assert_eq!(task, parsed);
+        assert_eq!(parsed.history.len(), 2);
+        assert_eq!(parsed.history[0].role, "user");
+        assert_eq!(parsed.history[1].role, "agent");
     }
 }
