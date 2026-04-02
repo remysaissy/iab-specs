@@ -743,9 +743,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```
 
 **Key Agentic Direct v2.1 Features:**
-- OpenDirect v2.1 entities: Organization, Account, Product, Order, Line, Creative, Assignment
-- A2A Protocol: Agent Cards, Skills, Tasks with artifact support
-- JSON-RPC 2.0 message framing for agent-to-agent communication
+- OpenDirect v2.1 entities: Organization, Account, Product, Order, Line, Creative, Assignment, ChangeRequest, Placement
+- A2A Protocol: Agent Cards, Skills, Tasks with A2AMessage history and artifact support
+- JSON-RPC 2.0 message framing, MCPTool definitions for agent-to-agent communication
 - State machines for Order, Line, and Task lifecycle management
 - Dual serialization: snake_case for OpenDirect, camelCase for A2A types
 

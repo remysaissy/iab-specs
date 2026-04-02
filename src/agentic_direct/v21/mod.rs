@@ -698,4 +698,113 @@ mod integration_tests {
         let result_order: Order = serde_json::from_value(response.result.unwrap()).unwrap();
         assert_eq!(result_order, order);
     }
+
+    #[test]
+    fn test_change_request_and_placement_workflow() {
+        let change_request = ChangeRequest::builder()
+            .id("cr-001")
+            .order_id("order-001")
+            .change_type("date_shift")
+            .description("Shift campaign start date by 2 weeks")
+            .requested_changes(serde_json::json!({
+                "field": "start_date",
+                "old_value": "2025-06-01",
+                "new_value": "2025-06-15"
+            }))
+            .status("pending")
+            .build()
+            .unwrap();
+
+        assert_eq!(change_request.order_id, "order-001");
+        assert_eq!(change_request.change_type, "date_shift");
+        assert_eq!(change_request.status, "pending");
+
+        let placement = Placement::builder()
+            .id("pl-001")
+            .line_id("line-001")
+            .ad_unit_code("HEADER_LEADERBOARD_728x90")
+            .overrides(Some(serde_json::json!({
+                "viewability_threshold": 0.7,
+                "position": "above_fold"
+            })))
+            .build()
+            .unwrap();
+
+        assert_eq!(placement.line_id, "line-001");
+        assert_eq!(placement.ad_unit_code, "HEADER_LEADERBOARD_728x90");
+        assert!(placement.overrides.is_some());
+
+        let cr_json = serde_json::to_string(&change_request).unwrap();
+        let parsed_cr: ChangeRequest = serde_json::from_str(&cr_json).unwrap();
+        assert_eq!(change_request, parsed_cr);
+
+        let pl_json = serde_json::to_string(&placement).unwrap();
+        let parsed_pl: Placement = serde_json::from_str(&pl_json).unwrap();
+        assert_eq!(placement, parsed_pl);
+    }
+
+    #[test]
+    fn test_mcp_tool_and_task_history_workflow() {
+        let tool = MCPTool::builder()
+            .name("get_inventory")
+            .description("Retrieve available advertising inventory")
+            .input_schema(serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "publisher_id": {"type": "string"},
+                    "ad_format": {"type": "string", "enum": ["display", "video", "native"]}
+                },
+                "required": ["publisher_id"]
+            }))
+            .build()
+            .unwrap();
+
+        assert_eq!(tool.name, "get_inventory");
+
+        let tool_json = serde_json::to_string(&tool).unwrap();
+        let parsed_tool: MCPTool = serde_json::from_str(&tool_json).unwrap();
+        assert_eq!(tool, parsed_tool);
+
+        let task = A2ATask::builder()
+            .id("task-hist-001")
+            .state(TaskState::Completed)
+            .message("Negotiation complete")
+            .history(vec![
+                A2AMessage::builder()
+                    .role("user")
+                    .content("Please negotiate order-001 with budget $50K")
+                    .timestamp("2025-06-01T10:00:00Z")
+                    .build()
+                    .unwrap(),
+                A2AMessage::builder()
+                    .role("agent")
+                    .content("Analyzing publisher inventory and pricing...")
+                    .timestamp("2025-06-01T10:00:05Z")
+                    .build()
+                    .unwrap(),
+                A2AMessage::builder()
+                    .role("agent")
+                    .content("Negotiation complete. Agreed CPM: $8.50 for 1M impressions")
+                    .timestamp("2025-06-01T10:05:00Z")
+                    .build()
+                    .unwrap(),
+            ])
+            .created_at("2025-06-01T10:00:00Z")
+            .updated_at("2025-06-01T10:05:00Z")
+            .build()
+            .unwrap();
+
+        assert_eq!(task.history.len(), 3);
+        assert_eq!(task.history[0].role, "user");
+        assert_eq!(task.history[2].role, "agent");
+
+        let json = serde_json::to_string(&task).unwrap();
+        assert!(json.contains("\"history\""));
+        assert!(json.contains("\"role\""));
+        assert!(json.contains("\"content\""));
+
+        let parsed: A2ATask = serde_json::from_str(&json).unwrap();
+        assert_eq!(task, parsed);
+        assert_eq!(parsed.history.len(), 3);
+    }
 }
