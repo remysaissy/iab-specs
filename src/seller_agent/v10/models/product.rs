@@ -20,14 +20,14 @@ use serde::{Deserialize, Serialize};
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let segment = InventorySegment::builder()
 ///     .id("seg-001".to_string())
-///     .name("Premium Display")
-///     .ad_format("970x250")
+///     .name("Premium Display".to_string())
+///     .ad_format("970x250".to_string())
 ///     .estimated_impressions(100000)
 ///     .build()?;
 ///
 /// let product = SellerProduct::builder()
 ///     .id("prod-001".to_string())
-///     .name("Premium Display Bundle")
+///     .name("Premium Display Bundle".to_string())
 ///     .base_cpm(5.50)
 ///     .segments(vec![segment])
 ///     .build()?;
@@ -87,8 +87,8 @@ impl SellerProduct {
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let segment = InventorySegment::builder()
 ///     .id("seg-001".to_string())
-///     .name("Above-the-fold")
-///     .ad_format("300x250")
+///     .name("Above-the-fold".to_string())
+///     .ad_format("300x250".to_string())
 ///     .estimated_impressions(50000)
 ///     .build()?;
 /// # Ok(())
