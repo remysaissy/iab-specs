@@ -2,16 +2,19 @@
 
 pub mod account;
 pub mod assignment;
+pub mod change_request;
 pub mod creative;
 pub mod line;
 pub mod line_state_machine;
 pub mod order;
 pub mod order_state_machine;
 pub mod organization;
+pub mod placement;
 pub mod product;
 
 pub use account::{Account, AccountBuilder, AccountStatus};
 pub use assignment::{Assignment, AssignmentBuilder};
+pub use change_request::{ChangeRequest, ChangeRequestBuilder};
 pub use creative::{Creative, CreativeBuilder};
 pub use line::{FrequencyCap, FrequencyCapBuilder, Line, LineBuilder};
 pub use line_state_machine::{
@@ -27,4 +30,5 @@ pub use organization::{
     Address, AddressBuilder, Contact, ContactBuilder, Organization, OrganizationBuilder,
     OrganizationType,
 };
+pub use placement::{Placement, PlacementBuilder};
 pub use product::{Product, ProductBuilder};
