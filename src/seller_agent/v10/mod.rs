@@ -167,7 +167,7 @@ mod integration_tests {
         TieredPricing,
     };
     use crate::seller_agent::v10::state_machines::{
-        can_transition_seller_order, SellerOrderTransition,
+        SellerOrderTransition, can_transition_seller_order,
     };
 
     #[test]
