@@ -1,5 +1,5 @@
-use crate::seller_agent::v10::enums::{ChangeRequestStatus, ChangeSeverity, ChangeType};
 use crate::Extension;
+use crate::seller_agent::v10::enums::{ChangeRequestStatus, ChangeSeverity, ChangeType};
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

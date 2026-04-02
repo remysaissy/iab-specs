@@ -286,13 +286,15 @@ mod tests {
         let dist = DealDistribution::builder()
             .deal_id("deal-004")
             .buyer_seats(vec!["buyer-1".to_string()])
-            .dsp_integrations(vec![DspIntegration::builder()
-                .dsp_name("PubMatic")
-                .seat_id("pm-seat")
-                .deal_id_at_dsp(Some("pm-deal-100".to_string()))
-                .status(DistributionStatus::Sent)
-                .build()
-                .unwrap()])
+            .dsp_integrations(vec![
+                DspIntegration::builder()
+                    .dsp_name("PubMatic")
+                    .seat_id("pm-seat")
+                    .deal_id_at_dsp(Some("pm-deal-100".to_string()))
+                    .status(DistributionStatus::Sent)
+                    .build()
+                    .unwrap(),
+            ])
             .distributed_at(Some("2026-04-01T10:30:00Z".to_string()))
             .build()
             .unwrap();

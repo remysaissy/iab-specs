@@ -1,5 +1,5 @@
-use crate::seller_agent::v10::enums::PricingTierType;
 use crate::Extension;
+use crate::seller_agent::v10::enums::PricingTierType;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
