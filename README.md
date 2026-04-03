@@ -831,9 +831,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```
 
 **Key Buyer Agent 1.0 Features:**
-- Campaign planning with CampaignBrief, CampaignAllocation, and BookingJob entities
+- Campaign planning with CampaignBrief, CampaignAllocation, ChannelBrief, and BookingJob entities
 - Deal negotiation with NegotiationStrategy and NegotiationOffer types
-- UCP embedding support with 384-dimensional vectors and AudiencePlan targeting
+- Booking tracking with BookedLine and BookingRecommendation types
+- Buyer identification with BuyerIdentity for tiered pricing lookups (seat, agency, advertiser)
+- UCP embedding support with 384-dimensional vectors, AudiencePlan targeting, UCPModelDescriptor, and UCPConsent
+- Linear TV support with LinearTVParams (flighting, cancellation terms, makegood policies)
+- V2 type aliases: ChannelAllocation, NegotiationRound, BookingState, ProductRecommendation
 - Validated state machines for Campaign (9 states) and Deal (13 states) lifecycles
 - Approval rejection loop: AwaitingApproval → Researching for iterative refinement
 - Re-exports all Agentic Direct 2.1 types for seamless integration

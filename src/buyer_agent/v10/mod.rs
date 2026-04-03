@@ -667,6 +667,288 @@ mod integration_tests {
     }
 
     #[test]
+    fn test_v2_type_aliases_are_usable() {
+        use crate::buyer_agent::v10::models::{
+            BookingState, ChannelAllocation, NegotiationRound, ProductRecommendation,
+        };
+
+        let alloc: ChannelAllocation = ChannelAllocation::builder()
+            .channel("display")
+            .budget_share(0.5)
+            .priority(1)
+            .rationale("V2 alias test")
+            .build()
+            .unwrap();
+        let alloc_orig: CampaignAllocation = CampaignAllocation::builder()
+            .channel("display")
+            .budget_share(0.5)
+            .priority(1)
+            .rationale("V2 alias test")
+            .build()
+            .unwrap();
+        assert_eq!(alloc, alloc_orig);
+
+        let round: NegotiationRound = NegotiationRound::builder()
+            .price(3.50)
+            .round(1)
+            .from_buyer(true)
+            .build()
+            .unwrap();
+        let offer_orig: NegotiationOffer = NegotiationOffer::builder()
+            .price(3.50)
+            .round(1)
+            .from_buyer(true)
+            .build()
+            .unwrap();
+        assert_eq!(round, offer_orig);
+
+        let state: BookingState = BookingState::builder()
+            .id("job-alias")
+            .campaign_brief_id("brief-alias")
+            .status(CampaignStatus::Initialized)
+            .build()
+            .unwrap();
+        let job_orig: BookingJob = BookingJob::builder()
+            .id("job-alias")
+            .campaign_brief_id("brief-alias")
+            .status(CampaignStatus::Initialized)
+            .build()
+            .unwrap();
+        assert_eq!(state, job_orig);
+
+        let rec: ProductRecommendation = ProductRecommendation::builder()
+            .seller_name("Test Seller")
+            .product_id("prod-alias")
+            .price(5.00)
+            .impressions(100000)
+            .build()
+            .unwrap();
+        let rec_orig: BookingRecommendation = BookingRecommendation::builder()
+            .seller_name("Test Seller")
+            .product_id("prod-alias")
+            .price(5.00)
+            .impressions(100000)
+            .build()
+            .unwrap();
+        assert_eq!(rec, rec_orig);
+
+        // Verify alias roundtrip serialization
+        let json = serde_json::to_string(&alloc).unwrap();
+        let parsed: CampaignAllocation = serde_json::from_str(&json).unwrap();
+        assert_eq!(alloc, parsed);
+    }
+
+    #[test]
+    fn test_v2_channel_brief_workflow() {
+        use crate::buyer_agent::v10::models::ChannelBrief;
+
+        let brief = ChannelBrief::builder()
+            .channel("video")
+            .budget(50000.0)
+            .objectives(vec!["engagement".to_string(), "conversion".to_string()])
+            .constraints(Some(serde_json::json!({
+                "frequency_cap": 3,
+                "geo": ["US", "UK"],
+                "device_types": ["mobile", "ctv"]
+            })))
+            .build()
+            .unwrap();
+
+        assert_eq!(brief.channel, "video");
+        assert_eq!(brief.budget, 50000.0);
+        assert_eq!(brief.objectives.len(), 2);
+        assert!(brief.constraints.is_some());
+
+        let json = serde_json::to_string(&brief).unwrap();
+        let parsed: ChannelBrief = serde_json::from_str(&json).unwrap();
+        assert_eq!(brief, parsed);
+
+        assert!(json.contains("\"channel\":\"video\""));
+        assert!(json.contains("\"budget\":50000.0"));
+        assert!(json.contains("\"frequency_cap\":3"));
+    }
+
+    #[test]
+    fn test_v2_booked_line_workflow() {
+        use crate::buyer_agent::v10::models::BookedLine;
+
+        let line = BookedLine::builder()
+            .line_id("line-v2-001")
+            .order_id("order-v2-001")
+            .product_id("product-v2-001")
+            .status("booked")
+            .rate(3.75)
+            .quantity(50000)
+            .build()
+            .unwrap();
+
+        assert_eq!(line.line_id, "line-v2-001");
+        assert_eq!(line.order_id, "order-v2-001");
+        assert_eq!(line.product_id, "product-v2-001");
+        assert_eq!(line.status, "booked");
+        assert_eq!(line.rate, 3.75);
+        assert_eq!(line.quantity, 50000);
+
+        let json = serde_json::to_string(&line).unwrap();
+        let parsed: BookedLine = serde_json::from_str(&json).unwrap();
+        assert_eq!(line, parsed);
+
+        // Verify total cost computation from fields
+        let total_cost = line.rate * (line.quantity as f64);
+        assert!((total_cost - 187500.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_v2_buyer_identity_tiered_pricing() {
+        // Full identity with all tiers
+        let full = BuyerIdentity::builder()
+            .seat_id("seat-premium-001")
+            .agency_id("agency-holdco-global")
+            .advertiser_id("advertiser-fortune-500")
+            .build()
+            .unwrap();
+
+        assert_eq!(full.seat_id, Some("seat-premium-001".to_string()));
+        assert_eq!(full.agency_id, Some("agency-holdco-global".to_string()));
+        assert_eq!(
+            full.advertiser_id,
+            Some("advertiser-fortune-500".to_string())
+        );
+
+        let full_json = serde_json::to_string(&full).unwrap();
+        let full_parsed: BuyerIdentity = serde_json::from_str(&full_json).unwrap();
+        assert_eq!(full, full_parsed);
+
+        // Seat-only tier
+        let seat_only = BuyerIdentity::builder()
+            .seat_id("seat-basic")
+            .build()
+            .unwrap();
+        let seat_json = serde_json::to_string(&seat_only).unwrap();
+        assert!(seat_json.contains("\"seat_id\""));
+        assert!(!seat_json.contains("agency_id"));
+        assert!(!seat_json.contains("advertiser_id"));
+
+        // Agency tier (no seat)
+        let agency_only = BuyerIdentity::builder()
+            .agency_id("agency-tier")
+            .build()
+            .unwrap();
+        let agency_json = serde_json::to_string(&agency_only).unwrap();
+        assert!(!agency_json.contains("seat_id"));
+        assert!(agency_json.contains("\"agency_id\""));
+
+        // Empty identity (valid for public pricing)
+        let empty = BuyerIdentity::builder().build().unwrap();
+        let empty_json = serde_json::to_string(&empty).unwrap();
+        assert_eq!(empty_json, "{}");
+    }
+
+    #[test]
+    fn test_v2_ucp_model_descriptor_and_consent() {
+        use crate::buyer_agent::v10::models::{UCPConsent, UCPModelDescriptor};
+
+        let descriptor = UCPModelDescriptor::builder()
+            .model_id("sentence-transformers/all-MiniLM-L6-v2")
+            .version("1.0.0")
+            .dimension(384)
+            .build()
+            .unwrap();
+
+        assert_eq!(
+            descriptor.model_id,
+            "sentence-transformers/all-MiniLM-L6-v2"
+        );
+        assert_eq!(descriptor.version, "1.0.0");
+        assert_eq!(descriptor.dimension, 384);
+
+        let desc_json = serde_json::to_string(&descriptor).unwrap();
+        let desc_parsed: UCPModelDescriptor = serde_json::from_str(&desc_json).unwrap();
+        assert_eq!(descriptor, desc_parsed);
+
+        // Consent with expiration
+        let consent = UCPConsent::builder()
+            .purpose("audience-targeting")
+            .granted(true)
+            .expires_at("2026-12-31T23:59:59Z")
+            .build()
+            .unwrap();
+
+        assert_eq!(consent.purpose, "audience-targeting");
+        assert!(consent.granted);
+        assert_eq!(consent.expires_at, Some("2026-12-31T23:59:59Z".to_string()));
+
+        let consent_json = serde_json::to_string(&consent).unwrap();
+        let consent_parsed: UCPConsent = serde_json::from_str(&consent_json).unwrap();
+        assert_eq!(consent, consent_parsed);
+
+        // Consent without expiration (skip_serializing_if)
+        let no_expiry = UCPConsent::builder()
+            .purpose("frequency-capping")
+            .granted(false)
+            .build()
+            .unwrap();
+
+        let no_expiry_json = serde_json::to_string(&no_expiry).unwrap();
+        assert!(!no_expiry_json.contains("expires_at"));
+        assert!(no_expiry_json.contains("\"granted\":false"));
+    }
+
+    #[test]
+    fn test_v2_linear_tv_params_workflow() {
+        use crate::buyer_agent::v10::models::LinearTVParams;
+
+        let flighting = serde_json::json!({
+            "daypart_schedule": {
+                "monday_friday": {
+                    "morning": {"start": "06:00", "end": "12:00", "cpm": 5.50},
+                    "evening": {"start": "18:00", "end": "23:00", "cpm": 8.00}
+                },
+                "weekend": {
+                    "prime": {"start": "19:00", "end": "23:00", "cpm": 10.00}
+                }
+            },
+            "flight_dates": [
+                {"start": "2026-04-01", "end": "2026-04-30", "impressions": 1000000},
+                {"start": "2026-06-01", "end": "2026-06-30", "impressions": 1200000}
+            ],
+            "blackout_periods": ["2026-05-01", "2026-07-04"]
+        });
+
+        let params = LinearTVParams::builder()
+            .flighting(Some(flighting.clone()))
+            .cancellation_terms("30 days written notice required")
+            .makegood_policy("100% value replacement within same quarter")
+            .build()
+            .unwrap();
+
+        assert_eq!(params.flighting, Some(flighting));
+        assert_eq!(
+            params.cancellation_terms,
+            Some("30 days written notice required".to_string())
+        );
+        assert_eq!(
+            params.makegood_policy,
+            Some("100% value replacement within same quarter".to_string())
+        );
+
+        let json = serde_json::to_string(&params).unwrap();
+        let parsed: LinearTVParams = serde_json::from_str(&json).unwrap();
+        assert_eq!(params, parsed);
+
+        // Verify complex nested JSON is preserved through roundtrip
+        let parsed_flighting = parsed.flighting.unwrap();
+        let daypart = &parsed_flighting["daypart_schedule"];
+        assert_eq!(
+            daypart["monday_friday"]["evening"]["cpm"].as_f64().unwrap(),
+            8.00
+        );
+        assert_eq!(daypart["weekend"]["prime"]["cpm"].as_f64().unwrap(), 10.00);
+        let flight_dates = parsed_flighting["flight_dates"].as_array().unwrap();
+        assert_eq!(flight_dates.len(), 2);
+    }
+
+    #[test]
     fn test_enum_serialization_roundtrip() {
         // DealStatus
         let deal_variants = [
