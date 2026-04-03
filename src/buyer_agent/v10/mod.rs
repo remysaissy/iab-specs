@@ -176,11 +176,11 @@ pub use crate::agentic_direct::v21::jsonrpc::*;
 mod integration_tests {
     use crate::buyer_agent::v10::enums::{ApprovalStatus, CampaignStatus, ChannelType, DealStatus};
     use crate::buyer_agent::v10::models::{
-        AudiencePlan, BookingJob, BookingRecommendation, CampaignAllocation, CampaignBrief,
-        NegotiationOffer, NegotiationStrategy, UCPEmbedding,
+        AudiencePlan, BookingJob, BookingRecommendation, BuyerIdentity, CampaignAllocation,
+        CampaignBrief, NegotiationOffer, NegotiationStrategy, UCPEmbedding,
     };
     use crate::buyer_agent::v10::state_machines::{
-        CampaignTransition, DealTransition, can_transition_campaign, can_transition_deal,
+        can_transition_campaign, can_transition_deal, CampaignTransition, DealTransition,
     };
 
     #[test]
@@ -630,6 +630,40 @@ mod integration_tests {
         let json = serde_json::to_string(&approved_booking).unwrap();
         let parsed: BookingJob = serde_json::from_str(&json).unwrap();
         assert_eq!(approved_booking, parsed);
+    }
+
+    #[test]
+    fn test_buyer_identity_for_tiered_pricing() {
+        // BuyerIdentity enables context-aware pricing lookups
+        let identity = BuyerIdentity::builder()
+            .seat_id("seat-premium-001")
+            .agency_id("agency-global-media")
+            .advertiser_id("advertiser-tech-giant")
+            .build()
+            .unwrap();
+
+        assert_eq!(identity.seat_id, Some("seat-premium-001".to_string()));
+        assert_eq!(identity.agency_id, Some("agency-global-media".to_string()));
+        assert_eq!(
+            identity.advertiser_id,
+            Some("advertiser-tech-giant".to_string())
+        );
+
+        // Verify roundtrip serialization
+        let json = serde_json::to_string(&identity).unwrap();
+        let parsed: BuyerIdentity = serde_json::from_str(&json).unwrap();
+        assert_eq!(identity, parsed);
+
+        // Verify skip_serializing_if — None fields are not in JSON
+        let partial_identity = BuyerIdentity::builder()
+            .seat_id("seat-123")
+            .build()
+            .unwrap();
+
+        let partial_json = serde_json::to_string(&partial_identity).unwrap();
+        assert!(partial_json.contains("\"seat_id\""));
+        assert!(!partial_json.contains("agency_id"));
+        assert!(!partial_json.contains("advertiser_id"));
     }
 
     #[test]
