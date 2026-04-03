@@ -40,7 +40,7 @@ impl ScoringRequest {
 
 #[cfg(test)]
 mod tests {
-    use super::super::super::enums::{CompositionType, EmbeddingType};
+    use super::super::super::enums::EmbeddingType;
     use super::*;
 
     #[test]
