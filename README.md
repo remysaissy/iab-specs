@@ -25,6 +25,7 @@ An unofficial Rust implementation of various IAB (Interactive Advertising Bureau
 - **[Buyer Agent 1.0](https://github.com/IABTechLab/buyer-agent)** — Demand-side campaign planning, UCP embeddings, negotiation, booking workflows, 2 state machines
 - **[Seller Agent 1.0](https://github.com/IABTechLab/seller-agent)** — Supply-side inventory management, proposals, tiered pricing, negotiation, order execution, 1 state machine
 - **[Agentic Audience v1.0 (Draft)](https://github.com/IABTechLab/agentic-audiences)** - Embedding exchange protocol for audience targeting
+- **[Registry Agent 1.0](https://github.com/IABTechLab/registry-agent)** — Agent discovery, trust lifecycle, and registry search
 
 ## Installation
 
@@ -33,7 +34,7 @@ Add `iab-specs` to your `Cargo.toml` with the features you need:
 ```toml
 [dependencies]
 # Enable all specifications
-iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10", "agentic_direct_21", "buyer_agent_10", "seller_agent_10", "agentic_audience_10"] }
+iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10", "agentic_direct_21", "buyer_agent_10", "seller_agent_10", "agentic_audience_10", "registry_agent_10"] }
 
 # Or enable only what you need
 iab-specs = { version = "0.4", features = ["openrtb_30"] }
@@ -43,7 +44,7 @@ Or use cargo:
 
 ```bash
 # Enable all specifications
-cargo add iab-specs --features adcom,openrtb_25,openrtb_26,openrtb_30,openrtb_native_12,ads_txt,app_ads_txt,sellers_json,artb_10,agentic_direct_21,buyer_agent_10,seller_agent_10,agentic_audience_10
+cargo add iab-specs --features adcom,openrtb_25,openrtb_26,openrtb_30,openrtb_native_12,ads_txt,app_ads_txt,sellers_json,artb_10,agentic_direct_21,buyer_agent_10,seller_agent_10,agentic_audience_10,registry_agent_10
 
 # Or enable only what you need
 cargo add iab-specs --features openrtb_30
@@ -69,6 +70,7 @@ The library uses cargo features to enable/disable specifications:
 - `buyer_agent_10` - Buyer Agent 1.0 support (automatically includes `agentic_direct_21` and `serde_json`)
 - `seller_agent_10` - Seller Agent 1.0 support (automatically includes `agentic_direct_21` and `serde_json`)
 - `agentic_audience_10` - Agentic Audience v1.0 (Draft) support (automatically includes `serde_json`)
+- `registry_agent_10` - Registry Agent 1.0 support (automatically includes `agentic_direct_21` and `serde_json`)
 
 ### Feature Selection Examples
 
@@ -113,8 +115,11 @@ iab-specs = { version = "0.4", features = ["seller_agent_10"] }
 # Only Agentic Audience v1.0 support (embedding exchange protocol)
 iab-specs = { version = "0.4", features = ["agentic_audience_10"] }
 
+# Only Registry Agent 1.0 support (automatically includes agentic_direct_21)
+iab-specs = { version = "0.4", features = ["registry_agent_10"] }
+
 # All specifications
-iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10", "agentic_direct_21", "buyer_agent_10", "seller_agent_10", "agentic_audience_10"] }
+iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10", "agentic_direct_21", "buyer_agent_10", "seller_agent_10", "agentic_audience_10", "registry_agent_10"] }
 ```
 
 **Why no default features?**
@@ -1010,6 +1015,86 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 - OpenRTB bid stream extension (`EmbeddingSegmentExt`) for `user.data.segment.ext`
 - Signal taxonomy enums (SignalType, EmbeddingType, ModelType, DistanceMetric, etc.)
 
+### Registry Agent 1.0
+
+Discover agents, manage trust lifecycles, and search the registry with autonomous registry agents.
+
+```rust
+use iab_specs::registry_agent::v10::{
+    RegisteredAgent, RegistrySource, AgentTrustInfo,
+    RegistrySearchFilter, RegistrySearchResult,
+    TrustLevel, AgentType, VerificationStatus,
+    AgentCard, Skill, SkillInputMode,
+    can_transition_trust, valid_trust_transitions_from,
+};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Create an agent card and register it
+    let agent_card = AgentCard::builder()
+        .name("Ad Optimization Agent")
+        .version("1.0.0")
+        .protocol_version("0.3.0")
+        .url("https://agent.example.com")
+        .skills(vec![
+            Skill::builder()
+                .id("optimize-campaign")
+                .name("Campaign Optimization")
+                .input_modes(vec![SkillInputMode::Data])
+                .build()?,
+        ])
+        .build()?;
+
+    let registered = RegisteredAgent::builder()
+        .agent_card(agent_card)
+        .registry_id("reg-001")
+        .trust_level(TrustLevel::Registered)
+        .verification_status(VerificationStatus::Verified)
+        .source(Some(RegistrySource::builder()
+            .name("IAB Tech Lab Registry")
+            .url("https://registry.iabtechlab.com")
+            .build()?))
+        .build()?;
+
+    // Trust lifecycle state machine
+    assert!(can_transition_trust(&TrustLevel::Unknown, &TrustLevel::Registered));
+    assert!(can_transition_trust(&TrustLevel::Registered, &TrustLevel::Verified));
+    assert!(can_transition_trust(&TrustLevel::Verified, &TrustLevel::Preferred));
+
+    // Blocked is terminal — no outgoing transitions
+    assert!(valid_trust_transitions_from(&TrustLevel::Blocked).is_empty());
+
+    // Search the registry with filters
+    let filter = RegistrySearchFilter::builder()
+        .query("optimization")
+        .trust_levels(vec![TrustLevel::Verified, TrustLevel::Preferred])
+        .agent_types(vec![AgentType::Dsp, AgentType::Ssp])
+        .max_results(Some(10))
+        .build()?;
+
+    // Quick trust lookup
+    let trust_info = AgentTrustInfo::builder()
+        .agent_url("https://agent.example.com")
+        .is_registered(true)
+        .trust_level(TrustLevel::Verified)
+        .registry_id("reg-001")
+        .build()?;
+
+    // Serialize to JSON
+    let json = serde_json::to_string_pretty(&registered)?;
+    println!("{}", json);
+
+    Ok(())
+}
+```
+
+**Key Registry Agent 1.0 Features:**
+- Agent registration with RegisteredAgent, RegistrySource, and AgentTrustInfo entities
+- Trust lifecycle state machine: Unknown → Registered → Verified → Preferred (with Blocked terminal state)
+- Registry search with RegistrySearchFilter and RegistrySearchResult types
+- Trust validation with can_transition_trust and valid_trust_transitions_from functions
+- TrustTransition records for audit trails
+- Re-exports all Agentic Direct 2.1 types for seamless integration
+
 ### Ads.txt
 
 Parse and generate ads.txt files:
@@ -1194,6 +1279,7 @@ All scripts support `--help` for more options.
 - [x] Buyer Agent 1.0
 - [x] Seller Agent 1.0
 - [x] Agentic Audience v1.0 (Draft)
+- [x] Registry Agent 1.0
 - [ ] Additional IAB specifications (contributions welcome!)
 
 ## Contributing
