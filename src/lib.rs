@@ -119,10 +119,10 @@
 pub mod adcom;
 #[cfg(feature = "ads_txt")]
 pub mod ads_txt;
-#[cfg(feature = "agentic_direct_21")]
-pub mod agentic_direct;
 #[cfg(feature = "agentic_audience_10")]
 pub mod agentic_audience;
+#[cfg(feature = "agentic_direct_21")]
+pub mod agentic_direct;
 #[cfg(feature = "app_ads_txt")]
 pub mod app_ads_txt;
 #[cfg(feature = "artb_10")]
