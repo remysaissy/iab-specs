@@ -8,3 +8,6 @@ pub use embedding_model::{EmbeddingModel, EmbeddingModelBuilder};
 
 mod embedding;
 pub use embedding::{Embedding, EmbeddingBuilder};
+
+mod embedding_envelope;
+pub use embedding_envelope::{EmbeddingEnvelope, EmbeddingEnvelopeBuilder};
