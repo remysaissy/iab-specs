@@ -24,6 +24,7 @@ An unofficial Rust implementation of various IAB (Interactive Advertising Bureau
 - **[Agentic Direct 2.1](https://github.com/IABTechLab/agentic-direct)** — OpenDirect v2.1 + A2A Protocol for direct campaign management
 - **[Buyer Agent 1.0](https://github.com/IABTechLab/buyer-agent)** — Demand-side campaign planning, UCP embeddings, negotiation, booking workflows, 2 state machines
 - **[Seller Agent 1.0](https://github.com/IABTechLab/seller-agent)** — Supply-side inventory management, proposals, tiered pricing, negotiation, order execution, 1 state machine
+- **[Agentic Audience v1.0 (Draft)](https://github.com/IABTechLab/agentic-audiences)** - Embedding exchange protocol for audience targeting
 
 ## Installation
 
@@ -32,7 +33,7 @@ Add `iab-specs` to your `Cargo.toml` with the features you need:
 ```toml
 [dependencies]
 # Enable all specifications
-iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10", "agentic_direct_21", "buyer_agent_10", "seller_agent_10"] }
+iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10", "agentic_direct_21", "buyer_agent_10", "seller_agent_10", "agentic_audience_10"] }
 
 # Or enable only what you need
 iab-specs = { version = "0.4", features = ["openrtb_30"] }
@@ -42,7 +43,7 @@ Or use cargo:
 
 ```bash
 # Enable all specifications
-cargo add iab-specs --features adcom,openrtb_25,openrtb_26,openrtb_30,openrtb_native_12,ads_txt,app_ads_txt,sellers_json,artb_10,agentic_direct_21,buyer_agent_10,seller_agent_10
+cargo add iab-specs --features adcom,openrtb_25,openrtb_26,openrtb_30,openrtb_native_12,ads_txt,app_ads_txt,sellers_json,artb_10,agentic_direct_21,buyer_agent_10,seller_agent_10,agentic_audience_10
 
 # Or enable only what you need
 cargo add iab-specs --features openrtb_30
@@ -67,6 +68,7 @@ The library uses cargo features to enable/disable specifications:
 - `agentic_direct_21` - Agentic Direct 2.1 support (automatically includes `serde_json`)
 - `buyer_agent_10` - Buyer Agent 1.0 support (automatically includes `agentic_direct_21` and `serde_json`)
 - `seller_agent_10` - Seller Agent 1.0 support (automatically includes `agentic_direct_21` and `serde_json`)
+- `agentic_audience_10` - Agentic Audience v1.0 (Draft) support (automatically includes `serde_json`)
 
 ### Feature Selection Examples
 
@@ -108,8 +110,11 @@ iab-specs = { version = "0.4", features = ["buyer_agent_10"] }
 # Only Seller Agent 1.0 support (automatically includes agentic_direct_21)
 iab-specs = { version = "0.4", features = ["seller_agent_10"] }
 
+# Only Agentic Audience v1.0 support (embedding exchange protocol)
+iab-specs = { version = "0.4", features = ["agentic_audience_10"] }
+
 # All specifications
-iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10", "agentic_direct_21", "buyer_agent_10", "seller_agent_10"] }
+iab-specs = { version = "0.4", features = ["adcom", "openrtb_25", "openrtb_26", "openrtb_30", "openrtb_native_12", "ads_txt", "app_ads_txt", "sellers_json", "artb_10", "agentic_direct_21", "buyer_agent_10", "seller_agent_10", "agentic_audience_10"] }
 ```
 
 **Why no default features?**
@@ -920,6 +925,87 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 - Validated state machine for SellerOrder (13 states) lifecycle with pause/resume support
 - Re-exports all Agentic Direct 2.1 types for seamless integration
 
+### Agentic Audience v1.0
+
+Exchange embeddings for audience targeting using the Agentic Audience protocol.
+
+> ⚠️ **Draft Specification**: Based on Agentic Audience v1.0 Draft. Breaking changes may occur.
+
+```rust
+use iab_specs::agentic_audience::v10::{
+    EmbeddingEnvelope, EmbeddingModel, EmbeddingContext, Embedding,
+    CampaignHead, ScoringRequest, ScoringResponse, CampaignScore,
+    EmbeddingSegmentExt,
+    ModelType, DistanceMetric, EmbeddingType,
+};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Create an embedding envelope with model and embeddings
+    let envelope = EmbeddingEnvelope::builder()
+        .model(EmbeddingModel::builder()
+            .id("minilm-l6-v2")
+            .version("1.0")
+            .type_(ModelType::Encoder)
+            .dimension(384)
+            .metric(DistanceMetric::Cosine)
+            .embedding_space_id("sentence-transformers/all-MiniLM-L6-v2")
+            .build()?)
+        .context(Some(EmbeddingContext::builder()
+            .url("https://example.com/article")
+            .page_title("AI in Advertising")
+            .language("en")
+            .build()?))
+        .embeddings(vec![
+            Embedding::builder()
+                .id("emb-001")
+                .type_(EmbeddingType::ContextContent)
+                .dimension(384)
+                .vector(Some(vec![0.1; 384]))
+                .build()?,
+        ])
+        .build()?;
+
+    // Score embeddings against campaigns
+    let request = ScoringRequest::builder()
+        .embeddings(envelope.embeddings.clone())
+        .campaign_ids(Some(vec!["camp-001".to_string()]))
+        .build()?;
+
+    let response = ScoringResponse::builder()
+        .scores(vec![
+            CampaignScore::builder()
+                .campaign_id("camp-001")
+                .score(0.87)
+                .percentile(Some(0.92))
+                .build()?,
+        ])
+        .build()?;
+
+    // OpenRTB bid stream extension for embedding transport
+    let segment_ext = EmbeddingSegmentExt::builder()
+        .ver("1.0")
+        .vector(vec![0.1, 0.2, 0.3, 0.4])
+        .model("minilm-l6-v2")
+        .dimension(4)
+        .type_(EmbeddingType::ContextContent)
+        .metric(Some(DistanceMetric::Cosine))
+        .build()?;
+
+    // Serialize to JSON
+    let json = serde_json::to_string_pretty(&envelope)?;
+    println!("{}", json);
+
+    Ok(())
+}
+```
+
+**Key Agentic Audience v1.0 Features:**
+- Embedding envelope for transport (model descriptor, context, embeddings)
+- 24 embedding type classifications across 7 signal categories
+- Campaign scoring with head weights, requests, and responses
+- OpenRTB bid stream extension (`EmbeddingSegmentExt`) for `user.data.segment.ext`
+- Signal taxonomy enums (SignalType, EmbeddingType, ModelType, DistanceMetric, etc.)
+
 ### Ads.txt
 
 Parse and generate ads.txt files:
@@ -1103,6 +1189,7 @@ All scripts support `--help` for more options.
 - [x] Agentic Direct 2.1
 - [x] Buyer Agent 1.0
 - [x] Seller Agent 1.0
+- [x] Agentic Audience v1.0 (Draft)
 - [ ] Additional IAB specifications (contributions welcome!)
 
 ## Contributing
