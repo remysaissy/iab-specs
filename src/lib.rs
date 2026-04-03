@@ -132,6 +132,8 @@ pub mod buyer_agent;
 mod errors;
 #[cfg(any(feature = "openrtb_25", feature = "openrtb_26", feature = "openrtb_30"))]
 pub mod openrtb;
+#[cfg(feature = "registry_agent_10")]
+pub mod registry_agent;
 #[cfg(feature = "seller_agent_10")]
 pub mod seller_agent;
 #[cfg(feature = "sellers_json")]
