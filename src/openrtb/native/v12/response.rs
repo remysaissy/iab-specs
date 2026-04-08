@@ -1209,4 +1209,674 @@ mod tests {
             Some("https://example.com/privacy-policy".to_string())
         );
     }
+
+    // === Default Value Tests ===
+
+    #[test]
+    fn test_native_response_default() {
+        let response: NativeResponse = NativeResponse::default();
+        assert!(response.ver.is_none());
+        assert!(response.assets.is_empty());
+        assert_eq!(response.link.url, "");
+        assert!(response.imptrackers.is_none());
+        assert!(response.jstracker.is_none());
+        assert!(response.eventtrackers.is_none());
+        assert!(response.privacy.is_none());
+        assert!(response.assetsurl.is_none());
+        assert!(response.dcourl.is_none());
+        assert!(response.ext.is_none());
+    }
+
+    #[test]
+    fn test_asset_response_default() {
+        let asset: AssetResponse = AssetResponse::default();
+        assert_eq!(asset.id, 0);
+        assert!(asset.required.is_none());
+        assert!(asset.title.is_none());
+        assert!(asset.img.is_none());
+        assert!(asset.video.is_none());
+        assert!(asset.data.is_none());
+        assert!(asset.link.is_none());
+        assert!(asset.ext.is_none());
+    }
+
+    #[test]
+    fn test_title_response_default() {
+        let title: TitleResponse = TitleResponse::default();
+        assert_eq!(title.text, "");
+        assert!(title.len.is_none());
+        assert!(title.ext.is_none());
+    }
+
+    #[test]
+    fn test_image_response_default() {
+        let image: ImageResponse = ImageResponse::default();
+        assert_eq!(image.url, "");
+        assert!(image.w.is_none());
+        assert!(image.h.is_none());
+        assert!(image.ext.is_none());
+    }
+
+    #[test]
+    fn test_video_response_default() {
+        let video: VideoResponse = VideoResponse::default();
+        assert_eq!(video.vasttag, "");
+        assert!(video.ext.is_none());
+    }
+
+    #[test]
+    fn test_data_response_default() {
+        let data: DataResponse = DataResponse::default();
+        assert_eq!(data.value, "");
+        assert!(data.type_.is_none());
+        assert!(data.label.is_none());
+        assert!(data.len.is_none());
+        assert!(data.ext.is_none());
+    }
+
+    #[test]
+    fn test_link_default() {
+        let link: Link = Link::default();
+        assert_eq!(link.url, "");
+        assert!(link.clicktrackers.is_none());
+        assert!(link.fallback.is_none());
+        assert!(link.ext.is_none());
+    }
+
+    #[test]
+    fn test_event_tracker_response_default() {
+        let tracker: EventTrackerResponse = EventTrackerResponse::default();
+        assert_eq!(tracker.event, 0);
+        assert_eq!(tracker.method, 0);
+        assert!(tracker.url.is_none());
+        assert!(tracker.customdata.is_none());
+        assert!(tracker.ext.is_none());
+    }
+
+    // === Serde Roundtrip Tests ===
+
+    #[test]
+    fn test_title_response_serde_roundtrip() {
+        let original = TitleResponse::builder()
+            .text("Buy Now - Limited Offer!".to_string())
+            .len(Some(23))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: TitleResponse = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, original);
+    }
+
+    #[test]
+    fn test_image_response_serde_roundtrip() {
+        let original = ImageResponse::builder()
+            .url("https://cdn.example.com/hero.jpg".to_string())
+            .w(Some(1200))
+            .h(Some(627))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: ImageResponse = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, original);
+    }
+
+    #[test]
+    fn test_video_response_serde_roundtrip() {
+        let original = VideoResponse::builder()
+            .vasttag("<VAST version=\"4.0\"><Ad></Ad></VAST>".to_string())
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: VideoResponse = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, original);
+    }
+
+    #[test]
+    fn test_data_response_serde_roundtrip() {
+        let original = DataResponse::builder()
+            .value("$49.99".to_string())
+            .type_(Some(6))
+            .label(Some("Price".to_string()))
+            .len(Some(6))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: DataResponse = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, original);
+    }
+
+    #[test]
+    fn test_link_serde_roundtrip() {
+        let original = Link::builder()
+            .url("https://example.com/product?ref=native".to_string())
+            .clicktrackers(Some(vec![
+                "https://tracker1.com/click?id=abc".to_string(),
+                "https://tracker2.com/click?id=def".to_string(),
+            ]))
+            .fallback(Some("https://example.com/fallback".to_string()))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: Link = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, original);
+    }
+
+    #[test]
+    fn test_event_tracker_response_serde_roundtrip() {
+        let original = EventTrackerResponse::builder()
+            .event(1)
+            .method(1)
+            .url("https://tracker.example.com/imp?id=abc")
+            .customdata(Some("campaign=summer2026".to_string()))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: EventTrackerResponse = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, original);
+    }
+
+    #[test]
+    fn test_asset_response_with_title_serde_roundtrip() {
+        let original = AssetResponse::builder()
+            .id(1)
+            .required(Some(1))
+            .title(Some(
+                TitleResponse::builder()
+                    .text("Great Product".to_string())
+                    .len(Some(13))
+                    .build()
+                    .unwrap(),
+            ))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: AssetResponse = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, original);
+    }
+
+    #[test]
+    fn test_asset_response_with_img_serde_roundtrip() {
+        let original = AssetResponse::builder()
+            .id(2)
+            .img(Some(
+                ImageResponse::builder()
+                    .url("https://cdn.example.com/banner.png".to_string())
+                    .w(Some(728))
+                    .h(Some(90))
+                    .build()
+                    .unwrap(),
+            ))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: AssetResponse = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, original);
+    }
+
+    #[test]
+    fn test_asset_response_with_video_serde_roundtrip() {
+        let original = AssetResponse::builder()
+            .id(3)
+            .video(Some(
+                VideoResponse::builder()
+                    .vasttag("<VAST version=\"3.0\"><Ad><InLine></InLine></Ad></VAST>".to_string())
+                    .build()
+                    .unwrap(),
+            ))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: AssetResponse = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, original);
+    }
+
+    #[test]
+    fn test_asset_response_with_data_serde_roundtrip() {
+        let original = AssetResponse::builder()
+            .id(4)
+            .data(Some(
+                DataResponse::builder()
+                    .value("Acme Corp".to_string())
+                    .type_(Some(1))
+                    .label(Some("Sponsored".to_string()))
+                    .build()
+                    .unwrap(),
+            ))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: AssetResponse = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, original);
+    }
+
+    #[test]
+    fn test_native_response_full_serde_roundtrip() {
+        let original = NativeResponse::builder()
+            .ver("1.2")
+            .assets(vec![
+                AssetResponse::builder()
+                    .id(1)
+                    .required(Some(1))
+                    .title(Some(
+                        TitleResponse::builder()
+                            .text("Summer Sale".to_string())
+                            .len(Some(11))
+                            .build()
+                            .unwrap(),
+                    ))
+                    .build()
+                    .unwrap(),
+                AssetResponse::builder()
+                    .id(2)
+                    .img(Some(
+                        ImageResponse::builder()
+                            .url("https://cdn.example.com/sale.jpg".to_string())
+                            .w(Some(1200))
+                            .h(Some(627))
+                            .build()
+                            .unwrap(),
+                    ))
+                    .build()
+                    .unwrap(),
+            ])
+            .link(
+                Link::builder()
+                    .url("https://example.com/sale".to_string())
+                    .clicktrackers(Some(vec!["https://click.tracker.com/c".to_string()]))
+                    .fallback(Some("https://example.com".to_string()))
+                    .build()
+                    .unwrap(),
+            )
+            .imptrackers(Some(vec!["https://imp.tracker.com/i".to_string()]))
+            .jstracker(Some("<script>track();</script>".to_string()))
+            .eventtrackers(Some(vec![
+                EventTrackerResponse::builder()
+                    .event(1)
+                    .method(1)
+                    .url("https://evt.tracker.com/imp")
+                    .customdata(Some("cd=123".to_string()))
+                    .build()
+                    .unwrap(),
+            ]))
+            .privacy(Some("https://example.com/privacy".to_string()))
+            .assetsurl(Some("https://example.com/assets.json".to_string()))
+            .dcourl(Some("https://dco.example.com/creative".to_string()))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: NativeResponse = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, original);
+    }
+
+    // === Full Realistic JSON Deserialization ===
+
+    #[test]
+    fn test_realistic_dsp_native_response_deserialization() {
+        let json = r#"{
+            "ver": "1.2",
+            "assets": [
+                {
+                    "id": 1,
+                    "required": 1,
+                    "title": {
+                        "text": "Summer Collection - 50% Off Everything",
+                        "len": 40
+                    }
+                },
+                {
+                    "id": 2,
+                    "required": 1,
+                    "img": {
+                        "url": "https://cdn.advertiser.com/campaigns/summer2026/hero-1200x627.jpg",
+                        "w": 1200,
+                        "h": 627
+                    }
+                },
+                {
+                    "id": 3,
+                    "img": {
+                        "url": "https://cdn.advertiser.com/brand/logo-128x128.png",
+                        "w": 128,
+                        "h": 128
+                    }
+                },
+                {
+                    "id": 4,
+                    "required": 1,
+                    "data": {
+                        "value": "Shop the hottest summer styles at unbeatable prices. Free shipping on orders over $50.",
+                        "type": 2,
+                        "label": "Description",
+                        "len": 85
+                    }
+                },
+                {
+                    "id": 5,
+                    "data": {
+                        "value": "FashionBrand",
+                        "type": 1,
+                        "label": "Sponsored"
+                    }
+                },
+                {
+                    "id": 6,
+                    "data": {
+                        "value": "Shop Now",
+                        "type": 12
+                    }
+                },
+                {
+                    "id": 7,
+                    "data": {
+                        "value": "4.8",
+                        "type": 3
+                    }
+                }
+            ],
+            "link": {
+                "url": "https://www.fashionbrand.com/summer-sale?utm_source=native&utm_medium=display&utm_campaign=summer2026",
+                "clicktrackers": [
+                    "https://tracking.dsp.com/click?cid=camp-789&creative=cr-456&ts=${AUCTION_PRICE}",
+                    "https://thirdparty.measurement.com/click?ref=dsp123"
+                ],
+                "fallback": "https://www.fashionbrand.com/"
+            },
+            "eventtrackers": [
+                {
+                    "event": 1,
+                    "method": 1,
+                    "url": "https://tracking.dsp.com/imp?cid=camp-789&creative=cr-456&price=${AUCTION_PRICE}"
+                },
+                {
+                    "event": 2,
+                    "method": 1,
+                    "url": "https://viewability.measurement.com/view?ref=dsp123"
+                },
+                {
+                    "event": 1,
+                    "method": 2,
+                    "url": "https://tracking.dsp.com/js/tracker.js",
+                    "customdata": "{\"campaignId\":\"camp-789\",\"creativeId\":\"cr-456\"}"
+                }
+            ],
+            "privacy": "https://www.fashionbrand.com/privacy-policy"
+        }"#;
+
+        let response: NativeResponse = serde_json::from_str(json).unwrap();
+
+        // Verify top-level fields
+        assert_eq!(response.ver, Some("1.2".to_string()));
+        assert_eq!(response.assets.len(), 7);
+        assert_eq!(
+            response.privacy,
+            Some("https://www.fashionbrand.com/privacy-policy".to_string())
+        );
+
+        // Verify title asset
+        let title_asset = &response.assets[0];
+        assert_eq!(title_asset.id, 1);
+        assert_eq!(title_asset.required, Some(1));
+        let title = title_asset.title.as_ref().unwrap();
+        assert_eq!(title.text, "Summer Collection - 50% Off Everything");
+        assert_eq!(title.len, Some(40));
+
+        // Verify main image asset
+        let img_asset = &response.assets[1];
+        assert_eq!(img_asset.id, 2);
+        let img = img_asset.img.as_ref().unwrap();
+        assert_eq!(img.w, Some(1200));
+        assert_eq!(img.h, Some(627));
+
+        // Verify data asset with type and label
+        let data_asset = &response.assets[3];
+        assert_eq!(data_asset.id, 4);
+        let data = data_asset.data.as_ref().unwrap();
+        assert_eq!(data.type_, Some(2));
+        assert_eq!(data.label, Some("Description".to_string()));
+        assert_eq!(data.len, Some(85));
+
+        // Verify CTA data asset
+        let cta_asset = &response.assets[5];
+        let cta_data = cta_asset.data.as_ref().unwrap();
+        assert_eq!(cta_data.value, "Shop Now");
+        assert_eq!(cta_data.type_, Some(12));
+
+        // Verify link
+        assert!(response.link.url.contains("utm_source=native"));
+        let trackers = response.link.clicktrackers.as_ref().unwrap();
+        assert_eq!(trackers.len(), 2);
+        assert_eq!(
+            response.link.fallback,
+            Some("https://www.fashionbrand.com/".to_string())
+        );
+
+        // Verify event trackers
+        let evt = response.eventtrackers.as_ref().unwrap();
+        assert_eq!(evt.len(), 3);
+        assert_eq!(evt[0].event, 1);
+        assert_eq!(evt[0].method, 1);
+        assert_eq!(evt[1].event, 2); // Viewable impression
+        assert_eq!(evt[2].method, 2); // JavaScript tracker
+        assert!(evt[2].customdata.is_some());
+    }
+
+    // === Edge Case Tests ===
+
+    #[test]
+    fn test_event_tracker_customdata_serde_roundtrip() {
+        let original = EventTrackerResponse::builder()
+            .event(3)
+            .method(2)
+            .url("https://tracker.com/click")
+            .customdata(Some(
+                "{\"macro\":\"%%CLICK_ID%%\",\"ts\":1234567890}".to_string(),
+            ))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: EventTrackerResponse = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.customdata, original.customdata);
+    }
+
+    #[test]
+    fn test_data_response_label_serde_roundtrip() {
+        let original = DataResponse::builder()
+            .value("Acme Corp".to_string())
+            .label(Some("Sponsored By".to_string()))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: DataResponse = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.label, original.label);
+    }
+
+    #[test]
+    fn test_data_response_type_field_json_roundtrip() {
+        // Verify "type" in JSON maps to type_ in Rust and back
+        let json = r#"{"value":"test","type":5}"#;
+        let parsed: DataResponse = serde_json::from_str(json).unwrap();
+        assert_eq!(parsed.type_, Some(5));
+
+        let serialized = serde_json::to_string(&parsed).unwrap();
+        assert!(serialized.contains(r#""type":5"#));
+        assert!(!serialized.contains("type_"));
+
+        let re_parsed: DataResponse = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(re_parsed.type_, Some(5));
+    }
+
+    #[test]
+    fn test_title_response_len_serde_roundtrip() {
+        let original = TitleResponse::builder()
+            .text("Short".to_string())
+            .len(Some(5))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: TitleResponse = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.len, Some(5));
+        assert_eq!(parsed, original);
+    }
+
+    #[test]
+    fn test_link_fallback_serde_roundtrip() {
+        let original = Link::builder()
+            .url("myapp://deep/link/path".to_string())
+            .fallback(Some("https://example.com/web/fallback".to_string()))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: Link = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.fallback, original.fallback);
+        assert_eq!(parsed, original);
+    }
+
+    #[test]
+    fn test_link_with_empty_clicktrackers_array() {
+        let link = Link::builder()
+            .url("https://example.com".to_string())
+            .clicktrackers(Some(vec![]))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&link).unwrap();
+        assert!(json.contains(r#""clicktrackers":[]"#));
+
+        let parsed: Link = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.clicktrackers, Some(vec![]));
+    }
+
+    #[test]
+    fn test_asset_response_with_video_type() {
+        let asset = AssetResponse::builder()
+            .id(10)
+            .required(Some(1))
+            .video(Some(
+                VideoResponse::builder()
+                    .vasttag(
+                        "<VAST version=\"4.0\"><Ad><Wrapper></Wrapper></Ad></VAST>".to_string(),
+                    )
+                    .build()
+                    .unwrap(),
+            ))
+            .build()
+            .unwrap();
+
+        assert_eq!(asset.id, 10);
+        assert!(asset.video.is_some());
+        assert!(asset.title.is_none());
+        assert!(asset.img.is_none());
+        assert!(asset.data.is_none());
+
+        let json = serde_json::to_string(&asset).unwrap();
+        let parsed: AssetResponse = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, asset);
+    }
+
+    #[test]
+    fn test_native_response_deprecated_and_new_tracking() {
+        // Test response with both deprecated (imptrackers/jstracker) AND new (eventtrackers)
+        let response = NativeResponse::builder()
+            .assets(vec![])
+            .link(
+                Link::builder()
+                    .url("https://example.com".to_string())
+                    .build()
+                    .unwrap(),
+            )
+            .imptrackers(Some(vec![
+                "https://legacy.tracker.com/imp1".to_string(),
+                "https://legacy.tracker.com/imp2".to_string(),
+            ]))
+            .jstracker(Some("<script>legacyTrack();</script>".to_string()))
+            .eventtrackers(Some(vec![
+                EventTrackerResponse::builder()
+                    .event(1)
+                    .method(1)
+                    .url("https://modern.tracker.com/imp")
+                    .build()
+                    .unwrap(),
+                EventTrackerResponse::builder()
+                    .event(2)
+                    .method(2)
+                    .url("https://modern.tracker.com/viewable.js")
+                    .build()
+                    .unwrap(),
+            ]))
+            .build()
+            .unwrap();
+
+        // Both deprecated and modern tracking present
+        assert!(response.imptrackers.is_some());
+        assert_eq!(response.imptrackers.as_ref().unwrap().len(), 2);
+        assert!(response.jstracker.is_some());
+        assert!(response.eventtrackers.is_some());
+        assert_eq!(response.eventtrackers.as_ref().unwrap().len(), 2);
+
+        // Serde roundtrip preserves both
+        let json = serde_json::to_string(&response).unwrap();
+        let parsed: NativeResponse = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, response);
+    }
+
+    #[test]
+    fn test_empty_string_required_fields() {
+        // url, text, vasttag, value are "required" but empty strings are valid in Rust
+        let title = TitleResponse::builder()
+            .text("".to_string())
+            .build()
+            .unwrap();
+        assert_eq!(title.text, "");
+
+        let image = ImageResponse::builder()
+            .url("".to_string())
+            .build()
+            .unwrap();
+        assert_eq!(image.url, "");
+
+        let video = VideoResponse::builder()
+            .vasttag("".to_string())
+            .build()
+            .unwrap();
+        assert_eq!(video.vasttag, "");
+
+        let data = DataResponse::builder()
+            .value("".to_string())
+            .build()
+            .unwrap();
+        assert_eq!(data.value, "");
+
+        let link = Link::builder().url("".to_string()).build().unwrap();
+        assert_eq!(link.url, "");
+    }
+
+    #[test]
+    fn test_unicode_in_title_response_text() {
+        let title = TitleResponse::builder()
+            .text("🔥 Soldes d'été — Économisez 50% 🎉".to_string())
+            .build()
+            .unwrap();
+
+        assert_eq!(title.text, "🔥 Soldes d'été — Économisez 50% 🎉");
+
+        // Verify serde roundtrip preserves unicode
+        let json = serde_json::to_string(&title).unwrap();
+        let parsed: TitleResponse = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.text, title.text);
+    }
 }
