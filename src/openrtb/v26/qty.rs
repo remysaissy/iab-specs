@@ -57,6 +57,7 @@ mod tests {
 
     #[test]
     fn test_qty_serialization() {
+        // Spec: Section 3.2.31
         let qty = Qty::builder()
             .multiplier(Some(100.0))
             .source(Some("Publisher".to_string()))
@@ -73,8 +74,69 @@ mod tests {
 
     #[test]
     fn test_skip_serializing_none() {
+        // Spec: Section 3.2.31
         let qty = Qty::builder().build().unwrap();
         let json = serde_json::to_string(&qty).unwrap();
         assert_eq!(json, "{}");
+    }
+
+    #[test]
+    fn test_qty_ext_field() {
+        // Spec: Section 3.2.31
+        let ext = serde_json::json!({"custom_field": "value", "priority": 5});
+        let qty = QtyBuilder::<serde_json::Value>::default()
+            .multiplier(Some(150.0))
+            .ext(Some(Box::new(ext.clone())))
+            .build()
+            .unwrap();
+
+        assert_eq!(*qty.ext.as_ref().unwrap().as_ref(), ext);
+
+        let json = serde_json::to_string(&qty).unwrap();
+        let deserialized: Qty<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(qty, deserialized);
+    }
+
+    #[test]
+    fn test_qty_deserialization_from_json() {
+        // Spec: Section 3.2.31
+        let json = r#"{"multiplier":150.0,"source":"MeasurementVendor"}"#;
+        let qty: Qty = serde_json::from_str(json).unwrap();
+        assert_eq!(qty.multiplier, Some(150.0));
+        assert_eq!(qty.source, Some("MeasurementVendor".to_string()));
+    }
+
+    #[test]
+    fn test_qty_roundtrip_all_fields() {
+        // Spec: Section 3.2.31
+        let qty = Qty::builder()
+            .multiplier(Some(250.0))
+            .source(Some("venue_measurement".to_string()))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&qty).unwrap();
+        let deserialized: Qty = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(qty.multiplier, deserialized.multiplier);
+        assert_eq!(qty.source, deserialized.source);
+        assert_eq!(qty, deserialized);
+    }
+
+    #[test]
+    fn test_qty_multiplier_edge_cases() {
+        // Spec: Section 3.2.31
+        let qty_zero = Qty::builder().multiplier(Some(0.0)).build().unwrap();
+        assert_eq!(qty_zero.multiplier, Some(0.0));
+
+        let qty_one = Qty::builder().multiplier(Some(1.0)).build().unwrap();
+        assert_eq!(qty_one.multiplier, Some(1.0));
+
+        let qty_large = Qty::builder().multiplier(Some(99999.0)).build().unwrap();
+        assert_eq!(qty_large.multiplier, Some(99999.0));
+
+        let json = serde_json::to_string(&qty_large).unwrap();
+        let deserialized: Qty = serde_json::from_str(&json).unwrap();
+        assert_eq!(qty_large, deserialized);
     }
 }
