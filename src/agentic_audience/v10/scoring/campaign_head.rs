@@ -162,4 +162,26 @@ mod tests {
         assert!(head.created_at.is_none());
         assert!(head.ext.is_none());
     }
+
+    #[test]
+    fn test_campaign_head_weights_dimension_mismatch() {
+        // Spec: head_weights.len() vs dimension mismatch is not enforced at builder level
+        let head = CampaignHead::builder()
+            .campaign_id("camp-mis")
+            .dimension(384)
+            .model_id("model-v1")
+            .head_weights(vec![0.1, 0.2, 0.3])
+            .build()
+            .unwrap();
+        assert_eq!(head.dimension, 384);
+        assert_eq!(head.head_weights.len(), 3);
+    }
+
+    #[test]
+    fn test_campaign_head_malformed_json_rejected() {
+        // Spec: score-related fields must have correct types
+        let json = r#"{"campaign_id": 123, "dimension": "not_a_number", "model_id": "m"}"#;
+        let result: Result<CampaignHead, _> = serde_json::from_str(json);
+        assert!(result.is_err(), "String dimension should be rejected");
+    }
 }
