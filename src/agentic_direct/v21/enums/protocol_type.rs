@@ -58,4 +58,17 @@ mod tests {
         let default = ProtocolType::default();
         assert_eq!(default, ProtocolType::JsonRpc, "Default should be JsonRpc");
     }
+
+    #[test]
+    fn test_case_sensitive_deserialization() {
+        // Spec: Agentic Direct 2.1 — snake_case serialization is mandatory
+        let invalid = ["\"JsonRpc\"", "\"JSON_RPC\""];
+        for json in &invalid {
+            assert!(
+                serde_json::from_str::<ProtocolType>(json).is_err(),
+                "{} should be rejected",
+                json
+            );
+        }
+    }
 }

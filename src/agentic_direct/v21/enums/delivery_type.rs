@@ -66,4 +66,17 @@ mod tests {
             "Default should be Guaranteed"
         );
     }
+
+    #[test]
+    fn test_case_sensitive_deserialization() {
+        // Spec: Agentic Direct 2.1 — snake_case serialization is mandatory
+        let invalid = ["\"Guaranteed\"", "\"NON_GUARANTEED\""];
+        for json in &invalid {
+            assert!(
+                serde_json::from_str::<DeliveryType>(json).is_err(),
+                "{} should be rejected",
+                json
+            );
+        }
+    }
 }
