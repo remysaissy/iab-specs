@@ -568,4 +568,145 @@ mod tests {
         assert!(debug_str.contains("Seller"));
         assert!(debug_str.contains("debug-123"));
     }
+
+    #[test]
+    fn round_trip_json_seller() {
+        // Spec: Section 2.3
+        let original = Seller::builder()
+            .seller_id("rt-123")
+            .seller_type(SellerType::Intermediary)
+            .is_confidential(false)
+            .is_passthrough(true)
+            .name(Some("RT Company".to_string()))
+            .domain(Some("rt.example.com".to_string()))
+            .comment(Some("round trip test".to_string()))
+            .ext(Some("ext-rt".to_string()))
+            .build()
+            .unwrap();
+        let json_str = serde_json::to_string(&original).unwrap();
+        let value1: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        let deserialized = Seller::from_str(&json_str).unwrap();
+        let json_str2 = serde_json::to_string(&deserialized).unwrap();
+        let value2: serde_json::Value = serde_json::from_str(&json_str2).unwrap();
+        assert_eq!(value1, value2);
+    }
+
+    #[test]
+    fn deserialize_rejects_unknown_fields() {
+        // Spec: Section 2.3
+        let res = Seller::from_str(
+            r#"{
+ "seller_id": "123",
+ "seller_type": "PUBLISHER",
+ "name": "company",
+ "unknown_field": "should fail"
+ }"#,
+        );
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn deserialize_confidential_seller_without_name() {
+        // Spec: Section 2.3
+        let res = Seller::from_str(
+            r#"{
+ "seller_id": "conf-1",
+ "seller_type": "PUBLISHER",
+ "is_confidential": 1
+ }"#,
+        );
+        assert!(res.is_ok());
+        let seller = res.unwrap();
+        assert!(seller.is_confidential);
+        assert!(seller.name.is_none());
+    }
+
+    #[test]
+    fn deserialize_confidential_seller_without_domain() {
+        // Spec: Section 2.3
+        let res = Seller::from_str(
+            r#"{
+ "seller_id": "conf-2",
+ "seller_type": "INTERMEDIARY",
+ "is_confidential": 1,
+ "name": "Confidential Corp"
+ }"#,
+        );
+        assert!(res.is_ok());
+        let seller = res.unwrap();
+        assert!(seller.is_confidential);
+        assert!(seller.domain.is_none());
+    }
+
+    #[test]
+    fn deserialize_all_seller_types_via_json() {
+        // Spec: Section 2.3
+        let pub_res = Seller::from_str(r#"{"seller_id":"1","seller_type":"PUBLISHER","name":"P"}"#);
+        assert!(pub_res.is_ok());
+        assert_eq!(pub_res.unwrap().seller_type, SellerType::Publisher);
+
+        let int_res =
+            Seller::from_str(r#"{"seller_id":"2","seller_type":"INTERMEDIARY","name":"I"}"#);
+        assert!(int_res.is_ok());
+        assert_eq!(int_res.unwrap().seller_type, SellerType::Intermediary);
+
+        let both_res = Seller::from_str(r#"{"seller_id":"3","seller_type":"BOTH","name":"B"}"#);
+        assert!(both_res.is_ok());
+        assert_eq!(both_res.unwrap().seller_type, SellerType::Both);
+    }
+
+    #[test]
+    fn serialize_is_passthrough_true_as_integer() {
+        // Spec: Section 2.3
+        let seller = Seller::builder()
+            .seller_id("pt-1")
+            .seller_type(SellerType::Publisher)
+            .is_passthrough(true)
+            .name(Some("PT Co".to_string()))
+            .build()
+            .unwrap();
+        let value: serde_json::Value = serde_json::to_value(&seller).unwrap();
+        assert_eq!(value["is_passthrough"], serde_json::json!(1));
+    }
+
+    #[test]
+    fn serialize_is_confidential_true_as_integer() {
+        // Spec: Section 2.3
+        let seller = Seller::builder()
+            .seller_id("conf-3")
+            .seller_type(SellerType::Publisher)
+            .is_confidential(true)
+            .name(Some("Conf Co".to_string()))
+            .build()
+            .unwrap();
+        let value: serde_json::Value = serde_json::to_value(&seller).unwrap();
+        assert_eq!(value["is_confidential"], serde_json::json!(1));
+    }
+
+    #[test]
+    fn deserialize_with_all_optional_fields() {
+        // Spec: Section 2.3
+        let res = Seller::from_str(
+            r#"{
+ "seller_id": "all-1",
+ "seller_type": "BOTH",
+ "is_confidential": 1,
+ "is_passthrough": 1,
+ "name": "All Fields Corp",
+ "domain": "allfields.com",
+ "comment": "test all fields",
+ "ext": "extension data"
+ }"#,
+        );
+        assert!(res.is_ok());
+        let seller = res.unwrap();
+        assert_eq!(seller.seller_id, "all-1");
+        assert_eq!(seller.seller_type, SellerType::Both);
+        assert!(seller.is_confidential);
+        assert!(seller.is_passthrough);
+        assert_eq!(seller.name, Some("All Fields Corp".to_string()));
+        assert_eq!(seller.domain, Some("allfields.com".to_string()));
+        assert_eq!(seller.comment, Some("test all fields".to_string()));
+        assert_eq!(seller.ext, Some("extension data".to_string()));
+    }
 }

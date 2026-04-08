@@ -58,4 +58,37 @@ mod tests {
         let res = SellersVersion::OneZero.to_string();
         assert_eq!(res, "1.0");
     }
+
+    #[test]
+    fn deserialize_with_empty_string() {
+        // Spec: Section 2.1
+        let res = SellersVersion::from_str("");
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn deserialize_with_invalid_version_2_0() {
+        // Spec: Section 2.1
+        let res = SellersVersion::from_str("2.0");
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn deserialize_via_json() {
+        // Spec: Section 2.1
+        let res: Result<SellersVersion, _> = serde_json::from_str(r#""1.0""#);
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), SellersVersion::OneZero);
+
+        let res: Result<SellersVersion, _> = serde_json::from_str(r#""1""#);
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), SellersVersion::OneZero);
+    }
+
+    #[test]
+    fn serialize_via_json() {
+        // Spec: Section 2.1
+        let json = serde_json::to_string(&SellersVersion::OneZero).unwrap();
+        assert_eq!(json, r#""1.0""#);
+    }
 }
