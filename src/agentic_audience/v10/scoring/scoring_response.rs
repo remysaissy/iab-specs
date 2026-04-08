@@ -142,4 +142,12 @@ mod tests {
         assert!(response.scores.is_empty());
         assert!(response.ext.is_none());
     }
+
+    #[test]
+    fn test_scoring_response_malformed_json_rejected() {
+        // Spec: score must be numeric
+        let json = r#"{"scores": [{"campaign_id": "camp-001", "score": "not_a_number"}]}"#;
+        let result: Result<ScoringResponse, _> = serde_json::from_str(json);
+        assert!(result.is_err(), "String score should be rejected");
+    }
 }

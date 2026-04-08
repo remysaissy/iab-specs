@@ -83,4 +83,11 @@ mod tests {
             "Default should be Persistent"
         );
     }
+
+    #[test]
+    fn test_integer_value_rejected() {
+        // Spec: Agentic Audience v1.0 — enums are string-serialized, integers must be rejected
+        let result: Result<TemporalScope, _> = serde_json::from_str("42");
+        assert!(result.is_err(), "Integer value should be rejected");
+    }
 }

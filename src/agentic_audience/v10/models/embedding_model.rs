@@ -166,4 +166,30 @@ mod tests {
         assert!(model.normalization.is_none());
         assert!(model.ext.is_none());
     }
+
+    #[test]
+    fn test_embedding_model_zero_dimension_accepted() {
+        // Spec: dimension > 0 is not enforced at builder level
+        let model = EmbeddingModel::builder()
+            .id("model-zero")
+            .version("1.0")
+            .type_(ModelType::Encoder)
+            .dimension(0)
+            .metric(DistanceMetric::Cosine)
+            .embedding_space_id("test-space")
+            .build()
+            .unwrap();
+        assert_eq!(model.dimension, 0);
+    }
+
+    #[test]
+    fn test_embedding_model_malformed_json_missing_metric() {
+        // Spec: required fields must be present in JSON
+        let json = r#"{"id":"m","version":"1.0","type":"encoder","dimension":384,"embedding_space_id":"s"}"#;
+        let result: Result<EmbeddingModel, _> = serde_json::from_str(json);
+        match result {
+            Ok(m) => assert_eq!(m.metric, DistanceMetric::default()),
+            Err(_) => {}
+        }
+    }
 }

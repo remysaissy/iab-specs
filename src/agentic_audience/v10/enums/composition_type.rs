@@ -84,4 +84,11 @@ mod tests {
         let default = CompositionType::default();
         assert_eq!(default, CompositionType::Atomic, "Default should be Atomic");
     }
+
+    #[test]
+    fn test_integer_value_rejected() {
+        // Spec: Agentic Audience v1.0 — enums are string-serialized, integers must be rejected
+        let result: Result<CompositionType, _> = serde_json::from_str("42");
+        assert!(result.is_err(), "Integer value should be rejected");
+    }
 }

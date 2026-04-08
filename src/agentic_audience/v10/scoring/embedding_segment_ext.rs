@@ -218,4 +218,27 @@ mod tests {
         assert!((vector[1].as_f64().unwrap() - (-0.22)).abs() < 0.0001);
         assert!((vector[2].as_f64().unwrap() - 0.08).abs() < 0.0001);
     }
+
+    #[test]
+    fn test_segment_ext_vector_dimension_mismatch() {
+        // Spec: vector.len() vs dimension mismatch is not enforced at builder level
+        let ext = EmbeddingSegmentExt::builder()
+            .ver("1.0")
+            .vector(vec![0.1, 0.2])
+            .model("test-model")
+            .dimension(384)
+            .type_(EmbeddingType::ContextContent)
+            .build()
+            .unwrap();
+        assert_eq!(ext.dimension, 384);
+        assert_eq!(ext.vector.len(), 2);
+    }
+
+    #[test]
+    fn test_segment_ext_malformed_json_rejected() {
+        // Spec: required fields must be present with correct types
+        let json = r#"{"ver": "1.0", "vector": "not_an_array"}"#;
+        let result: Result<EmbeddingSegmentExt, _> = serde_json::from_str(json);
+        assert!(result.is_err(), "String vector should be rejected");
+    }
 }

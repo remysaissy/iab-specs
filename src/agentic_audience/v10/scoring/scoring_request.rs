@@ -143,4 +143,15 @@ mod tests {
         assert!(request.campaign_ids.is_none());
         assert!(request.ext.is_none());
     }
+
+    #[test]
+    fn test_scoring_request_empty_embeddings_accepted() {
+        // Spec: empty embeddings array is accepted at builder level
+        let request = ScoringRequest::builder()
+            .embeddings(vec![])
+            .campaign_ids(Some(vec!["camp-001".to_string()]))
+            .build()
+            .unwrap();
+        assert!(request.embeddings.is_empty());
+    }
 }

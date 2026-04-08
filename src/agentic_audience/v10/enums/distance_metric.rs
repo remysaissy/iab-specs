@@ -67,4 +67,11 @@ mod tests {
         let default = DistanceMetric::default();
         assert_eq!(default, DistanceMetric::Cosine, "Default should be Cosine");
     }
+
+    #[test]
+    fn test_integer_value_rejected() {
+        // Spec: Agentic Audience v1.0 — enums are string-serialized, integers must be rejected
+        let result: Result<DistanceMetric, _> = serde_json::from_str("42");
+        assert!(result.is_err(), "Integer value should be rejected");
+    }
 }

@@ -129,4 +129,18 @@ mod tests {
         assert!(context.content_hash.is_none());
         assert!(context.ext.is_none());
     }
+
+    #[test]
+    fn test_embedding_context_empty_keywords_omitted() {
+        // Spec: empty keywords vec should be omitted from JSON via skip_serializing_if
+        let context = EmbeddingContext::builder()
+            .url("https://example.com")
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&context).unwrap();
+        assert!(
+            !json.contains("\"keywords\""),
+            "Empty keywords should be omitted from JSON"
+        );
+    }
 }

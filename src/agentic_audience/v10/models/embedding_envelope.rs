@@ -278,4 +278,35 @@ mod tests {
         assert!(parsed.context.is_none());
         assert_eq!(parsed.embeddings.len(), 1);
     }
+
+    #[test]
+    fn test_envelope_empty_embeddings_accepted() {
+        // Spec: empty embeddings array is accepted at builder level
+        let model = EmbeddingModel::builder()
+            .id("m")
+            .version("1.0")
+            .type_(ModelType::Encoder)
+            .dimension(384)
+            .metric(DistanceMetric::Cosine)
+            .embedding_space_id("s")
+            .build()
+            .unwrap();
+        let envelope = EmbeddingEnvelope::builder()
+            .model(model)
+            .embeddings(vec![])
+            .build()
+            .unwrap();
+        assert!(envelope.embeddings.is_empty());
+        let json = serde_json::to_string(&envelope).unwrap();
+        let parsed: EmbeddingEnvelope = serde_json::from_str(&json).unwrap();
+        assert!(parsed.embeddings.is_empty());
+    }
+
+    #[test]
+    fn test_envelope_malformed_json_rejected() {
+        // Spec: nested required fields must be present
+        let json = r#"{"model": "not_an_object", "embeddings": []}"#;
+        let result: Result<EmbeddingEnvelope, _> = serde_json::from_str(json);
+        assert!(result.is_err(), "Invalid model object should be rejected");
+    }
 }

@@ -110,4 +110,12 @@ mod tests {
         assert!(score.percentile.is_none());
         assert!(score.ext.is_none());
     }
+
+    #[test]
+    fn test_campaign_score_malformed_json_rejected() {
+        // Spec: score field must be numeric (f64)
+        let json = r#"{"campaign_id": "camp-001", "score": "high"}"#;
+        let result: Result<CampaignScore, _> = serde_json::from_str(json);
+        assert!(result.is_err(), "String score should be rejected");
+    }
 }
