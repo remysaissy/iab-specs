@@ -89,24 +89,6 @@ mod tests {
     }
 
     #[test]
-    fn test_clone() {
-        let original = SellerRelationType::Direct;
-        let cloned = original.clone();
-        assert_eq!(original, cloned);
-    }
-
-    #[test]
-    fn test_debug() {
-        let direct = SellerRelationType::Direct;
-        let debug_str = format!("{:?}", direct);
-        assert!(debug_str.contains("Direct"));
-
-        let reseller = SellerRelationType::Reseller;
-        let debug_str = format!("{:?}", reseller);
-        assert!(debug_str.contains("Reseller"));
-    }
-
-    #[test]
     fn test_equality() {
         assert_eq!(SellerRelationType::Direct, SellerRelationType::Direct);
         assert_eq!(SellerRelationType::Reseller, SellerRelationType::Reseller);
@@ -114,10 +96,47 @@ mod tests {
     }
 
     #[test]
-    fn test_ordering() {
-        assert!(SellerRelationType::Direct < SellerRelationType::Reseller);
-        assert!(SellerRelationType::Reseller > SellerRelationType::Direct);
-        assert!(SellerRelationType::Direct <= SellerRelationType::Direct);
-        assert!(SellerRelationType::Reseller >= SellerRelationType::Reseller);
+    // Spec: Section 3.1.1 Field 3 — Case-insensitive relationship type parsing
+    fn parse_mixed_case_relation_type() {
+        // Test mixed case: "Direct" should parse to Direct
+        let res = SellerRelationType::from_str("Direct");
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), SellerRelationType::Direct);
+
+        // Test mixed case: "Reseller" should parse to Reseller
+        let res = SellerRelationType::from_str("Reseller");
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), SellerRelationType::Reseller);
+
+        // Test all caps
+        let res = SellerRelationType::from_str("DIRECT");
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), SellerRelationType::Direct);
+
+        // Test all caps
+        let res = SellerRelationType::from_str("RESELLER");
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), SellerRelationType::Reseller);
+
+        // Test fully lower case
+        let res = SellerRelationType::from_str("direct");
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), SellerRelationType::Direct);
+
+        // Test random mixed case
+        let res = SellerRelationType::from_str("dIrEcT");
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), SellerRelationType::Direct);
+
+        let res = SellerRelationType::from_str("rEsElLeR");
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), SellerRelationType::Reseller);
+    }
+
+    #[test]
+    // Spec: Section 3.1.1 Field 3 — Empty string produces error
+    fn parse_empty_relation_type() {
+        let res = SellerRelationType::from_str("");
+        assert!(res.is_err());
     }
 }

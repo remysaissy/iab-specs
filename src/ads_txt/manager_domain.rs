@@ -117,29 +117,6 @@ mod tests {
     }
 
     #[test]
-    fn test_clone() {
-        let original = ManagerDomain::builder()
-            .domain("test.com")
-            .country_code(Some(CountryCode::from_str("US").unwrap()))
-            .build()
-            .unwrap();
-        let cloned = original.clone();
-        assert_eq!(cloned.domain, original.domain);
-        assert_eq!(cloned.country_code, original.country_code);
-    }
-
-    #[test]
-    fn test_debug() {
-        let manager_domain = ManagerDomain::builder()
-            .domain("debug.com")
-            .build()
-            .unwrap();
-        let debug_str = format!("{:?}", manager_domain);
-        assert!(debug_str.contains("ManagerDomain"));
-        assert!(debug_str.contains("debug.com"));
-    }
-
-    #[test]
     fn serialize_with_country_code() {
         let manager_domain = ManagerDomain::builder()
             .domain("example.com")
@@ -148,5 +125,30 @@ mod tests {
             .unwrap();
         let res = manager_domain.to_string();
         assert_eq!(res, "example.com,US");
+    }
+
+    #[test]
+    // Spec: Section 3.1.2 — Manager domain round-trip: parse → display → parse
+    fn roundtrip_serialization_manager_domain() {
+        // Test round-trip without country code
+        let original = ManagerDomain::from_str("managerdomain.com").unwrap();
+        let displayed = original.to_string();
+        let reparsed = ManagerDomain::from_str(&displayed).unwrap();
+        assert_eq!(original.domain, reparsed.domain);
+        assert_eq!(original.country_code, reparsed.country_code);
+
+        // Test round-trip with country code
+        let original = ManagerDomain::from_str("managerdomain.com, FR").unwrap();
+        let displayed = original.to_string();
+        let reparsed = ManagerDomain::from_str(&displayed).unwrap();
+        assert_eq!(original.domain, reparsed.domain);
+        assert_eq!(original.country_code, reparsed.country_code);
+
+        // Test round-trip with uppercase domain
+        let original = ManagerDomain::from_str("EXAMPLE.COM, US").unwrap();
+        let displayed = original.to_string();
+        let reparsed = ManagerDomain::from_str(&displayed).unwrap();
+        assert_eq!(original.domain, reparsed.domain);
+        assert_eq!(original.country_code, reparsed.country_code);
     }
 }

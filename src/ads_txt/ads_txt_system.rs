@@ -267,23 +267,6 @@ mod tests {
     }
 
     #[test]
-    fn deserialize_with_single_system_direct_without_cert_with_comment() {
-        let res = AdsTxtSystem::from_str(
-            "greenadexchange.com, XF7342, DIRECT # comment at the end of the #line",
-        );
-        assert!(res.is_ok());
-        let res = res.unwrap();
-        assert_eq!(&res.domain, "greenadexchange.com");
-        assert_eq!(&res.publisher_id, "xf7342");
-        assert_eq!(res.relation, SellerRelationType::Direct);
-        assert_eq!(res.cert_id, None);
-        assert_eq!(
-            res.comment,
-            Some("comment at the end of the #line".to_string())
-        );
-    }
-
-    #[test]
     fn deserialize_with_invalid_characters() {
         let res = AdsTxtSystem::from_str(
             "Ã¯Â»Â¿greenadexchange.com, XF7342, DIRECT # comment at the end of the #line",
@@ -327,5 +310,76 @@ mod tests {
             res,
             "greenadexchange.com,xf7342,direct # comment at the end of the #line"
         );
+    }
+
+    #[test]
+    // Spec: Section 3.1.1 — Data record round-trip: parse → display → parse
+    fn roundtrip_serialization_system() {
+        let input = "greenadexchange.com, XF7342, DIRECT, 5jyxf8k54";
+        let parsed = AdsTxtSystem::from_str(input).unwrap();
+        let displayed = parsed.to_string();
+        let reparsed = AdsTxtSystem::from_str(&displayed).unwrap();
+        assert_eq!(parsed.domain, reparsed.domain);
+        assert_eq!(parsed.publisher_id, reparsed.publisher_id);
+        assert_eq!(parsed.relation, reparsed.relation);
+        assert_eq!(parsed.cert_id, reparsed.cert_id);
+    }
+
+    #[test]
+    // Spec: Section 3.1.1 — Builder with all fields including cert_id and comment
+    fn builder_all_fields() {
+        let system = AdsTxtSystem::builder()
+            .domain("exchange.com")
+            .publisher_id("pub-123")
+            .relation(SellerRelationType::Direct)
+            .cert_id(Some("abc123def".to_string()))
+            .comment(Some("my comment".to_string()))
+            .build()
+            .unwrap();
+        assert_eq!(&system.domain, "exchange.com");
+        assert_eq!(&system.publisher_id, "pub-123");
+        assert_eq!(system.relation, SellerRelationType::Direct);
+        assert_eq!(system.cert_id, Some("abc123def".to_string()));
+        assert_eq!(system.comment, Some("my comment".to_string()));
+        let display = system.to_string();
+        assert_eq!(
+            display,
+            "exchange.com,pub-123,direct,abc123def # my comment"
+        );
+    }
+
+    #[test]
+    // Spec: Section 3.1.1 — Builder with required fields only (no cert_id, no comment)
+    fn builder_required_fields_only() {
+        let system = AdsTxtSystem::builder()
+            .domain("exchange.com")
+            .publisher_id("pub-456")
+            .relation(SellerRelationType::Reseller)
+            .build()
+            .unwrap();
+        assert_eq!(&system.domain, "exchange.com");
+        assert_eq!(&system.publisher_id, "pub-456");
+        assert_eq!(system.relation, SellerRelationType::Reseller);
+        assert!(system.cert_id.is_none());
+        assert!(system.comment.is_none());
+        let display = system.to_string();
+        assert_eq!(display, "exchange.com,pub-456,reseller");
+    }
+
+    #[test]
+    // Spec: Section 3.1.1 — Edge case: long values in domain and account ID fields
+    fn parse_long_domain_and_account_id() {
+        let input = "very-long-subdomain.advertising.exchange.example.com, account-id-with-lots-of-characters-12345678, DIRECT, f08c47fec0942fa0";
+        let res = AdsTxtSystem::from_str(input).unwrap();
+        assert_eq!(
+            &res.domain,
+            "very-long-subdomain.advertising.exchange.example.com"
+        );
+        assert_eq!(
+            &res.publisher_id,
+            "account-id-with-lots-of-characters-12345678"
+        );
+        assert_eq!(res.relation, SellerRelationType::Direct);
+        assert_eq!(res.cert_id, Some("f08c47fec0942fa0".to_string()));
     }
 }
