@@ -812,4 +812,288 @@ greenadexchange.com, 12345, DIRECT
         // Should be rejected by AdsTxtSystem parser
         assert!(res.is_err());
     }
+
+    // NEW SPEC-DRIVEN TESTS (Task 2: Gap Analysis Coverage)
+
+    #[test]
+    // Spec: Section 3.1 — Unicode characters in comments are allowed
+    fn test_unicode_in_comments() {
+        let content =
+            "# Comment with émojis 🎉 and accénts\ngreenadexchange.com, 12345, DIRECT, d75815a79";
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        assert_eq!(app_ads.systems.len(), 1);
+    }
+
+    #[test]
+    // Spec: Section 3.1 — Parser handles extremely long system record lines
+    fn test_very_long_line() {
+        let long_domain = format!("{}.com", "a".repeat(500));
+        let content = format!("{}, 12345, DIRECT, d75815a79", long_domain);
+        let res = AppAdsTxt::from_str(&content);
+        // Should parse without panic — either Ok or graceful Err
+        match res {
+            Ok(app_ads) => assert_eq!(app_ads.systems.len(), 1),
+            Err(_) => {} // Graceful error is acceptable
+        }
+    }
+
+    #[test]
+    // Spec: Section 3.1 — File with only blank lines is valid (no records)
+    fn test_only_blank_lines() {
+        let content = "\n\n\n   \n\t\n";
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        assert!(app_ads.contact.is_none());
+        assert!(app_ads.subdomain.is_none());
+        assert!(app_ads.inventory_partner_domain.is_none());
+        assert!(app_ads.systems.is_empty());
+    }
+
+    #[test]
+    // Spec: Section 3.1.1 — Relation type field is case insensitive
+    fn test_case_insensitive_relation_type() {
+        // lowercase "direct"
+        let content = "greenadexchange.com, 12345, direct, d75815a79";
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        assert_eq!(app_ads.systems[0].relation, SellerRelationType::Direct);
+
+        // Mixed case "Direct"
+        let content = "greenadexchange.com, 12345, Direct, d75815a79";
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        assert_eq!(app_ads.systems[0].relation, SellerRelationType::Direct);
+
+        // Mixed case "Reseller"
+        let content = "greenadexchange.com, 12345, Reseller";
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        assert_eq!(app_ads.systems[0].relation, SellerRelationType::Reseller);
+    }
+
+    #[test]
+    // Spec: Section 3.1.2 — Variable keys are case insensitive
+    fn test_mixed_case_variable_keys() {
+        let content = "Contact=test@example.com\nSubDomain=sub.example.com\nInVeNtOrYpArTnErDoMaIn=partner.com\ngreenadexchange.com, 12345, DIRECT";
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        assert_eq!(app_ads.contact, Some("test@example.com".to_string()));
+        assert_eq!(app_ads.subdomain, Some("sub.example.com".to_string()));
+        assert_eq!(
+            app_ads.inventory_partner_domain,
+            Some("partner.com".to_string())
+        );
+    }
+
+    #[test]
+    // Spec: Section 3.1.2 — Duplicate INVENTORYPARTNERDOMAIN overwrites (last wins)
+    fn test_duplicate_inventorypartnerdomain() {
+        let content = "inventorypartnerdomain=first.com\ninventorypartnerdomain=second.com\ngreenadexchange.com, 12345, DIRECT";
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        assert_eq!(
+            app_ads.inventory_partner_domain,
+            Some("second.com".to_string())
+        );
+    }
+
+    #[test]
+    // Spec: Exclusion — OWNERDOMAIN rejected regardless of case (ads.txt 1.1 feature)
+    fn test_reject_ownerdomain_mixed_case() {
+        let content = "OwnerDomain=example.com\ngreenadexchange.com, 12345, DIRECT";
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_err());
+        let err_msg = res.unwrap_err().to_string();
+        assert!(err_msg.contains("OWNERDOMAIN"));
+    }
+
+    #[test]
+    // Spec: Exclusion — MANAGERDOMAIN rejected regardless of case (ads.txt 1.1 feature)
+    fn test_reject_managerdomain_mixed_case() {
+        let content = "ManagerDomain=manager.com\ngreenadexchange.com, 12345, DIRECT";
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_err());
+        let err_msg = res.unwrap_err().to_string();
+        assert!(err_msg.contains("MANAGERDOMAIN"));
+    }
+
+    #[test]
+    // Spec: Section 3.1 — Round-trip serialization preserves all variables
+    fn test_roundtrip_all_variables() {
+        let app_ads = AppAdsTxt::builder()
+            .contact(Some("adops@example.com".to_string()))
+            .subdomain(Some("mobile.example.com".to_string()))
+            .inventory_partner_domain(Some("partner.example.com".to_string()))
+            .systems(vec![
+                AdsTxtSystem::builder()
+                    .domain("greenadexchange.com")
+                    .publisher_id("12345")
+                    .relation(SellerRelationType::Direct)
+                    .cert_id(Some("d75815a79".to_string()))
+                    .build()
+                    .unwrap(),
+                AdsTxtSystem::builder()
+                    .domain("silverssp.com")
+                    .publisher_id("9876")
+                    .relation(SellerRelationType::Reseller)
+                    .build()
+                    .unwrap(),
+            ])
+            .build()
+            .unwrap();
+
+        let serialized = app_ads.to_string();
+        let reparsed = AppAdsTxt::from_str(&serialized).unwrap();
+
+        assert_eq!(app_ads.contact, reparsed.contact);
+        assert_eq!(app_ads.subdomain, reparsed.subdomain);
+        assert_eq!(
+            app_ads.inventory_partner_domain,
+            reparsed.inventory_partner_domain
+        );
+        assert_eq!(app_ads.systems.len(), reparsed.systems.len());
+        for (orig, re) in app_ads.systems.iter().zip(reparsed.systems.iter()) {
+            assert_eq!(orig.domain, re.domain);
+            assert_eq!(orig.publisher_id, re.publisher_id);
+            assert_eq!(orig.relation, re.relation);
+            assert_eq!(orig.cert_id, re.cert_id);
+        }
+    }
+
+    #[test]
+    // Spec: Section 3.3.1 — INVENTORYPARTNERDOMAIN survives round-trip
+    fn test_roundtrip_with_inventorypartnerdomain() {
+        let content =
+            "inventorypartnerdomain=partner.example.com\ngreenadexchange.com, 12345, DIRECT";
+        let app_ads = AppAdsTxt::from_str(content).unwrap();
+        let serialized = app_ads.to_string();
+        let reparsed = AppAdsTxt::from_str(&serialized).unwrap();
+        assert_eq!(
+            app_ads.inventory_partner_domain,
+            reparsed.inventory_partner_domain
+        );
+        assert_eq!(
+            reparsed.inventory_partner_domain,
+            Some("partner.example.com".to_string())
+        );
+    }
+
+    #[test]
+    // Spec: Conversion — Systems preserved during AppAdsTxt ↔ AdsTxt conversion
+    fn test_conversion_preserves_systems() {
+        let app_ads = AppAdsTxt::builder()
+            .systems(vec![
+                AdsTxtSystem::builder()
+                    .domain("greenadexchange.com")
+                    .publisher_id("12345")
+                    .relation(SellerRelationType::Direct)
+                    .cert_id(Some("d75815a79".to_string()))
+                    .build()
+                    .unwrap(),
+                AdsTxtSystem::builder()
+                    .domain("silverssp.com")
+                    .publisher_id("9876")
+                    .relation(SellerRelationType::Reseller)
+                    .build()
+                    .unwrap(),
+            ])
+            .build()
+            .unwrap();
+
+        // AppAdsTxt → AdsTxt
+        let ads_txt: crate::ads_txt::AdsTxt = app_ads.clone().into();
+        assert_eq!(ads_txt.systems.len(), 2);
+        assert_eq!(ads_txt.systems[0].domain, "greenadexchange.com");
+        assert_eq!(ads_txt.systems[1].domain, "silverssp.com");
+
+        // AdsTxt → AppAdsTxt
+        let back = AppAdsTxt::try_from(ads_txt).unwrap();
+        assert_eq!(back.systems.len(), 2);
+        assert_eq!(back.systems[0].domain, "greenadexchange.com");
+        assert_eq!(back.systems[0].relation, SellerRelationType::Direct);
+        assert_eq!(back.systems[1].domain, "silverssp.com");
+        assert_eq!(back.systems[1].relation, SellerRelationType::Reseller);
+    }
+
+    #[test]
+    // Spec: Conversion — inventory_partner_domain preserved during conversion
+    fn test_conversion_preserves_inventorypartnerdomain() {
+        let app_ads = AppAdsTxt::builder()
+            .inventory_partner_domain(Some("partner.example.com".to_string()))
+            .build()
+            .unwrap();
+
+        // AppAdsTxt → AdsTxt
+        let ads_txt: crate::ads_txt::AdsTxt = app_ads.clone().into();
+        assert_eq!(
+            ads_txt.inventory_partner_domain,
+            Some("partner.example.com".to_string())
+        );
+
+        // AdsTxt → AppAdsTxt
+        let back = AppAdsTxt::try_from(ads_txt).unwrap();
+        assert_eq!(
+            back.inventory_partner_domain,
+            Some("partner.example.com".to_string())
+        );
+    }
+
+    #[test]
+    // Spec: Conversion — AppAdsTxt → AdsTxt → AppAdsTxt identity
+    fn test_conversion_roundtrip() {
+        let original = AppAdsTxt::builder()
+            .contact(Some("adops@example.com".to_string()))
+            .subdomain(Some("mobile.example.com".to_string()))
+            .inventory_partner_domain(Some("partner.example.com".to_string()))
+            .systems(vec![
+                AdsTxtSystem::builder()
+                    .domain("greenadexchange.com")
+                    .publisher_id("12345")
+                    .relation(SellerRelationType::Direct)
+                    .build()
+                    .unwrap(),
+            ])
+            .build()
+            .unwrap();
+
+        let ads_txt: crate::ads_txt::AdsTxt = original.clone().into();
+        let roundtripped = AppAdsTxt::try_from(ads_txt).unwrap();
+
+        assert_eq!(original.contact, roundtripped.contact);
+        assert_eq!(original.subdomain, roundtripped.subdomain);
+        assert_eq!(
+            original.inventory_partner_domain,
+            roundtripped.inventory_partner_domain
+        );
+        assert_eq!(original.systems.len(), roundtripped.systems.len());
+    }
+
+    #[test]
+    // Spec: Section 3.2 — Leading whitespace on lines is stripped before parsing
+    fn test_leading_whitespace_on_lines() {
+        let content = "  contact=adops@example.com\n\tgreenadexchange.com, 12345, DIRECT";
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        assert_eq!(app_ads.contact, Some("adops@example.com".to_string()));
+        assert_eq!(app_ads.systems.len(), 1);
+    }
+
+    #[test]
+    // Spec: Section 3.2 — Tab characters around = in variable lines are handled
+    fn test_tabs_in_variable_lines() {
+        let content = "contact\t=\tadops@example.com\ngreenadexchange.com, 12345, DIRECT";
+        let res = AppAdsTxt::from_str(content);
+        assert!(res.is_ok());
+        let app_ads = res.unwrap();
+        assert_eq!(app_ads.contact, Some("adops@example.com".to_string()));
+    }
 }
