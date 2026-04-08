@@ -150,4 +150,36 @@ mod tests {
         assert_eq!(geo.country, Some("USA".to_string()));
         assert_eq!(geo.zip, Some("10001".to_string()));
     }
+
+    /// AdCOM 1.0 Section 7.6 - Geo serialization roundtrip
+    #[test]
+    fn test_geo_serialization_roundtrip() {
+        let original = Geo::builder()
+            .lat(Some(51.5074))
+            .lon(Some(-0.1278))
+            .country(Some("GBR".to_string()))
+            .city(Some("London".to_string()))
+            .utcoffset(Some(0))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Geo = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 7.6 - Geo extension field handling
+    #[test]
+    fn test_geo_ext() {
+        let obj = GeoBuilder::<serde_json::Value>::default()
+            .country(Some("USA".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Geo<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

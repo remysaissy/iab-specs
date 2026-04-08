@@ -85,4 +85,36 @@ mod tests {
         assert!(native.asset.is_some());
         assert_eq!(native.asset.as_ref().unwrap().len(), 2);
     }
+
+    /// AdCOM 1.0 Section 4.4 - NativeFormat serialization roundtrip
+    #[test]
+    fn test_native_format_serialization_roundtrip() {
+        let original = NativeFormat::builder()
+            .asset(Some(vec![
+                AssetFormat::builder().id(Some(1)).build().unwrap(),
+            ]))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: NativeFormat = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 4.4 - NativeFormat extension field handling
+    #[test]
+    fn test_native_format_ext() {
+        let obj = NativeFormatBuilder::<serde_json::Value>::default()
+            .asset(Some(vec![
+                AssetFormat::builder().id(Some(1)).build().unwrap(),
+            ]))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: NativeFormat<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

@@ -108,4 +108,33 @@ mod tests {
             Some("https://example.com/video.xml".to_string())
         );
     }
+
+    /// AdCOM 1.0 Section 3.9 - VideoAsset serialization roundtrip
+    #[test]
+    fn test_video_asset_serialization_roundtrip() {
+        let original = VideoAsset::builder()
+            .adm(Some("<VAST></VAST>".to_string()))
+            .curl(Some("https://example.com/vast.xml".to_string()))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: VideoAsset = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 3.9 - VideoAsset extension field handling
+    #[test]
+    fn test_video_asset_ext() {
+        let obj = VideoAssetBuilder::<serde_json::Value>::default()
+            .adm(Some("<VAST></VAST>".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: VideoAsset<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

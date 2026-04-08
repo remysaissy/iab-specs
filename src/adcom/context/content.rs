@@ -246,4 +246,36 @@ mod tests {
         );
         assert_eq!(content.cattax, Some(1));
     }
+
+    /// AdCOM 1.0 Section 7 - Content serialization roundtrip
+    #[test]
+    fn test_content_serialization_roundtrip() {
+        let original = Content::builder()
+            .id(Some("content_rt".to_string()))
+            .title(Some("Roundtrip Content".to_string()))
+            .language(Some("en".to_string()))
+            .len(Some(600))
+            .livestream(Some(0))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Content = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 7 - Content extension field handling
+    #[test]
+    fn test_content_ext() {
+        let obj = ContentBuilder::<serde_json::Value>::default()
+            .id(Some("content_ext".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Content<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

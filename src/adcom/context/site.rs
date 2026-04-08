@@ -176,4 +176,35 @@ mod tests {
         );
         assert_eq!(site.cattax, Some(1));
     }
+
+    /// AdCOM 1.0 Section 7.1 - Site serialization roundtrip
+    #[test]
+    fn test_site_serialization_roundtrip() {
+        let original = Site::builder()
+            .id(Some("site_rt".to_string()))
+            .name(Some("Roundtrip Site".to_string()))
+            .domain(Some("roundtrip.com".to_string()))
+            .mobile(Some(0))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Site = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 7.1 - Site extension field handling
+    #[test]
+    fn test_site_ext() {
+        let obj = SiteBuilder::<serde_json::Value>::default()
+            .id(Some("site_ext".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Site<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

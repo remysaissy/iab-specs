@@ -137,4 +137,34 @@ mod tests {
         assert_eq!(dc.id, Some("dc111".to_string()));
         assert_eq!(dc.name, Some("Streaming Service".to_string()));
     }
+
+    /// AdCOM 1.0 Section 7 - DistributionChannel serialization roundtrip
+    #[test]
+    fn test_distribution_channel_serialization_roundtrip() {
+        let original = DistributionChannel::builder()
+            .id(Some("dc_rt".to_string()))
+            .name(Some("Roundtrip Channel".to_string()))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: DistributionChannel = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 7 - DistributionChannel extension field handling
+    #[test]
+    fn test_distribution_channel_ext() {
+        let obj = DistributionChannelBuilder::<serde_json::Value>::default()
+            .id(Some("dc_ext".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: DistributionChannel<serde_json::Value> =
+            serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

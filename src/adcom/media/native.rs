@@ -119,4 +119,32 @@ mod tests {
             Some("https://example.com".to_string())
         );
     }
+
+    /// AdCOM 1.0 Section 3.4 - Native serialization roundtrip
+    #[test]
+    fn test_native_serialization_roundtrip() {
+        let original = Native::builder()
+            .asset(Some(vec![Asset::builder().id(Some(1)).build().unwrap()]))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Native = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 3.4 - Native extension field handling
+    #[test]
+    fn test_native_ext() {
+        let obj = NativeBuilder::<serde_json::Value>::default()
+            .asset(Some(vec![Asset::builder().id(Some(1)).build().unwrap()]))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Native<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

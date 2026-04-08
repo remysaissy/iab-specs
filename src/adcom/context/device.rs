@@ -261,4 +261,37 @@ mod tests {
         assert_eq!(device.ppi, Some(460));
         assert_eq!(device.pxratio, Some(3.0));
     }
+
+    /// AdCOM 1.0 Section 7.4 - Device serialization roundtrip
+    #[test]
+    fn test_device_serialization_roundtrip() {
+        let original = Device::builder()
+            .type_(Some(4))
+            .make(Some("Apple".to_string()))
+            .model(Some("iPhone 14".to_string()))
+            .os(Some(3))
+            .osv(Some("16.0".to_string()))
+            .lang(Some("en".to_string()))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Device = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 7.4 - Device extension field handling
+    #[test]
+    fn test_device_ext() {
+        let obj = DeviceBuilder::<serde_json::Value>::default()
+            .make(Some("Apple".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Device<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

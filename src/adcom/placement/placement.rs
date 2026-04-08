@@ -193,4 +193,35 @@ mod tests {
         assert_eq!(placement.name, Some("Test Placement".to_string()));
         assert_eq!(placement.secure, Some(1));
     }
+
+    /// AdCOM 1.0 Section 4.1 - Placement serialization roundtrip
+    #[test]
+    fn test_placement_serialization_roundtrip() {
+        let original = Placement::builder()
+            .id(Some("placement123".to_string()))
+            .name(Some("Homepage Banner".to_string()))
+            .secure(Some(1))
+            .cattax(Some(2))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Placement = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 4.1 - Placement extension field handling
+    #[test]
+    fn test_placement_ext() {
+        let obj = PlacementBuilder::<serde_json::Value>::default()
+            .id(Some("p_ext".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Placement<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

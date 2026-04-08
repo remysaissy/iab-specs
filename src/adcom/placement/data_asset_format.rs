@@ -79,4 +79,33 @@ mod tests {
         assert_eq!(data.type_, Some(1));
         assert_eq!(data.len, Some(25));
     }
+
+    /// AdCOM 1.0 Section 4.8 - DataAssetFormat serialization roundtrip
+    #[test]
+    fn test_data_asset_format_serialization_roundtrip() {
+        let original = DataAssetFormat::builder()
+            .type_(Some(2))
+            .len(Some(140))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: DataAssetFormat = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 4.8 - DataAssetFormat extension field handling
+    #[test]
+    fn test_data_asset_format_ext() {
+        let obj = DataAssetFormatBuilder::<serde_json::Value>::default()
+            .type_(Some(1))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: DataAssetFormat<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

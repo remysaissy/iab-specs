@@ -118,4 +118,35 @@ mod tests {
         assert_eq!(format.wratio, Some(16));
         assert_eq!(format.hratio, Some(9));
     }
+
+    /// AdCOM 1.0 Section 4.3 - DisplayFormat serialization roundtrip
+    #[test]
+    fn test_display_format_serialization_roundtrip() {
+        let original = DisplayFormat::builder()
+            .w(Some(728))
+            .h(Some(90))
+            .wratio(Some(16))
+            .hratio(Some(9))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: DisplayFormat = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 4.3 - DisplayFormat extension field handling
+    #[test]
+    fn test_display_format_ext() {
+        let obj = DisplayFormatBuilder::<serde_json::Value>::default()
+            .w(Some(300))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: DisplayFormat<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

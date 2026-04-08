@@ -88,4 +88,34 @@ mod tests {
         assert_eq!(channel.name, Some("Sports Channel".to_string()));
         assert_eq!(channel.domain, Some("sports.example.com".to_string()));
     }
+
+    /// AdCOM 1.0 Section 7.12 - Channel serialization roundtrip
+    #[test]
+    fn test_channel_serialization_roundtrip() {
+        let original = Channel::builder()
+            .id(Some("ch_rt".to_string()))
+            .name(Some("Roundtrip Channel".to_string()))
+            .domain(Some("roundtrip.example.com".to_string()))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Channel = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 7.12 - Channel extension field handling
+    #[test]
+    fn test_channel_ext() {
+        let obj = ChannelBuilder::<serde_json::Value>::default()
+            .id(Some("ch_ext".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Channel<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

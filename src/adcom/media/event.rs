@@ -110,4 +110,34 @@ mod tests {
             Some(vec!["https://example.com/track".to_string()])
         );
     }
+
+    /// AdCOM 1.0 Section 3.11 - Event serialization roundtrip
+    #[test]
+    fn test_event_serialization_roundtrip() {
+        let original = Event::builder()
+            .type_(Some(1))
+            .method(Some(1))
+            .url(Some(vec!["https://track.com/pixel".to_string()]))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Event = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 3.11 - Event extension field handling
+    #[test]
+    fn test_event_ext() {
+        let obj = EventBuilder::<serde_json::Value>::default()
+            .type_(Some(1))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Event<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

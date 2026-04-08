@@ -109,4 +109,33 @@ mod tests {
         assert_eq!(data.id, Some("data999".to_string()));
         assert_eq!(data.name, Some("Third Party Data".to_string()));
     }
+
+    /// AdCOM 1.0 Section 7.8 - Data serialization roundtrip
+    #[test]
+    fn test_data_serialization_roundtrip() {
+        let original = Data::builder()
+            .id(Some("data_rt".to_string()))
+            .name(Some("Roundtrip Provider".to_string()))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Data = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 7.8 - Data extension field handling
+    #[test]
+    fn test_data_ext() {
+        let obj = DataBuilder::<serde_json::Value>::default()
+            .id(Some("data_ext".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Data<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

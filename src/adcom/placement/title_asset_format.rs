@@ -63,4 +63,30 @@ mod tests {
 
         assert_eq!(title.len, Some(25));
     }
+
+    /// AdCOM 1.0 Section 4.6 - TitleAssetFormat serialization roundtrip
+    #[test]
+    fn test_title_asset_format_serialization_roundtrip() {
+        let original = TitleAssetFormat::builder().len(Some(90)).build().unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: TitleAssetFormat = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 4.6 - TitleAssetFormat extension field handling
+    #[test]
+    fn test_title_asset_format_ext() {
+        let obj = TitleAssetFormatBuilder::<serde_json::Value>::default()
+            .len(Some(25))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: TitleAssetFormat<serde_json::Value> =
+            serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

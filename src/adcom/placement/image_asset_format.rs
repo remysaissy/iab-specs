@@ -149,4 +149,35 @@ mod tests {
         assert_eq!(img.w, Some(1200));
         assert_eq!(img.h, Some(627));
     }
+
+    /// AdCOM 1.0 Section 4.7 - ImageAssetFormat serialization roundtrip
+    #[test]
+    fn test_image_asset_format_serialization_roundtrip() {
+        let original = ImageAssetFormat::builder()
+            .type_(Some(3))
+            .w(Some(1200))
+            .h(Some(627))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: ImageAssetFormat = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 4.7 - ImageAssetFormat extension field handling
+    #[test]
+    fn test_image_asset_format_ext() {
+        let obj = ImageAssetFormatBuilder::<serde_json::Value>::default()
+            .type_(Some(3))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: ImageAssetFormat<serde_json::Value> =
+            serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

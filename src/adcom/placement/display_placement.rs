@@ -211,4 +211,36 @@ mod tests {
         assert_eq!(display.h, Some(250));
         assert_eq!(display.instl, Some(0));
     }
+
+    /// AdCOM 1.0 Section 4.2 - DisplayPlacement serialization roundtrip
+    #[test]
+    fn test_display_placement_serialization_roundtrip() {
+        let original = DisplayPlacement::builder()
+            .pos(Some(1))
+            .w(Some(300))
+            .h(Some(250))
+            .instl(Some(0))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: DisplayPlacement = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 4.2 - DisplayPlacement extension field handling
+    #[test]
+    fn test_display_placement_ext() {
+        let obj = DisplayPlacementBuilder::<serde_json::Value>::default()
+            .pos(Some(1))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: DisplayPlacement<serde_json::Value> =
+            serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

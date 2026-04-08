@@ -168,4 +168,36 @@ mod tests {
         assert_eq!(ua.bitness, Some("64".to_string()));
         assert_eq!(ua.model, Some("SM-G998B".to_string()));
     }
+
+    /// AdCOM 1.0 Section 7.5 - UserAgent serialization roundtrip
+    #[test]
+    fn test_user_agent_serialization_roundtrip() {
+        let original = UserAgent::builder()
+            .mobile(Some(1))
+            .architecture(Some("arm64".to_string()))
+            .bitness(Some("64".to_string()))
+            .model(Some("Pixel 7".to_string()))
+            .source(Some(1))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: UserAgent = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 7.5 - UserAgent extension field handling
+    #[test]
+    fn test_user_agent_ext() {
+        let obj = UserAgentBuilder::<serde_json::Value>::default()
+            .mobile(Some(0))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: UserAgent<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

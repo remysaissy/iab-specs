@@ -88,4 +88,34 @@ mod tests {
         assert_eq!(network.name, Some("Display Network".to_string()));
         assert_eq!(network.domain, Some("display.example.com".to_string()));
     }
+
+    /// AdCOM 1.0 Section 7.11 - Network serialization roundtrip
+    #[test]
+    fn test_network_serialization_roundtrip() {
+        let original = Network::builder()
+            .id(Some("net_rt".to_string()))
+            .name(Some("Roundtrip Network".to_string()))
+            .domain(Some("roundtrip.example.com".to_string()))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Network = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 7.11 - Network extension field handling
+    #[test]
+    fn test_network_ext() {
+        let obj = NetworkBuilder::<serde_json::Value>::default()
+            .id(Some("net_ext".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Network<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

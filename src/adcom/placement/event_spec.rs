@@ -125,4 +125,33 @@ mod tests {
         assert_eq!(event.method, Some(vec![1, 2]));
         assert_eq!(event.api, Some(vec![5, 6]));
     }
+
+    /// AdCOM 1.0 Section 4.9 - EventSpec serialization roundtrip
+    #[test]
+    fn test_event_spec_serialization_roundtrip() {
+        let original = EventSpec::builder()
+            .type_(Some(1))
+            .method(Some(vec![1, 2]))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: EventSpec = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 4.9 - EventSpec extension field handling
+    #[test]
+    fn test_event_spec_ext() {
+        let obj = EventSpecBuilder::<serde_json::Value>::default()
+            .type_(Some(1))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: EventSpec<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }
