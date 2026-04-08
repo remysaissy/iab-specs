@@ -818,4 +818,239 @@ mod tests {
         );
         // TODO: Should deserialization validate mutual exclusivity for site/app/dooh?
     }
+
+    // === Spec-Driven Hardening Tests ===
+
+    #[test]
+    fn test_bid_request_roundtrip_all_fields() {
+        // Spec: Section 3.2.1
+        let imp = Imp::builder().id("imp1".to_string()).build().unwrap();
+        let site = Site::builder()
+            .id(Some("site1".to_string()))
+            .domain(Some("example.com".to_string()))
+            .build()
+            .unwrap();
+        let device = Device::builder()
+            .ua(Some("Mozilla/5.0".to_string()))
+            .ip(Some("10.0.0.1".to_string()))
+            .build()
+            .unwrap();
+        let user = User::builder()
+            .id(Some("user1".to_string()))
+            .build()
+            .unwrap();
+        let source = Source::builder()
+            .fd(Some(1))
+            .tid(Some("txn-abc".to_string()))
+            .build()
+            .unwrap();
+        let regs = Regs::builder().coppa(Some(1)).build().unwrap();
+
+        let request = BidRequest::builder()
+            .id("req-full".to_string())
+            .imp(vec![imp])
+            .site(Some(site))
+            .device(Some(device))
+            .user(Some(user))
+            .test(1)
+            .at(1)
+            .tmax(Some(200))
+            .wseat(Some(vec!["seat-a".to_string()]))
+            .bseat(Some(vec!["seat-b".to_string()]))
+            .allimps(1)
+            .cur(Some(vec!["USD".to_string(), "EUR".to_string()]))
+            .wlang(Some(vec!["en".to_string(), "fr".to_string()]))
+            .bcat(Some(vec!["IAB25".to_string()]))
+            .badv(Some(vec!["blocked.com".to_string()]))
+            .bapp(Some(vec!["com.blocked.app".to_string()]))
+            .source(Some(source))
+            .regs(Some(regs))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&request).unwrap();
+        let deserialized: BidRequest = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(deserialized.id, "req-full");
+        assert_eq!(deserialized.imp.len(), 1);
+        assert!(deserialized.site.is_some());
+        assert!(deserialized.device.is_some());
+        assert!(deserialized.user.is_some());
+        assert_eq!(deserialized.test, 1);
+        assert_eq!(deserialized.at, 1);
+        assert_eq!(deserialized.tmax, Some(200));
+        assert_eq!(deserialized.wseat, Some(vec!["seat-a".to_string()]));
+        assert_eq!(deserialized.bseat, Some(vec!["seat-b".to_string()]));
+        assert_eq!(deserialized.allimps, 1);
+        assert_eq!(
+            deserialized.cur,
+            Some(vec!["USD".to_string(), "EUR".to_string()])
+        );
+        assert_eq!(
+            deserialized.wlang,
+            Some(vec!["en".to_string(), "fr".to_string()])
+        );
+        assert_eq!(deserialized.bcat, Some(vec!["IAB25".to_string()]));
+        assert_eq!(deserialized.badv, Some(vec!["blocked.com".to_string()]));
+        assert_eq!(deserialized.bapp, Some(vec!["com.blocked.app".to_string()]));
+        assert!(deserialized.source.is_some());
+        assert!(deserialized.regs.is_some());
+    }
+    #[test]
+    fn test_bid_request_ext_field() {
+        // Spec: Section 3.2.1
+        let imp = crate::openrtb::v25::imp::ImpBuilder::<serde_json::Value>::default()
+            .id("imp1".to_string())
+            .build()
+            .unwrap();
+        let ext_value = Box::new(serde_json::json!({"exchange_key": "abc", "priority": 5}));
+        let request = BidRequestBuilder::<serde_json::Value>::default()
+            .id("req-ext".to_string())
+            .imp(vec![imp])
+            .ext(Some(ext_value.clone()))
+            .build()
+            .unwrap();
+
+        assert_eq!(request.ext, Some(ext_value.clone()));
+
+        let json = serde_json::to_string(&request).unwrap();
+        assert!(json.contains("\"exchange_key\":\"abc\""));
+        assert!(json.contains("\"priority\":5"));
+
+        let deserialized: BidRequest<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.ext, Some(ext_value));
+    }
+    #[test]
+    fn test_bid_request_allimps_flag() {
+        // Spec: Section 3.2.1
+        let imp = Imp::builder().id("imp1".to_string()).build().unwrap();
+
+        // allimps=0: no or unknown
+        let request = BidRequest::builder()
+            .id("req1".to_string())
+            .imp(vec![imp.clone()])
+            .allimps(0)
+            .build()
+            .unwrap();
+        assert_eq!(request.allimps, 0);
+
+        // allimps=1: all impressions represented
+        let request = BidRequest::builder()
+            .id("req2".to_string())
+            .imp(vec![imp])
+            .allimps(1)
+            .build()
+            .unwrap();
+        assert_eq!(request.allimps, 1);
+
+        // Verify round-trip preserves allimps=1
+        let json = serde_json::to_string(&request).unwrap();
+        let deserialized: BidRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.allimps, 1);
+    }
+
+    #[test]
+    fn test_bid_request_cur_array() {
+        // Spec: Section 3.2.1
+        let imp = Imp::builder().id("imp1".to_string()).build().unwrap();
+
+        let request = BidRequest::builder()
+            .id("req-cur".to_string())
+            .imp(vec![imp])
+            .cur(Some(vec![
+                "USD".to_string(),
+                "EUR".to_string(),
+                "GBP".to_string(),
+            ]))
+            .build()
+            .unwrap();
+
+        let currencies = request.cur.as_ref().unwrap();
+        assert_eq!(currencies.len(), 3);
+        assert_eq!(currencies[0], "USD");
+        assert_eq!(currencies[1], "EUR");
+        assert_eq!(currencies[2], "GBP");
+
+        // Verify serialized JSON contains the array
+        let json = serde_json::to_string(&request).unwrap();
+        assert!(json.contains("\"cur\":[\"USD\",\"EUR\",\"GBP\"]"));
+    }
+
+    #[test]
+    fn test_bid_request_wseat_bseat() {
+        // Spec: Section 3.2.1
+        let imp = Imp::builder().id("imp1".to_string()).build().unwrap();
+
+        let request = BidRequest::builder()
+            .id("req-seats".to_string())
+            .imp(vec![imp])
+            .wseat(Some(vec![
+                "seat-allowed-1".to_string(),
+                "seat-allowed-2".to_string(),
+            ]))
+            .bseat(Some(vec!["seat-blocked-1".to_string()]))
+            .build()
+            .unwrap();
+
+        let wseat = request.wseat.as_ref().unwrap();
+        assert_eq!(wseat.len(), 2);
+        assert_eq!(wseat[0], "seat-allowed-1");
+        assert_eq!(wseat[1], "seat-allowed-2");
+
+        let bseat = request.bseat.as_ref().unwrap();
+        assert_eq!(bseat.len(), 1);
+        assert_eq!(bseat[0], "seat-blocked-1");
+
+        // Verify round-trip
+        let json = serde_json::to_string(&request).unwrap();
+        let deserialized: BidRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.wseat, request.wseat);
+        assert_eq!(deserialized.bseat, request.bseat);
+    }
+
+    #[test]
+    fn test_bid_request_blocklists_bcat_badv_bapp() {
+        // Spec: Section 3.2.1
+        let imp = Imp::builder().id("imp1".to_string()).build().unwrap();
+
+        let request = BidRequest::builder()
+            .id("req-blocklists".to_string())
+            .imp(vec![imp])
+            .bcat(Some(vec![
+                "IAB25".to_string(),
+                "IAB26".to_string(),
+                "IAB7-39".to_string(),
+            ]))
+            .badv(Some(vec![
+                "competitor1.com".to_string(),
+                "competitor2.com".to_string(),
+            ]))
+            .bapp(Some(vec![
+                "com.competitor.game".to_string(),
+                "12345".to_string(),
+            ]))
+            .build()
+            .unwrap();
+
+        let bcat = request.bcat.as_ref().unwrap();
+        assert_eq!(bcat.len(), 3);
+        assert_eq!(bcat[0], "IAB25");
+        assert_eq!(bcat[2], "IAB7-39");
+
+        let badv = request.badv.as_ref().unwrap();
+        assert_eq!(badv.len(), 2);
+        assert_eq!(badv[0], "competitor1.com");
+
+        let bapp = request.bapp.as_ref().unwrap();
+        assert_eq!(bapp.len(), 2);
+        assert_eq!(bapp[0], "com.competitor.game");
+        assert_eq!(bapp[1], "12345"); // iOS numeric ID
+
+        // Verify round-trip preserves all blocklists
+        let json = serde_json::to_string(&request).unwrap();
+        let deserialized: BidRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.bcat, request.bcat);
+        assert_eq!(deserialized.badv, request.badv);
+        assert_eq!(deserialized.bapp, request.bapp);
+    }
 }

@@ -226,4 +226,124 @@ mod tests {
         assert_eq!(user.gdpr, Some(1));
         assert_eq!(user.consent, Some("consent_string_here".to_string()));
     }
+
+    #[test]
+    fn test_user_buyeruid_field() {
+        // Spec: Section 3.2.20
+        let user = User::builder()
+            .buyeruid(Some("buyer-mapped-uid-456".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(user.buyeruid, Some("buyer-mapped-uid-456".to_string()));
+    }
+
+    #[test]
+    fn test_user_yob_field() {
+        // Spec: Section 3.2.20
+        let user = User::builder().yob(Some(1985)).build().unwrap();
+
+        assert_eq!(user.yob, Some(1985));
+
+        let user_none = User::builder().build().unwrap();
+        assert_eq!(user_none.yob, None);
+    }
+
+    #[test]
+    fn test_user_gender_field() {
+        // Spec: Section 3.2.20
+        let male = User::builder()
+            .gender(Some("M".to_string()))
+            .build()
+            .unwrap();
+        assert_eq!(male.gender, Some("M".to_string()));
+
+        let female = User::builder()
+            .gender(Some("F".to_string()))
+            .build()
+            .unwrap();
+        assert_eq!(female.gender, Some("F".to_string()));
+
+        let other = User::builder()
+            .gender(Some("O".to_string()))
+            .build()
+            .unwrap();
+        assert_eq!(other.gender, Some("O".to_string()));
+
+        let unknown = User::builder().build().unwrap();
+        assert_eq!(unknown.gender, None);
+    }
+
+    #[test]
+    fn test_user_customdata_field() {
+        // Spec: Section 3.2.20
+        let user = User::builder()
+            .customdata(Some("base85encodedcookiedata".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(user.customdata, Some("base85encodedcookiedata".to_string()));
+    }
+
+    #[test]
+    fn test_user_ext_field() {
+        // Spec: Section 3.2.20
+        let user = UserBuilder::<serde_json::Value>::default()
+            .id(Some("user-ext".to_string()))
+            .ext(Some(Box::new(serde_json::json!({
+                "consent": "BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA"
+            }))))
+            .build()
+            .unwrap();
+
+        assert!(user.ext.is_some());
+        assert_eq!(
+            user.ext.as_ref().unwrap()["consent"],
+            "BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA"
+        );
+    }
+
+    #[test]
+    fn test_user_roundtrip_all_fields() {
+        // Spec: Section 3.2.20
+        let geo = Geo::builder()
+            .country(Some("USA".to_string()))
+            .region(Some("NY".to_string()))
+            .build()
+            .unwrap();
+
+        let data = Data::builder()
+            .id(Some("data-1".to_string()))
+            .name(Some("BlueKai".to_string()))
+            .build()
+            .unwrap();
+
+        let user = User::builder()
+            .id(Some("user-all".to_string()))
+            .buyeruid(Some("buyer-all".to_string()))
+            .yob(Some(1992))
+            .gender(Some("F".to_string()))
+            .keywords(Some("sports,tech".to_string()))
+            .customdata(Some("custom123".to_string()))
+            .geo(Some(geo))
+            .data(Some(vec![data]))
+            .consent(Some("consent-string".to_string()))
+            .gdpr(Some(1))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&user).unwrap();
+        let deserialized: User = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(user.id, deserialized.id);
+        assert_eq!(user.buyeruid, deserialized.buyeruid);
+        assert_eq!(user.yob, deserialized.yob);
+        assert_eq!(user.gender, deserialized.gender);
+        assert_eq!(user.keywords, deserialized.keywords);
+        assert_eq!(user.customdata, deserialized.customdata);
+        assert_eq!(user.geo, deserialized.geo);
+        assert_eq!(user.data, deserialized.data);
+        assert_eq!(user.consent, deserialized.consent);
+        assert_eq!(user.gdpr, deserialized.gdpr);
+    }
 }

@@ -338,4 +338,163 @@ mod tests {
         assert_eq!(bid.cat.as_ref().unwrap().len(), 2);
         assert_eq!(bid.attr.as_ref().unwrap().len(), 3);
     }
+
+    #[test]
+    fn test_bid_required_fields_default_values() {
+        // Spec: Section 4.2.3
+        // Required fields: id, impid, price. Builder defaults them to empty/0.
+        let bid = Bid::builder().build().unwrap();
+        assert_eq!(bid.id, "");
+        assert_eq!(bid.impid, "");
+        assert_eq!(bid.price, 0.0);
+    }
+
+    #[test]
+    fn test_bid_nurl_with_auction_price_macro() {
+        // Spec: Section 4.2.3
+        // nurl supports substitution macros like ${AUCTION_PRICE}.
+        let bid = Bid::builder()
+            .id("bid1".to_string())
+            .impid("imp1".to_string())
+            .price(3.25)
+            .nurl(Some(
+                "https://win.example.com/notify?p=${AUCTION_PRICE}&id=${AUCTION_ID}&imp=${AUCTION_IMP_ID}".to_string(),
+            ))
+            .build()
+            .unwrap();
+
+        let nurl = bid.nurl.as_ref().unwrap();
+        assert!(nurl.contains("${AUCTION_PRICE}"));
+        assert!(nurl.contains("${AUCTION_ID}"));
+        assert!(nurl.contains("${AUCTION_IMP_ID}"));
+    }
+
+    #[test]
+    fn test_bid_burl_url_presence() {
+        // Spec: Section 4.2.3
+        // burl is a billing notice URL called when a winning bid becomes billable.
+        let bid = Bid::builder()
+            .id("bid1".to_string())
+            .impid("imp1".to_string())
+            .price(2.0)
+            .burl(Some(
+                "https://billing.example.com/bill?p=${AUCTION_PRICE}".to_string(),
+            ))
+            .build()
+            .unwrap();
+
+        assert!(bid.burl.as_ref().unwrap().starts_with("https://"));
+        assert!(bid.burl.as_ref().unwrap().contains("${AUCTION_PRICE}"));
+    }
+
+    #[test]
+    fn test_bid_lurl_url_presence() {
+        // Spec: Section 4.2.3
+        // lurl is a loss notice URL called when a bid is known to have been lost.
+        let bid = Bid::builder()
+            .id("bid1".to_string())
+            .impid("imp1".to_string())
+            .price(2.0)
+            .lurl(Some(
+                "https://loss.example.com/loss?reason=${AUCTION_LOSS}".to_string(),
+            ))
+            .build()
+            .unwrap();
+
+        assert!(bid.lurl.as_ref().unwrap().starts_with("https://"));
+        assert!(bid.lurl.as_ref().unwrap().contains("${AUCTION_LOSS}"));
+    }
+
+    #[test]
+    fn test_bid_tactic_field() {
+        // Spec: Section 4.2.3
+        // tactic enables buyers to label bids for reporting to the exchange.
+        let bid = Bid::builder()
+            .id("bid1".to_string())
+            .impid("imp1".to_string())
+            .price(2.0)
+            .tactic(Some("retargeting".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(bid.tactic, Some("retargeting".to_string()));
+    }
+
+    #[test]
+    fn test_bid_ext_with_serde_json_value() {
+        // Spec: Section 4.2.3
+        // Extension object for exchange-specific extensions.
+        let ext = serde_json::json!({
+            "priority": 1,
+            "source": "dsp-engine"
+        });
+
+        let bid = BidBuilder::<serde_json::Value>::default()
+            .id("bid1".to_string())
+            .impid("imp1".to_string())
+            .price(2.0)
+            .ext(Some(Box::new(ext)))
+            .build()
+            .unwrap();
+
+        assert!(bid.ext.is_some());
+        assert_eq!(bid.ext.as_ref().unwrap()["priority"], 1);
+        assert_eq!(bid.ext.as_ref().unwrap()["source"], "dsp-engine");
+    }
+
+    #[test]
+    fn test_bid_serde_roundtrip_all_fields() {
+        // Spec: Section 4.2.3
+        // Verify serde round-trip with all implemented optional fields populated.
+        let bid = BidBuilder::<serde_json::Value>::default()
+            .id("bid-full".to_string())
+            .impid("imp-full".to_string())
+            .price(4.75)
+            .adid(Some("ad-123".to_string()))
+            .nurl(Some("https://win.example.com".to_string()))
+            .burl(Some("https://bill.example.com".to_string()))
+            .lurl(Some("https://loss.example.com".to_string()))
+            .adm(Some("<html>ad</html>".to_string()))
+            .adomain(Some(vec![
+                "ford.com".to_string(),
+                "lincoln.com".to_string(),
+            ]))
+            .iurl(Some("https://sample.example.com/img.jpg".to_string()))
+            .cid(Some("campaign-1".to_string()))
+            .crid(Some("creative-1".to_string()))
+            .tactic(Some("awareness".to_string()))
+            .cat(Some(vec!["IAB2-1".to_string()]))
+            .attr(Some(vec![1, 4]))
+            .language(Some("en".to_string()))
+            .dealid(Some("deal-xyz".to_string()))
+            .w(Some(728))
+            .h(Some(90))
+            .ext(Some(Box::new(serde_json::json!({"custom": true}))))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&bid).unwrap();
+        let deserialized: Bid<serde_json::Value> = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(bid.id, deserialized.id);
+        assert_eq!(bid.impid, deserialized.impid);
+        assert_eq!(bid.price, deserialized.price);
+        assert_eq!(bid.adid, deserialized.adid);
+        assert_eq!(bid.nurl, deserialized.nurl);
+        assert_eq!(bid.burl, deserialized.burl);
+        assert_eq!(bid.lurl, deserialized.lurl);
+        assert_eq!(bid.adm, deserialized.adm);
+        assert_eq!(bid.adomain, deserialized.adomain);
+        assert_eq!(bid.iurl, deserialized.iurl);
+        assert_eq!(bid.cid, deserialized.cid);
+        assert_eq!(bid.crid, deserialized.crid);
+        assert_eq!(bid.tactic, deserialized.tactic);
+        assert_eq!(bid.cat, deserialized.cat);
+        assert_eq!(bid.attr, deserialized.attr);
+        assert_eq!(bid.language, deserialized.language);
+        assert_eq!(bid.dealid, deserialized.dealid);
+        assert_eq!(bid.w, deserialized.w);
+        assert_eq!(bid.h, deserialized.h);
+        assert_eq!(bid.ext, deserialized.ext);
+    }
 }

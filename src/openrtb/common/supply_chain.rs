@@ -200,6 +200,7 @@ mod tests {
 
     #[test]
     fn test_supply_chain_multiple_nodes() {
+        // Spec: SupplyChain
         let nodes = vec![
             SupplyChainNode::builder()
                 .asi("pub.com".to_string())
@@ -231,5 +232,187 @@ mod tests {
         assert_eq!(schain.nodes[0].hp, 1);
         assert_eq!(schain.nodes[1].hp, 0);
         assert_eq!(schain.nodes[2].hp, 0);
+    }
+
+    #[test]
+    fn test_supply_chain_ver_field() {
+        // Spec: SupplyChain - Test version field with format "major.minor"
+        let schain1 = SupplyChain::builder()
+            .nodes(vec![
+                SupplyChainNode::builder()
+                    .asi("test.com".to_string())
+                    .sid("123".to_string())
+                    .build()
+                    .unwrap(),
+            ])
+            .ver(Some("1.0".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(schain1.ver, Some("1.0".to_string()));
+
+        // Test with different version
+        let schain2 = SupplyChain::builder()
+            .nodes(vec![
+                SupplyChainNode::builder()
+                    .asi("test.com".to_string())
+                    .sid("123".to_string())
+                    .build()
+                    .unwrap(),
+            ])
+            .ver(Some("2.0".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(schain2.ver, Some("2.0".to_string()));
+
+        // Test deserialization with ver field
+        let json = r#"{"nodes":[{"asi":"test.com","sid":"123","hp":0}],"ver":"1.0"}"#;
+        let schain3: SupplyChain = serde_json::from_str(json).unwrap();
+        assert_eq!(schain3.ver, Some("1.0".to_string()));
+    }
+
+    #[test]
+    fn test_supply_chain_complete_flag_explicit() {
+        // Spec: SupplyChain - Test complete flag with explicit 0 and 1 values
+        let json_0 = r#"{"nodes":[{"asi":"test.com","sid":"123","hp":0}],"complete":0}"#;
+        let schain0: SupplyChain = serde_json::from_str(json_0).unwrap();
+        assert_eq!(schain0.complete, Some(0));
+
+        let json_1 = r#"{"nodes":[{"asi":"test.com","sid":"123","hp":0}],"complete":1}"#;
+        let schain1: SupplyChain = serde_json::from_str(json_1).unwrap();
+        assert_eq!(schain1.complete, Some(1));
+
+        // Test builder with explicit complete values
+        let sc0 = SupplyChain::builder()
+            .complete(Some(0))
+            .nodes(vec![
+                SupplyChainNode::builder()
+                    .asi("test.com".to_string())
+                    .sid("123".to_string())
+                    .build()
+                    .unwrap(),
+            ])
+            .build()
+            .unwrap();
+        assert_eq!(sc0.complete, Some(0));
+
+        let sc1 = SupplyChain::builder()
+            .complete(Some(1))
+            .nodes(vec![
+                SupplyChainNode::builder()
+                    .asi("test.com".to_string())
+                    .sid("123".to_string())
+                    .build()
+                    .unwrap(),
+            ])
+            .build()
+            .unwrap();
+        assert_eq!(sc1.complete, Some(1));
+    }
+
+    #[test]
+    fn test_supply_chain_roundtrip_all_fields() {
+        // Spec: SupplyChain - Serde round-trip with all fields populated
+        let schain_original = SupplyChain::builder()
+            .complete(Some(1))
+            .nodes(vec![
+                SupplyChainNode::builder()
+                    .asi("publisher.com".to_string())
+                    .sid("pub-001".to_string())
+                    .hp(1)
+                    .rid(Some("req-pub-123".to_string()))
+                    .name(Some("Publisher Corp".to_string()))
+                    .domain(Some("publisher.com".to_string()))
+                    .build()
+                    .unwrap(),
+                SupplyChainNode::builder()
+                    .asi("exchange.com".to_string())
+                    .sid("exch-456".to_string())
+                    .hp(0)
+                    .rid(Some("req-exch-789".to_string()))
+                    .name(Some("Exchange Inc".to_string()))
+                    .domain(Some("exchange.com".to_string()))
+                    .build()
+                    .unwrap(),
+            ])
+            .ver(Some("1.0".to_string()))
+            .build()
+            .unwrap();
+
+        // Serialize to JSON
+        let json = serde_json::to_string(&schain_original).unwrap();
+
+        // Deserialize back
+        let schain_deserialized: SupplyChain = serde_json::from_str(&json).unwrap();
+
+        // Verify all fields match
+        assert_eq!(schain_deserialized.complete, schain_original.complete);
+        assert_eq!(schain_deserialized.ver, schain_original.ver);
+        assert_eq!(schain_deserialized.nodes.len(), schain_original.nodes.len());
+
+        // Check first node
+        assert_eq!(
+            schain_deserialized.nodes[0].asi,
+            schain_original.nodes[0].asi
+        );
+        assert_eq!(
+            schain_deserialized.nodes[0].sid,
+            schain_original.nodes[0].sid
+        );
+        assert_eq!(schain_deserialized.nodes[0].hp, schain_original.nodes[0].hp);
+        assert_eq!(
+            schain_deserialized.nodes[0].rid,
+            schain_original.nodes[0].rid
+        );
+        assert_eq!(
+            schain_deserialized.nodes[0].name,
+            schain_original.nodes[0].name
+        );
+        assert_eq!(
+            schain_deserialized.nodes[0].domain,
+            schain_original.nodes[0].domain
+        );
+
+        // Check second node
+        assert_eq!(
+            schain_deserialized.nodes[1].asi,
+            schain_original.nodes[1].asi
+        );
+        assert_eq!(
+            schain_deserialized.nodes[1].sid,
+            schain_original.nodes[1].sid
+        );
+        assert_eq!(schain_deserialized.nodes[1].hp, schain_original.nodes[1].hp);
+        assert_eq!(
+            schain_deserialized.nodes[1].rid,
+            schain_original.nodes[1].rid
+        );
+        assert_eq!(
+            schain_deserialized.nodes[1].name,
+            schain_original.nodes[1].name
+        );
+        assert_eq!(
+            schain_deserialized.nodes[1].domain,
+            schain_original.nodes[1].domain
+        );
+    }
+
+    #[test]
+    fn test_supply_chain_ver_default() {
+        // Spec: SupplyChain - Default ver value
+        let schain = SupplyChain::builder()
+            .nodes(vec![
+                SupplyChainNode::builder()
+                    .asi("test.com".to_string())
+                    .sid("123".to_string())
+                    .build()
+                    .unwrap(),
+            ])
+            .build()
+            .unwrap();
+
+        // Default should be "1.0"
+        assert_eq!(schain.ver, Some("1.0".to_string()));
     }
 }

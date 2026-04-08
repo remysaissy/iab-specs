@@ -140,4 +140,56 @@ mod tests {
         assert_eq!(producer.id, Some("prod123".to_string()));
         assert_eq!(producer.name, Some("Warner Bros".to_string()));
     }
+
+    #[test]
+    fn test_producer_domain_field() {
+        // Spec: Section 3.2.17
+        let producer = Producer::builder()
+            .id(Some("prod1".to_string()))
+            .domain(Some("studio.example.com".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(producer.domain, Some("studio.example.com".to_string()));
+    }
+
+    #[test]
+    fn test_producer_ext_with_serde_json_value() {
+        // Spec: Section 3.2.17
+        let ext = serde_json::json!({"content_type": "episodic", "quality": "hd"});
+
+        let producer = ProducerBuilder::<serde_json::Value>::default()
+            .id(Some("prod1".to_string()))
+            .ext(Some(Box::new(ext)))
+            .build()
+            .unwrap();
+
+        assert!(producer.ext.is_some());
+        assert_eq!(producer.ext.as_ref().unwrap()["content_type"], "episodic");
+        assert_eq!(producer.ext.as_ref().unwrap()["quality"], "hd");
+    }
+
+    #[test]
+    fn test_producer_serde_roundtrip_all_fields() {
+        // Spec: Section 3.2.17
+        let producer = ProducerBuilder::<serde_json::Value>::default()
+            .id(Some("prod-full".to_string()))
+            .name(Some("Full Studio".to_string()))
+            .cattax(1)
+            .cat(Some(vec!["IAB1".to_string(), "IAB9".to_string()]))
+            .domain(Some("fullstudio.com".to_string()))
+            .ext(Some(Box::new(serde_json::json!({"syndicated": true}))))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&producer).unwrap();
+        let deserialized: Producer<serde_json::Value> = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(producer.id, deserialized.id);
+        assert_eq!(producer.name, deserialized.name);
+        assert_eq!(producer.cattax, deserialized.cattax);
+        assert_eq!(producer.cat, deserialized.cat);
+        assert_eq!(producer.domain, deserialized.domain);
+        assert_eq!(producer.ext, deserialized.ext);
+    }
 }

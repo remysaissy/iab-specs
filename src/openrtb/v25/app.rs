@@ -238,4 +238,158 @@ mod tests {
         assert_eq!(app.id, Some("app123".to_string()));
         assert_eq!(app.bundle, Some("com.example.mygame".to_string()));
     }
+
+    #[test]
+    fn test_app_bundle_field() {
+        // Spec: Section 3.2.14
+        let app_android = App::builder()
+            .bundle(Some("com.example.mygame".to_string()))
+            .build()
+            .unwrap();
+        assert_eq!(app_android.bundle, Some("com.example.mygame".to_string()));
+
+        let app_ios = App::builder()
+            .bundle(Some("123456789".to_string()))
+            .build()
+            .unwrap();
+        assert_eq!(app_ios.bundle, Some("123456789".to_string()));
+    }
+
+    #[test]
+    fn test_app_storeurl_field() {
+        // Spec: Section 3.2.14
+        let app = App::builder()
+            .storeurl(Some(
+                "https://play.google.com/store/apps/details?id=com.example.mygame".to_string(),
+            ))
+            .build()
+            .unwrap();
+        assert_eq!(
+            app.storeurl,
+            Some("https://play.google.com/store/apps/details?id=com.example.mygame".to_string())
+        );
+    }
+
+    #[test]
+    fn test_app_category_arrays() {
+        // Spec: Section 3.2.14
+        let app = App::builder()
+            .cat(Some(vec!["IAB9".to_string(), "IAB9-30".to_string()]))
+            .sectioncat(Some(vec!["IAB9-5".to_string()]))
+            .pagecat(Some(vec!["IAB9-7".to_string()]))
+            .build()
+            .unwrap();
+
+        assert_eq!(
+            app.cat,
+            Some(vec!["IAB9".to_string(), "IAB9-30".to_string()])
+        );
+        assert_eq!(app.sectioncat, Some(vec!["IAB9-5".to_string()]));
+        assert_eq!(app.pagecat, Some(vec!["IAB9-7".to_string()]));
+    }
+
+    #[test]
+    fn test_app_ver_field() {
+        // Spec: Section 3.2.14
+        let app = App::builder()
+            .ver(Some("2.1.0".to_string()))
+            .build()
+            .unwrap();
+        assert_eq!(app.ver, Some("2.1.0".to_string()));
+    }
+
+    #[test]
+    fn test_app_paid_flag() {
+        // Spec: Section 3.2.14
+        let free_app = App::builder().paid(Some(0)).build().unwrap();
+        assert_eq!(free_app.paid, Some(0));
+
+        let paid_app = App::builder().paid(Some(1)).build().unwrap();
+        assert_eq!(paid_app.paid, Some(1));
+
+        let default_app = App::builder().build().unwrap();
+        assert_eq!(default_app.paid, None);
+    }
+
+    #[test]
+    fn test_app_privacypolicy_flag() {
+        // Spec: Section 3.2.14
+        let app_with = App::builder().privacypolicy(Some(1)).build().unwrap();
+        assert_eq!(app_with.privacypolicy, Some(1));
+
+        let app_without = App::builder().privacypolicy(Some(0)).build().unwrap();
+        assert_eq!(app_without.privacypolicy, Some(0));
+    }
+
+    #[test]
+    fn test_app_ext_field() {
+        // Spec: Section 3.2.14
+        let app = AppBuilder::<serde_json::Value>::default()
+            .id(Some("app-ext".to_string()))
+            .ext(Some(Box::new(serde_json::json!({
+                "app_specific": true
+            }))))
+            .build()
+            .unwrap();
+
+        assert!(app.ext.is_some());
+        assert_eq!(app.ext.as_ref().unwrap()["app_specific"], true);
+    }
+
+    #[test]
+    fn test_app_roundtrip_all_fields() {
+        // Spec: Section 3.2.14
+        let publisher = Publisher::builder()
+            .id(Some("pub-1".to_string()))
+            .build()
+            .unwrap();
+
+        let content = Content::builder()
+            .id(Some("content-1".to_string()))
+            .build()
+            .unwrap();
+
+        let app = App::builder()
+            .id(Some("app-all".to_string()))
+            .name(Some("All Fields App".to_string()))
+            .bundle(Some("com.all.fields".to_string()))
+            .domain(Some("allfields.com".to_string()))
+            .storeurl(Some("https://store.example.com".to_string()))
+            .cattax(2)
+            .cat(Some(vec!["IAB1".to_string()]))
+            .sectioncat(Some(vec!["IAB1-1".to_string()]))
+            .pagecat(Some(vec!["IAB2-1".to_string()]))
+            .ver(Some("3.0.1".to_string()))
+            .privacypolicy(Some(1))
+            .paid(Some(1))
+            .publisher(Some(publisher))
+            .content(Some(content))
+            .keywords(Some("game,puzzle".to_string()))
+            .inventorypartnerdomain(Some("partner.com".to_string()))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&app).unwrap();
+        let deserialized: App = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(app.id, deserialized.id);
+        assert_eq!(app.name, deserialized.name);
+        assert_eq!(app.bundle, deserialized.bundle);
+        assert_eq!(app.domain, deserialized.domain);
+        assert_eq!(app.storeurl, deserialized.storeurl);
+        assert_eq!(app.cattax, deserialized.cattax);
+        assert_eq!(app.cat, deserialized.cat);
+        assert_eq!(app.sectioncat, deserialized.sectioncat);
+        assert_eq!(app.pagecat, deserialized.pagecat);
+        assert_eq!(app.ver, deserialized.ver);
+        assert_eq!(app.privacypolicy, deserialized.privacypolicy);
+        assert_eq!(app.paid, deserialized.paid);
+        assert_eq!(app.publisher, deserialized.publisher);
+        assert_eq!(app.content, deserialized.content);
+        assert_eq!(app.keywords, deserialized.keywords);
+        assert_eq!(
+            app.inventorypartnerdomain,
+            deserialized.inventorypartnerdomain
+        );
+    }
 }

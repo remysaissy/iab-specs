@@ -137,4 +137,68 @@ mod tests {
 
         assert_eq!(native.ext, Some(ext_value));
     }
+
+    // === Spec-Driven Hardening Tests ===
+
+    #[test]
+    fn test_native_request_required() {
+        // Spec: Section 3.2.5
+        let json_missing = r#"{"ver":"1.2"}"#;
+        let result: Result<Native, _> = serde_json::from_str(json_missing);
+        assert!(
+            result.is_err(),
+            "Native without required 'request' field should fail"
+        );
+
+        let json_empty = r#"{"request":""}"#;
+        let result_empty: Result<Native, _> = serde_json::from_str(json_empty);
+        assert!(result_empty.is_ok());
+        assert_eq!(result_empty.unwrap().request, "");
+    }
+
+    #[test]
+    fn test_native_ver_field() {
+        // Spec: Section 3.2.5
+        let native_with_ver = Native::builder()
+            .request(r#"{"ver":"1.2","assets":[]}"#.to_string())
+            .ver(Some("1.2".to_string()))
+            .build()
+            .unwrap();
+        assert_eq!(native_with_ver.ver, Some("1.2".to_string()));
+
+        let native_without_ver = Native::builder()
+            .request(r#"{"assets":[]}"#.to_string())
+            .build()
+            .unwrap();
+        assert!(native_without_ver.ver.is_none());
+
+        let json = serde_json::to_string(&native_with_ver).unwrap();
+        assert!(json.contains("\"ver\":\"1.2\""));
+
+        let json_no_ver = serde_json::to_string(&native_without_ver).unwrap();
+        assert!(!json_no_ver.contains("ver"));
+    }
+
+    #[test]
+    fn test_native_roundtrip_all_fields() {
+        // Spec: Section 3.2.5
+        let native = Native::builder()
+            .request(
+                r#"{"ver":"1.2","assets":[{"id":1,"required":1,"title":{"len":90}}]}"#.to_string(),
+            )
+            .ver(Some("1.2".to_string()))
+            .api(Some(vec![3, 5, 6]))
+            .battr(Some(vec![1, 2, 13]))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&native).unwrap();
+        let deserialized: Native = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(native.request, deserialized.request);
+        assert_eq!(native.ver, deserialized.ver);
+        assert_eq!(native.api, deserialized.api);
+        assert_eq!(native.battr, deserialized.battr);
+        assert_eq!(native, deserialized);
+    }
 }

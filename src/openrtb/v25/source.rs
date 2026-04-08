@@ -170,4 +170,81 @@ mod tests {
         assert_eq!(source.pchain, None);
         assert_eq!(source.schain, None);
     }
+
+    #[test]
+    fn test_source_tid_field() {
+        // Spec: Section 3.2.2
+        let source = Source::builder()
+            .tid(Some("txn-abc-123".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(source.tid, Some("txn-abc-123".to_string()));
+    }
+
+    #[test]
+    fn test_source_pchain_field() {
+        // Spec: Section 3.2.2
+        let source = Source::builder()
+            .pchain(Some("tag1:abc/tag2:def".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(source.pchain, Some("tag1:abc/tag2:def".to_string()));
+    }
+
+    #[test]
+    fn test_source_ext_with_serde_json_value() {
+        // Spec: Section 3.2.2
+        let ext = serde_json::json!({"omidpn": "Example OM SDK", "omidpv": "1.0"});
+
+        let source = SourceBuilder::<serde_json::Value>::default()
+            .fd(Some(1))
+            .ext(Some(Box::new(ext)))
+            .build()
+            .unwrap();
+
+        assert!(source.ext.is_some());
+        assert_eq!(source.ext.as_ref().unwrap()["omidpn"], "Example OM SDK");
+    }
+
+    #[test]
+    fn test_source_serde_roundtrip_all_fields() {
+        // Spec: Section 3.2.2
+        let node = SupplyChainNode::builder()
+            .asi("exchange.com".to_string())
+            .sid("pub-999".to_string())
+            .hp(1)
+            .build()
+            .unwrap();
+
+        let schain = SupplyChain::builder()
+            .complete(Some(1))
+            .ver(Some("1.0".to_string()))
+            .nodes(vec![node])
+            .build()
+            .unwrap();
+
+        let source = SourceBuilder::<serde_json::Value>::default()
+            .fd(Some(1))
+            .tid(Some("txn-roundtrip".to_string()))
+            .pchain(Some("chain:value".to_string()))
+            .schain(Some(schain))
+            .ext(Some(Box::new(serde_json::json!({"key": "val"}))))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&source).unwrap();
+        let deserialized: Source<serde_json::Value> = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(source.fd, deserialized.fd);
+        assert_eq!(source.tid, deserialized.tid);
+        assert_eq!(source.pchain, deserialized.pchain);
+        assert!(deserialized.schain.is_some());
+        assert_eq!(
+            source.schain.as_ref().unwrap().nodes[0].asi,
+            deserialized.schain.as_ref().unwrap().nodes[0].asi
+        );
+        assert_eq!(source.ext, deserialized.ext);
+    }
 }

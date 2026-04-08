@@ -204,4 +204,100 @@ mod tests {
         assert_eq!(geo.accuracy, Some(10));
         assert_eq!(geo.lastfix, Some(60));
     }
+
+    #[test]
+    fn test_geo_type_field() {
+        // Spec: Section 3.2.19
+        let gps = Geo::builder().type_(Some(1)).build().unwrap();
+        assert_eq!(gps.type_, Some(1));
+
+        let ip = Geo::builder().type_(Some(2)).build().unwrap();
+        assert_eq!(ip.type_, Some(2));
+
+        let user_provided = Geo::builder().type_(Some(3)).build().unwrap();
+        assert_eq!(user_provided.type_, Some(3));
+    }
+
+    #[test]
+    fn test_geo_region_fields() {
+        // Spec: Section 3.2.19
+        let geo = Geo::builder()
+            .region(Some("CA".to_string()))
+            .regionfips104(Some("US06".to_string()))
+            .metro(Some("807".to_string()))
+            .zip(Some("94102".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(geo.region, Some("CA".to_string()));
+        assert_eq!(geo.regionfips104, Some("US06".to_string()));
+        assert_eq!(geo.metro, Some("807".to_string()));
+        assert_eq!(geo.zip, Some("94102".to_string()));
+    }
+
+    #[test]
+    fn test_geo_utcoffset_field() {
+        // Spec: Section 3.2.19
+        let positive = Geo::builder().utcoffset(Some(60)).build().unwrap();
+        assert_eq!(positive.utcoffset, Some(60));
+
+        let negative = Geo::builder().utcoffset(Some(-480)).build().unwrap();
+        assert_eq!(negative.utcoffset, Some(-480));
+
+        let zero = Geo::builder().utcoffset(Some(0)).build().unwrap();
+        assert_eq!(zero.utcoffset, Some(0));
+    }
+
+    #[test]
+    fn test_geo_ext_field() {
+        // Spec: Section 3.2.19
+        let geo = GeoBuilder::<serde_json::Value>::default()
+            .country(Some("USA".to_string()))
+            .ext(Some(Box::new(serde_json::json!({
+                "dma": "San Francisco"
+            }))))
+            .build()
+            .unwrap();
+
+        assert!(geo.ext.is_some());
+        assert_eq!(geo.ext.as_ref().unwrap()["dma"], "San Francisco");
+    }
+
+    #[test]
+    fn test_geo_roundtrip_all_fields() {
+        // Spec: Section 3.2.19
+        let geo = Geo::builder()
+            .lat(Some(37.7749))
+            .lon(Some(-122.4194))
+            .type_(Some(1))
+            .accuracy(Some(50))
+            .lastfix(Some(30))
+            .ipservice(Some(3))
+            .country(Some("USA".to_string()))
+            .region(Some("CA".to_string()))
+            .regionfips104(Some("US06".to_string()))
+            .metro(Some("807".to_string()))
+            .city(Some("San Francisco".to_string()))
+            .zip(Some("94102".to_string()))
+            .utcoffset(Some(-480))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&geo).unwrap();
+        let deserialized: Geo = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(geo.lat, deserialized.lat);
+        assert_eq!(geo.lon, deserialized.lon);
+        assert_eq!(geo.type_, deserialized.type_);
+        assert_eq!(geo.accuracy, deserialized.accuracy);
+        assert_eq!(geo.lastfix, deserialized.lastfix);
+        assert_eq!(geo.ipservice, deserialized.ipservice);
+        assert_eq!(geo.country, deserialized.country);
+        assert_eq!(geo.region, deserialized.region);
+        assert_eq!(geo.regionfips104, deserialized.regionfips104);
+        assert_eq!(geo.metro, deserialized.metro);
+        assert_eq!(geo.city, deserialized.city);
+        assert_eq!(geo.zip, deserialized.zip);
+        assert_eq!(geo.utcoffset, deserialized.utcoffset);
+    }
 }
