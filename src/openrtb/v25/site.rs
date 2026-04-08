@@ -313,4 +313,167 @@ mod tests {
         );
         // TODO: Should deserialization validate mutual exclusivity for keyword fields?
     }
+
+    #[test]
+    fn test_site_url_fields() {
+        // Spec: Section 3.2.13
+        let site = Site::builder()
+            .page(Some("https://example.com/articles/tech".to_string()))
+            .ref_(Some("https://google.com/search?q=tech".to_string()))
+            .search(Some("tech news".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(
+            site.page,
+            Some("https://example.com/articles/tech".to_string())
+        );
+        assert_eq!(
+            site.ref_,
+            Some("https://google.com/search?q=tech".to_string())
+        );
+        assert_eq!(site.search, Some("tech news".to_string()));
+
+        let json = serde_json::to_string(&site).unwrap();
+        assert!(json.contains("\"page\":\"https://example.com/articles/tech\""));
+        assert!(json.contains("\"ref_\":\"https://google.com/search?q=tech\""));
+        assert!(json.contains("\"search\":\"tech news\""));
+    }
+
+    #[test]
+    fn test_site_category_arrays() {
+        // Spec: Section 3.2.13
+        let site = Site::builder()
+            .cat(Some(vec!["IAB1".to_string(), "IAB2".to_string()]))
+            .sectioncat(Some(vec!["IAB1-1".to_string()]))
+            .pagecat(Some(vec!["IAB2-3".to_string(), "IAB3-1".to_string()]))
+            .build()
+            .unwrap();
+
+        assert_eq!(site.cat, Some(vec!["IAB1".to_string(), "IAB2".to_string()]));
+        assert_eq!(site.sectioncat, Some(vec!["IAB1-1".to_string()]));
+        assert_eq!(
+            site.pagecat,
+            Some(vec!["IAB2-3".to_string(), "IAB3-1".to_string()])
+        );
+    }
+
+    #[test]
+    fn test_site_mobile_flag() {
+        // Spec: Section 3.2.13
+        let site_mobile = Site::builder().mobile(Some(1)).build().unwrap();
+        assert_eq!(site_mobile.mobile, Some(1));
+
+        let site_not_mobile = Site::builder().mobile(Some(0)).build().unwrap();
+        assert_eq!(site_not_mobile.mobile, Some(0));
+
+        let site_default = Site::builder().build().unwrap();
+        assert_eq!(site_default.mobile, None);
+    }
+
+    #[test]
+    fn test_site_privacypolicy_flag() {
+        // Spec: Section 3.2.13
+        let site_with_policy = Site::builder().privacypolicy(Some(1)).build().unwrap();
+        assert_eq!(site_with_policy.privacypolicy, Some(1));
+
+        let site_no_policy = Site::builder().privacypolicy(Some(0)).build().unwrap();
+        assert_eq!(site_no_policy.privacypolicy, Some(0));
+    }
+
+    #[test]
+    fn test_site_with_content() {
+        // Spec: Section 3.2.13
+        let content = Content::builder()
+            .id(Some("content-1".to_string()))
+            .title(Some("Breaking News".to_string()))
+            .language(Some("en".to_string()))
+            .build()
+            .unwrap();
+
+        let site = Site::builder()
+            .id(Some("site-1".to_string()))
+            .content(Some(content))
+            .build()
+            .unwrap();
+
+        assert!(site.content.is_some());
+        let c = site.content.as_ref().unwrap();
+        assert_eq!(c.id, Some("content-1".to_string()));
+        assert_eq!(c.title, Some("Breaking News".to_string()));
+        assert_eq!(c.language, Some("en".to_string()));
+    }
+
+    #[test]
+    fn test_site_ext_field() {
+        // Spec: Section 3.2.13
+        let site = SiteBuilder::<serde_json::Value>::default()
+            .id(Some("site-ext".to_string()))
+            .ext(Some(Box::new(serde_json::json!({
+                "custom_field": "custom_value"
+            }))))
+            .build()
+            .unwrap();
+
+        assert!(site.ext.is_some());
+        let ext = site.ext.as_ref().unwrap();
+        assert_eq!(ext["custom_field"], "custom_value");
+    }
+
+    #[test]
+    fn test_site_roundtrip_all_fields() {
+        // Spec: Section 3.2.13
+        let publisher = Publisher::builder()
+            .id(Some("pub-1".to_string()))
+            .build()
+            .unwrap();
+
+        let content = Content::builder()
+            .id(Some("content-1".to_string()))
+            .build()
+            .unwrap();
+
+        let site = Site::builder()
+            .id(Some("site-all".to_string()))
+            .name(Some("All Fields Site".to_string()))
+            .domain(Some("allfields.com".to_string()))
+            .cattax(2)
+            .cat(Some(vec!["IAB1".to_string()]))
+            .sectioncat(Some(vec!["IAB1-1".to_string()]))
+            .pagecat(Some(vec!["IAB2-1".to_string()]))
+            .page(Some("https://allfields.com/page".to_string()))
+            .ref_(Some("https://referrer.com".to_string()))
+            .search(Some("search query".to_string()))
+            .mobile(Some(1))
+            .privacypolicy(Some(1))
+            .publisher(Some(publisher))
+            .content(Some(content))
+            .keywords(Some("all,fields".to_string()))
+            .inventorypartnerdomain(Some("partner.com".to_string()))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&site).unwrap();
+        let deserialized: Site = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(site.id, deserialized.id);
+        assert_eq!(site.name, deserialized.name);
+        assert_eq!(site.domain, deserialized.domain);
+        assert_eq!(site.cattax, deserialized.cattax);
+        assert_eq!(site.cat, deserialized.cat);
+        assert_eq!(site.sectioncat, deserialized.sectioncat);
+        assert_eq!(site.pagecat, deserialized.pagecat);
+        assert_eq!(site.page, deserialized.page);
+        assert_eq!(site.ref_, deserialized.ref_);
+        assert_eq!(site.search, deserialized.search);
+        assert_eq!(site.mobile, deserialized.mobile);
+        assert_eq!(site.privacypolicy, deserialized.privacypolicy);
+        assert_eq!(site.publisher, deserialized.publisher);
+        assert_eq!(site.content, deserialized.content);
+        assert_eq!(site.keywords, deserialized.keywords);
+        assert_eq!(
+            site.inventorypartnerdomain,
+            deserialized.inventorypartnerdomain
+        );
+    }
 }

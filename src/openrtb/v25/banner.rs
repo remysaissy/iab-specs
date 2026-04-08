@@ -382,4 +382,160 @@ mod tests {
         assert_eq!(banner.api, Some(vec![-5]));
         // Document: Negative values are invalid for all these enum types
     }
+
+    // === Spec-Driven Hardening Tests ===
+
+    #[test]
+    fn test_banner_format_only_no_wh() {
+        // Spec: Section 3.2.6
+        // Per spec: if no format objects specified, use w/h attributes.
+        // Conversely, format array can be used without w/h.
+        let banner = Banner::builder()
+            .format(Some(vec![
+                Format::builder().w(Some(300)).h(Some(250)).build().unwrap(),
+                Format::builder().w(Some(728)).h(Some(90)).build().unwrap(),
+            ]))
+            .build()
+            .unwrap();
+
+        assert!(banner.format.is_some());
+        assert_eq!(banner.format.as_ref().unwrap().len(), 2);
+        assert!(banner.w.is_none());
+        assert!(banner.h.is_none());
+
+        // Verify serde round-trip
+        let json = serde_json::to_string(&banner).unwrap();
+        let deserialized: Banner = serde_json::from_str(&json).unwrap();
+        assert_eq!(banner, deserialized);
+    }
+
+    #[test]
+    fn test_banner_wh_only_no_format() {
+        // Spec: Section 3.2.6
+        // Per spec: w/h recommended if no format objects are specified.
+        let banner = Banner::builder().w(Some(320)).h(Some(50)).build().unwrap();
+
+        assert_eq!(banner.w, Some(320));
+        assert_eq!(banner.h, Some(50));
+        assert!(banner.format.is_none());
+
+        let json = serde_json::to_string(&banner).unwrap();
+        let deserialized: Banner = serde_json::from_str(&json).unwrap();
+        assert_eq!(banner, deserialized);
+    }
+
+    #[test]
+    fn test_banner_with_both_format_and_wh() {
+        // Spec: Section 3.2.6
+        // Both format array and w/h can coexist; w/h serve as fallback.
+        let banner = Banner::builder()
+            .format(Some(vec![
+                Format::builder().w(Some(300)).h(Some(250)).build().unwrap(),
+            ]))
+            .w(Some(300))
+            .h(Some(250))
+            .build()
+            .unwrap();
+
+        assert!(banner.format.is_some());
+        assert_eq!(banner.w, Some(300));
+        assert_eq!(banner.h, Some(250));
+
+        let json = serde_json::to_string(&banner).unwrap();
+        let deserialized: Banner = serde_json::from_str(&json).unwrap();
+        assert_eq!(banner, deserialized);
+    }
+
+    #[test]
+    fn test_banner_topframe_field() {
+        // Spec: Section 3.2.6
+        // topframe: 0 = iframe, 1 = top frame
+        let banner_iframe = Banner::builder()
+            .w(Some(300))
+            .h(Some(250))
+            .topframe(Some(0))
+            .build()
+            .unwrap();
+        assert_eq!(banner_iframe.topframe, Some(0));
+
+        let banner_topframe = Banner::builder()
+            .w(Some(300))
+            .h(Some(250))
+            .topframe(Some(1))
+            .build()
+            .unwrap();
+        assert_eq!(banner_topframe.topframe, Some(1));
+
+        // Verify serialization includes topframe
+        let json = serde_json::to_string(&banner_topframe).unwrap();
+        assert!(json.contains("\"topframe\":1"));
+
+        // Verify None omits topframe
+        let banner_none = Banner::builder().w(Some(300)).h(Some(250)).build().unwrap();
+        let json_none = serde_json::to_string(&banner_none).unwrap();
+        assert!(!json_none.contains("topframe"));
+    }
+
+    #[test]
+    fn test_banner_ext_field() {
+        // Spec: Section 3.2.6
+        // Extension field handling with serde_json::Value
+        let ext = serde_json::json!({"custom_field": "value", "priority": 5});
+        let banner = BannerBuilder::<serde_json::Value>::default()
+            .w(Some(300))
+            .h(Some(250))
+            .ext(Some(Box::new(ext.clone())))
+            .build()
+            .unwrap();
+
+        assert_eq!(*banner.ext.as_ref().unwrap().as_ref(), ext);
+
+        // Verify round-trip with ext
+        let json = serde_json::to_string(&banner).unwrap();
+        let deserialized: Banner<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(banner, deserialized);
+    }
+
+    #[test]
+    fn test_banner_roundtrip_all_fields() {
+        // Spec: Section 3.2.6
+        // Serde round-trip with ALL optional fields populated
+        let banner = Banner::builder()
+            .format(Some(vec![
+                Format::builder().w(Some(300)).h(Some(250)).build().unwrap(),
+            ]))
+            .w(Some(300))
+            .h(Some(250))
+            .btype(Some(vec![1, 4]))
+            .battr(Some(vec![1, 2, 3]))
+            .pos(Some(1))
+            .mimes(Some(vec![
+                "image/jpeg".to_string(),
+                "image/png".to_string(),
+            ]))
+            .topframe(Some(1))
+            .expdir(Some(vec![1, 2, 3]))
+            .api(Some(vec![3, 5, 6]))
+            .id(Some("banner-1".to_string()))
+            .vcm(Some(0))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&banner).unwrap();
+        let deserialized: Banner = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(banner.format, deserialized.format);
+        assert_eq!(banner.w, deserialized.w);
+        assert_eq!(banner.h, deserialized.h);
+        assert_eq!(banner.btype, deserialized.btype);
+        assert_eq!(banner.battr, deserialized.battr);
+        assert_eq!(banner.pos, deserialized.pos);
+        assert_eq!(banner.mimes, deserialized.mimes);
+        assert_eq!(banner.topframe, deserialized.topframe);
+        assert_eq!(banner.expdir, deserialized.expdir);
+        assert_eq!(banner.api, deserialized.api);
+        assert_eq!(banner.id, deserialized.id);
+        assert_eq!(banner.vcm, deserialized.vcm);
+        assert_eq!(banner, deserialized);
+    }
 }

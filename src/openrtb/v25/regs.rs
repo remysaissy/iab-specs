@@ -129,4 +129,60 @@ mod tests {
         assert!(regs.ext.is_some());
         assert_eq!(regs.ext.as_ref().unwrap()["us_privacy"], "1YNN");
     }
+
+    #[test]
+    fn test_regs_coppa_applies() {
+        // Spec: Section 3.2.3
+        let regs = Regs::builder().coppa(Some(1)).build().unwrap();
+
+        assert_eq!(regs.coppa, Some(1));
+    }
+
+    #[test]
+    fn test_regs_coppa_does_not_apply() {
+        // Spec: Section 3.2.3
+        let regs = Regs::builder().coppa(Some(0)).build().unwrap();
+
+        assert_eq!(regs.coppa, Some(0));
+    }
+
+    #[test]
+    fn test_regs_ext_dedicated_test() {
+        // Spec: Section 3.2.3
+        let ext = serde_json::json!({
+            "gdpr": 1,
+            "consent": "BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA",
+            "us_privacy": "1YNN"
+        });
+
+        let regs = RegsBuilder::<serde_json::Value>::default()
+            .coppa(Some(0))
+            .ext(Some(Box::new(ext)))
+            .build()
+            .unwrap();
+
+        let ext_ref = regs.ext.as_ref().unwrap();
+        assert_eq!(ext_ref["gdpr"], 1);
+        assert!(ext_ref["consent"].as_str().unwrap().starts_with("BOEFEAy"));
+        assert_eq!(ext_ref["us_privacy"], "1YNN");
+    }
+
+    #[test]
+    fn test_regs_serde_roundtrip_all_fields() {
+        // Spec: Section 3.2.3
+        let regs = RegsBuilder::<serde_json::Value>::default()
+            .coppa(Some(1))
+            .ext(Some(Box::new(serde_json::json!({
+                "gdpr": 1,
+                "us_privacy": "1YNN"
+            }))))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&regs).unwrap();
+        let deserialized: Regs<serde_json::Value> = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(regs.coppa, deserialized.coppa);
+        assert_eq!(regs.ext, deserialized.ext);
+    }
 }

@@ -331,4 +331,148 @@ mod tests {
         assert_eq!(content.id, Some("content123".to_string()));
         assert_eq!(content.title, Some("Great Movie".to_string()));
     }
+
+    #[test]
+    fn test_content_media_fields() {
+        // Spec: Section 3.2.16
+        let content = Content::builder()
+            .episode(Some(5))
+            .title(Some("Search Committee".to_string()))
+            .series(Some("The Office".to_string()))
+            .season(Some("Season 3".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(content.episode, Some(5));
+        assert_eq!(content.title, Some("Search Committee".to_string()));
+        assert_eq!(content.series, Some("The Office".to_string()));
+        assert_eq!(content.season, Some("Season 3".to_string()));
+    }
+
+    #[test]
+    fn test_content_category_fields() {
+        // Spec: Section 3.2.16
+        let content = Content::builder()
+            .cat(Some(vec!["IAB1".to_string(), "IAB1-1".to_string()]))
+            .genre(Some("drama".to_string()))
+            .language(Some("en".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(
+            content.cat,
+            Some(vec!["IAB1".to_string(), "IAB1-1".to_string()])
+        );
+        assert_eq!(content.genre, Some("drama".to_string()));
+        assert_eq!(content.language, Some("en".to_string()));
+    }
+
+    #[test]
+    fn test_content_livestream_flag() {
+        // Spec: Section 3.2.16
+        let live = Content::builder().livestream(Some(1)).build().unwrap();
+        assert_eq!(live.livestream, Some(1));
+
+        let not_live = Content::builder().livestream(Some(0)).build().unwrap();
+        assert_eq!(not_live.livestream, Some(0));
+
+        let default = Content::builder().build().unwrap();
+        assert_eq!(default.livestream, None);
+    }
+
+    #[test]
+    fn test_content_len_field() {
+        // Spec: Section 3.2.16
+        let content = Content::builder().len(Some(1800)).build().unwrap();
+
+        assert_eq!(content.len, Some(1800));
+    }
+
+    #[test]
+    fn test_content_ext_field() {
+        // Spec: Section 3.2.16
+        let content = ContentBuilder::<serde_json::Value>::default()
+            .id(Some("content-ext".to_string()))
+            .ext(Some(Box::new(serde_json::json!({
+                "content_rating_source": "MPAA"
+            }))))
+            .build()
+            .unwrap();
+
+        assert!(content.ext.is_some());
+        assert_eq!(
+            content.ext.as_ref().unwrap()["content_rating_source"],
+            "MPAA"
+        );
+    }
+
+    #[test]
+    fn test_content_roundtrip_all_fields() {
+        // Spec: Section 3.2.16
+        let producer = Producer::builder()
+            .id(Some("prod-1".to_string()))
+            .name(Some("Studio".to_string()))
+            .build()
+            .unwrap();
+
+        let content = Content::builder()
+            .id(Some("content-all".to_string()))
+            .episode(Some(10))
+            .title(Some("Finale".to_string()))
+            .series(Some("Breaking Bad".to_string()))
+            .season(Some("Season 5".to_string()))
+            .artist(Some("Vince Gilligan".to_string()))
+            .genre(Some("drama".to_string()))
+            .gtax(9)
+            .album(Some("Soundtrack".to_string()))
+            .isrc(Some("USRC17607839".to_string()))
+            .producer(Some(producer))
+            .url(Some("https://example.com/content".to_string()))
+            .cattax(1)
+            .cat(Some(vec!["IAB1".to_string()]))
+            .prodq(Some(2))
+            .context(Some(1))
+            .contentrating(Some("TV-MA".to_string()))
+            .userrating(Some("4.5".to_string()))
+            .qagmediarating(Some(2))
+            .keywords(Some("drama,thriller".to_string()))
+            .livestream(Some(0))
+            .sourcerelationship(Some(1))
+            .len(Some(3600))
+            .language(Some("en".to_string()))
+            .langb(Some("en-US".to_string()))
+            .embeddable(Some(1))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&content).unwrap();
+        let deserialized: Content = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(content.id, deserialized.id);
+        assert_eq!(content.episode, deserialized.episode);
+        assert_eq!(content.title, deserialized.title);
+        assert_eq!(content.series, deserialized.series);
+        assert_eq!(content.season, deserialized.season);
+        assert_eq!(content.artist, deserialized.artist);
+        assert_eq!(content.genre, deserialized.genre);
+        assert_eq!(content.gtax, deserialized.gtax);
+        assert_eq!(content.album, deserialized.album);
+        assert_eq!(content.isrc, deserialized.isrc);
+        assert_eq!(content.producer, deserialized.producer);
+        assert_eq!(content.url, deserialized.url);
+        assert_eq!(content.cattax, deserialized.cattax);
+        assert_eq!(content.cat, deserialized.cat);
+        assert_eq!(content.prodq, deserialized.prodq);
+        assert_eq!(content.context, deserialized.context);
+        assert_eq!(content.contentrating, deserialized.contentrating);
+        assert_eq!(content.userrating, deserialized.userrating);
+        assert_eq!(content.qagmediarating, deserialized.qagmediarating);
+        assert_eq!(content.keywords, deserialized.keywords);
+        assert_eq!(content.livestream, deserialized.livestream);
+        assert_eq!(content.sourcerelationship, deserialized.sourcerelationship);
+        assert_eq!(content.len, deserialized.len);
+        assert_eq!(content.language, deserialized.language);
+        assert_eq!(content.langb, deserialized.langb);
+        assert_eq!(content.embeddable, deserialized.embeddable);
+    }
 }

@@ -280,4 +280,150 @@ mod tests {
 
         assert_eq!(response.ext, Some(ext_value));
     }
+
+    // === Spec-Driven Hardening Tests ===
+
+    #[test]
+    fn test_bid_response_nbr_field() {
+        // Spec: Section 4.2.1
+        // NoBidReason codes: 0=Unknown, 1=Technical Error, 2=Invalid Request,
+        // 3=Known Web Spider, 4=Suspected Non-Human, 5=Cloud/Data Center/Proxy IP,
+        // 6=Unsupported Device, 7=Blocked Publisher/Site, 8=Unmatched User, 9=Daily Reader Cap Met,
+        // 10=Daily Domain Cap Met
+        let nbr_values = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+        for &nbr_code in &nbr_values {
+            let response = BidResponse::builder()
+                .id(format!("req-nbr-{}", nbr_code))
+                .nbr(Some(nbr_code))
+                .build()
+                .unwrap();
+
+            assert_eq!(response.nbr, Some(nbr_code));
+
+            // Verify serde round-trip
+            let json = serde_json::to_string(&response).unwrap();
+            let deserialized: BidResponse = serde_json::from_str(&json).unwrap();
+            assert_eq!(deserialized.nbr, Some(nbr_code));
+        }
+
+        // Exchange-specific codes (>= 10000) are also valid
+        let response = BidResponse::builder()
+            .id("req-nbr-custom".to_string())
+            .nbr(Some(10001))
+            .build()
+            .unwrap();
+        assert_eq!(response.nbr, Some(10001));
+    }
+
+    #[test]
+    fn test_bid_response_roundtrip_all_fields() {
+        // Spec: Section 4.2.1
+        let bid = Bid::builder()
+            .id("bid1".to_string())
+            .impid("imp1".to_string())
+            .price(3.50)
+            .adm(Some("<div>ad</div>".to_string()))
+            .build()
+            .unwrap();
+
+        let seatbid = SeatBid::builder()
+            .bid(vec![bid])
+            .seat(Some("seat-xyz".to_string()))
+            .group(1)
+            .build()
+            .unwrap();
+
+        let response = BidResponse::builder()
+            .id("req-full".to_string())
+            .seatbid(Some(vec![seatbid]))
+            .bidid(Some("bidder-resp-123".to_string()))
+            .cur("EUR".to_string())
+            .customdata(Some("base85data".to_string()))
+            .nbr(Some(0))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&response).unwrap();
+        let deserialized: BidResponse = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(deserialized.id, "req-full");
+        assert_eq!(deserialized.seatbid.as_ref().unwrap().len(), 1);
+        assert_eq!(
+            deserialized.seatbid.as_ref().unwrap()[0].seat,
+            Some("seat-xyz".to_string())
+        );
+        assert_eq!(deserialized.bidid, Some("bidder-resp-123".to_string()));
+        assert_eq!(deserialized.cur, "EUR");
+        assert_eq!(deserialized.customdata, Some("base85data".to_string()));
+        assert_eq!(deserialized.nbr, Some(0));
+    }
+
+    #[test]
+    fn test_bid_response_bidid_field() {
+        // Spec: Section 4.2.1
+        // bidid: Bidder-generated response ID for logging/tracking
+        let response = BidResponse::builder()
+            .id("req-123".to_string())
+            .bidid(Some("bidder-unique-456".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(response.bidid, Some("bidder-unique-456".to_string()));
+
+        // Verify it serializes when present
+        let json = serde_json::to_string(&response).unwrap();
+        assert!(json.contains("\"bidid\":\"bidder-unique-456\""));
+
+        // Verify it's omitted when None
+        let response_no_bidid = BidResponse::builder()
+            .id("req-789".to_string())
+            .build()
+            .unwrap();
+        let json_no_bidid = serde_json::to_string(&response_no_bidid).unwrap();
+        assert!(!json_no_bidid.contains("bidid"));
+    }
+
+    #[test]
+    fn test_bid_response_empty_seatbid_vs_none() {
+        // Spec: Section 4.2.1
+        // Both empty seatbid array and omitted seatbid indicate a no-bid,
+        // but they are structurally different.
+
+        // Case 1: seatbid = None (omitted entirely)
+        let response_none = BidResponse::builder()
+            .id("req-none".to_string())
+            .build()
+            .unwrap();
+        assert!(response_none.seatbid.is_none());
+
+        let json_none = serde_json::to_string(&response_none).unwrap();
+        assert!(
+            !json_none.contains("seatbid"),
+            "None seatbid should be omitted from JSON"
+        );
+
+        // Case 2: seatbid = Some(vec![]) (empty array)
+        let response_empty = BidResponse::builder()
+            .id("req-empty".to_string())
+            .seatbid(Some(vec![]))
+            .build()
+            .unwrap();
+        assert!(response_empty.seatbid.is_some());
+        assert_eq!(response_empty.seatbid.as_ref().unwrap().len(), 0);
+
+        let json_empty = serde_json::to_string(&response_empty).unwrap();
+        assert!(
+            json_empty.contains("\"seatbid\":[]"),
+            "Empty seatbid array should serialize as []"
+        );
+
+        // Verify deserialization distinguishes the two cases
+        let deser_none: BidResponse = serde_json::from_str(&json_none).unwrap();
+        assert!(deser_none.seatbid.is_none());
+
+        let deser_empty: BidResponse = serde_json::from_str(&json_empty).unwrap();
+        assert!(deser_empty.seatbid.is_some());
+        assert_eq!(deser_empty.seatbid.unwrap().len(), 0);
+    }
 }

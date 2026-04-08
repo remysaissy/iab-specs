@@ -474,4 +474,164 @@ mod tests {
         // the code won't compile without the feature flag
         assert_eq!(device.ua, Some("Mozilla/5.0".to_string()));
     }
+
+    #[test]
+    fn test_device_lmt_flag() {
+        // Spec: Section 3.2.18
+        let device_unrestricted = Device::builder().lmt(Some(0)).build().unwrap();
+        assert_eq!(device_unrestricted.lmt, Some(0));
+
+        let device_limited = Device::builder().lmt(Some(1)).build().unwrap();
+        assert_eq!(device_limited.lmt, Some(1));
+
+        let device_default = Device::builder().build().unwrap();
+        assert_eq!(device_default.lmt, None);
+    }
+
+    #[test]
+    fn test_device_hardware_fields() {
+        // Spec: Section 3.2.18
+        let device = Device::builder()
+            .hwv(Some("5S".to_string()))
+            .make(Some("Apple".to_string()))
+            .model(Some("iPhone".to_string()))
+            .os(Some("iOS".to_string()))
+            .osv(Some("14.7.1".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(device.hwv, Some("5S".to_string()));
+        assert_eq!(device.make, Some("Apple".to_string()));
+        assert_eq!(device.model, Some("iPhone".to_string()));
+        assert_eq!(device.os, Some("iOS".to_string()));
+        assert_eq!(device.osv, Some("14.7.1".to_string()));
+    }
+
+    #[test]
+    fn test_device_language_fields() {
+        // Spec: Section 3.2.18
+        let device = Device::builder()
+            .language(Some("en".to_string()))
+            .langb(Some("en-US".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(device.language, Some("en".to_string()));
+        assert_eq!(device.langb, Some("en-US".to_string()));
+    }
+
+    #[test]
+    fn test_device_carrier_field() {
+        // Spec: Section 3.2.18
+        let device = Device::builder()
+            .carrier(Some("VERIZON".to_string()))
+            .mccmnc(Some("310-005".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(device.carrier, Some("VERIZON".to_string()));
+        assert_eq!(device.mccmnc, Some("310-005".to_string()));
+    }
+
+    #[test]
+    fn test_device_pxratio_field() {
+        // Spec: Section 3.2.18
+        let device = Device::builder().pxratio(Some(3.0)).build().unwrap();
+
+        assert_eq!(device.pxratio, Some(3.0));
+    }
+
+    #[test]
+    fn test_device_ext_field() {
+        // Spec: Section 3.2.18
+        let device = DeviceBuilder::<serde_json::Value>::default()
+            .ua(Some("Mozilla/5.0".to_string()))
+            .ext(Some(Box::new(serde_json::json!({
+                "atts": 3
+            }))))
+            .build()
+            .unwrap();
+
+        assert!(device.ext.is_some());
+        assert_eq!(device.ext.as_ref().unwrap()["atts"], 3);
+    }
+
+    #[test]
+    fn test_device_roundtrip_all_fields() {
+        // Spec: Section 3.2.18
+        let geo = Geo::builder()
+            .country(Some("USA".to_string()))
+            .build()
+            .unwrap();
+
+        let device = Device::builder()
+            .ua(Some("Mozilla/5.0".to_string()))
+            .geo(Some(geo))
+            .dnt(Some(0))
+            .lmt(Some(0))
+            .ip(Some("192.168.1.1".to_string()))
+            .ipv6(Some("2001:0db8::1".to_string()))
+            .devicetype(Some(4))
+            .make(Some("Apple".to_string()))
+            .model(Some("iPhone".to_string()))
+            .os(Some("iOS".to_string()))
+            .osv(Some("15.0".to_string()))
+            .hwv(Some("13 Pro".to_string()))
+            .h(Some(2532))
+            .w(Some(1170))
+            .ppi(Some(460))
+            .pxratio(Some(3.0))
+            .js(Some(1))
+            .geofetch(Some(1))
+            .flashver(Some("0".to_string()))
+            .language(Some("en".to_string()))
+            .langb(Some("en-US".to_string()))
+            .carrier(Some("AT&T".to_string()))
+            .mccmnc(Some("310-410".to_string()))
+            .connectiontype(Some(2))
+            .ifa(Some("AEBE52E7-03EE-455A-B3C4-E57283966239".to_string()))
+            .didsha1(Some("abc123sha1".to_string()))
+            .didmd5(Some("abc123md5".to_string()))
+            .dpidsha1(Some("dpid123sha1".to_string()))
+            .dpidmd5(Some("dpid123md5".to_string()))
+            .macsha1(Some("mac123sha1".to_string()))
+            .macmd5(Some("mac123md5".to_string()))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&device).unwrap();
+        let deserialized: Device = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(device.ua, deserialized.ua);
+        assert_eq!(device.dnt, deserialized.dnt);
+        assert_eq!(device.lmt, deserialized.lmt);
+        assert_eq!(device.ip, deserialized.ip);
+        assert_eq!(device.ipv6, deserialized.ipv6);
+        assert_eq!(device.devicetype, deserialized.devicetype);
+        assert_eq!(device.make, deserialized.make);
+        assert_eq!(device.model, deserialized.model);
+        assert_eq!(device.os, deserialized.os);
+        assert_eq!(device.osv, deserialized.osv);
+        assert_eq!(device.hwv, deserialized.hwv);
+        assert_eq!(device.h, deserialized.h);
+        assert_eq!(device.w, deserialized.w);
+        assert_eq!(device.ppi, deserialized.ppi);
+        assert_eq!(device.pxratio, deserialized.pxratio);
+        assert_eq!(device.js, deserialized.js);
+        assert_eq!(device.geofetch, deserialized.geofetch);
+        assert_eq!(device.flashver, deserialized.flashver);
+        assert_eq!(device.language, deserialized.language);
+        assert_eq!(device.langb, deserialized.langb);
+        assert_eq!(device.carrier, deserialized.carrier);
+        assert_eq!(device.mccmnc, deserialized.mccmnc);
+        assert_eq!(device.connectiontype, deserialized.connectiontype);
+        assert_eq!(device.ifa, deserialized.ifa);
+        assert_eq!(device.didsha1, deserialized.didsha1);
+        assert_eq!(device.didmd5, deserialized.didmd5);
+        assert_eq!(device.dpidsha1, deserialized.dpidsha1);
+        assert_eq!(device.dpidmd5, deserialized.dpidmd5);
+        assert_eq!(device.macsha1, deserialized.macsha1);
+        assert_eq!(device.macmd5, deserialized.macmd5);
+        assert_eq!(device.geo, deserialized.geo);
+    }
 }

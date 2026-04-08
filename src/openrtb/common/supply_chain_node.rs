@@ -167,6 +167,7 @@ mod tests {
 
     #[test]
     fn test_supply_chain_node_hp_values() {
+        // Spec: SupplyChain
         let json_hp_0 = r#"{"asi":"ex.com","sid":"123","hp":0}"#;
         let node0: SupplyChainNode = serde_json::from_str(json_hp_0).unwrap();
         assert_eq!(node0.hp, 0);
@@ -174,5 +175,128 @@ mod tests {
         let json_hp_1 = r#"{"asi":"ex.com","sid":"123","hp":1}"#;
         let node1: SupplyChainNode = serde_json::from_str(json_hp_1).unwrap();
         assert_eq!(node1.hp, 1);
+    }
+
+    #[test]
+    fn test_supply_chain_node_asi_required() {
+        // Spec: SupplyChain - asi (advertising system domain) is required
+        let node = SupplyChainNode::builder()
+            .asi("publisher.example.com".to_string())
+            .sid("pub-123".to_string())
+            .build()
+            .unwrap();
+
+        assert_eq!(node.asi, "publisher.example.com");
+        assert!(!node.asi.is_empty());
+    }
+
+    #[test]
+    fn test_supply_chain_node_sid_required() {
+        // Spec: SupplyChain - sid (seller/reseller account ID) is required
+        let node = SupplyChainNode::builder()
+            .asi("exchange.com".to_string())
+            .sid("seller-account-456".to_string())
+            .build()
+            .unwrap();
+
+        assert_eq!(node.sid, "seller-account-456");
+        assert!(!node.sid.is_empty());
+    }
+
+    #[test]
+    fn test_supply_chain_node_rid_field() {
+        // Spec: SupplyChain - rid (OpenRTB RequestId) is optional
+        let node_with_rid = SupplyChainNode::builder()
+            .asi("exchange.com".to_string())
+            .sid("seller-123".to_string())
+            .rid(Some("req-abc-12345".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(node_with_rid.rid, Some("req-abc-12345".to_string()));
+
+        let node_without_rid = SupplyChainNode::builder()
+            .asi("exchange.com".to_string())
+            .sid("seller-123".to_string())
+            .build()
+            .unwrap();
+
+        assert_eq!(node_without_rid.rid, None);
+    }
+
+    #[test]
+    fn test_supply_chain_node_domain_field() {
+        // Spec: SupplyChain - domain (business domain name) is optional
+        let node_with_domain = SupplyChainNode::builder()
+            .asi("publisher.com".to_string())
+            .sid("pub-789".to_string())
+            .domain(Some("publisher.example.com".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(
+            node_with_domain.domain,
+            Some("publisher.example.com".to_string())
+        );
+
+        let node_without_domain = SupplyChainNode::builder()
+            .asi("publisher.com".to_string())
+            .sid("pub-789".to_string())
+            .build()
+            .unwrap();
+
+        assert_eq!(node_without_domain.domain, None);
+    }
+
+    #[test]
+    fn test_supply_chain_node_roundtrip_all_fields() {
+        // Spec: SupplyChain - Serde round-trip with all fields populated
+        let node_original = SupplyChainNode::builder()
+            .asi("exchange.example.com".to_string())
+            .sid("seller-account-123".to_string())
+            .hp(1)
+            .rid(Some("req-xyz-999".to_string()))
+            .name(Some("Example Exchange LLC".to_string()))
+            .domain(Some("exchange.example.com".to_string()))
+            .build()
+            .unwrap();
+
+        // Serialize to JSON
+        let json = serde_json::to_string(&node_original).unwrap();
+
+        // Deserialize back
+        let node_deserialized: SupplyChainNode = serde_json::from_str(&json).unwrap();
+
+        // Verify all fields match
+        assert_eq!(node_deserialized.asi, node_original.asi);
+        assert_eq!(node_deserialized.sid, node_original.sid);
+        assert_eq!(node_deserialized.hp, node_original.hp);
+        assert_eq!(node_deserialized.rid, node_original.rid);
+        assert_eq!(node_deserialized.name, node_original.name);
+        assert_eq!(node_deserialized.domain, node_original.domain);
+    }
+
+    #[test]
+    fn test_supply_chain_node_name_field() {
+        // Spec: SupplyChain - name (company legal entity name) is optional
+        let node_with_name = SupplyChainNode::builder()
+            .asi("exchange.com".to_string())
+            .sid("exch-456".to_string())
+            .name(Some("Global Exchange Corporation".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(
+            node_with_name.name,
+            Some("Global Exchange Corporation".to_string())
+        );
+
+        let node_without_name = SupplyChainNode::builder()
+            .asi("exchange.com".to_string())
+            .sid("exch-456".to_string())
+            .build()
+            .unwrap();
+
+        assert_eq!(node_without_name.name, None);
     }
 }

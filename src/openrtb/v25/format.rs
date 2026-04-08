@@ -102,4 +102,72 @@ mod tests {
         assert_eq!(format.hratio, Some(9));
         assert_eq!(format.wmin, Some(300));
     }
+
+    #[test]
+    fn test_format_wratio_hratio_fields() {
+        // Spec: Section 3.2.10
+        let format = Format::builder()
+            .wratio(Some(4))
+            .hratio(Some(3))
+            .build()
+            .unwrap();
+
+        assert_eq!(format.wratio, Some(4));
+        assert_eq!(format.hratio, Some(3));
+        assert_eq!(format.w, None);
+        assert_eq!(format.h, None);
+    }
+
+    #[test]
+    fn test_format_wmin_field() {
+        // Spec: Section 3.2.10
+        let format = Format::builder()
+            .wratio(Some(16))
+            .hratio(Some(9))
+            .wmin(Some(640))
+            .build()
+            .unwrap();
+
+        assert_eq!(format.wmin, Some(640));
+    }
+
+    #[test]
+    fn test_format_ext_with_serde_json_value() {
+        // Spec: Section 3.2.10
+        let ext = serde_json::json!({"custom_size": "billboard"});
+
+        let format = FormatBuilder::<serde_json::Value>::default()
+            .w(Some(970))
+            .h(Some(250))
+            .ext(Some(Box::new(ext)))
+            .build()
+            .unwrap();
+
+        assert!(format.ext.is_some());
+        assert_eq!(format.ext.as_ref().unwrap()["custom_size"], "billboard");
+    }
+
+    #[test]
+    fn test_format_serde_roundtrip_all_fields() {
+        // Spec: Section 3.2.10
+        let format = FormatBuilder::<serde_json::Value>::default()
+            .w(Some(300))
+            .h(Some(250))
+            .wratio(Some(6))
+            .hratio(Some(5))
+            .wmin(Some(120))
+            .ext(Some(Box::new(serde_json::json!({"note": "test"}))))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&format).unwrap();
+        let deserialized: Format<serde_json::Value> = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(format.w, deserialized.w);
+        assert_eq!(format.h, deserialized.h);
+        assert_eq!(format.wratio, deserialized.wratio);
+        assert_eq!(format.hratio, deserialized.hratio);
+        assert_eq!(format.wmin, deserialized.wmin);
+        assert_eq!(format.ext, deserialized.ext);
+    }
 }

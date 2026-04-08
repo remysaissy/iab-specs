@@ -141,4 +141,67 @@ mod tests {
         assert_eq!(publisher.id, Some("pub123".to_string()));
         assert_eq!(publisher.name, Some("Publisher Inc".to_string()));
     }
+
+    #[test]
+    fn test_publisher_domain_field() {
+        // Spec: Section 3.2.15
+        let publisher = Publisher::builder()
+            .id(Some("pub1".to_string()))
+            .domain(Some("news-site.com".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(publisher.domain, Some("news-site.com".to_string()));
+    }
+
+    #[test]
+    fn test_publisher_name_field() {
+        // Spec: Section 3.2.15
+        let publisher = Publisher::builder()
+            .name(Some("Acme Media Group".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(publisher.name, Some("Acme Media Group".to_string()));
+    }
+
+    #[test]
+    fn test_publisher_ext_with_serde_json_value() {
+        // Spec: Section 3.2.15
+        let ext = serde_json::json!({"tier": "premium", "rep_score": 95});
+
+        let publisher = PublisherBuilder::<serde_json::Value>::default()
+            .id(Some("pub1".to_string()))
+            .ext(Some(Box::new(ext)))
+            .build()
+            .unwrap();
+
+        assert!(publisher.ext.is_some());
+        assert_eq!(publisher.ext.as_ref().unwrap()["tier"], "premium");
+        assert_eq!(publisher.ext.as_ref().unwrap()["rep_score"], 95);
+    }
+
+    #[test]
+    fn test_publisher_serde_roundtrip_all_fields() {
+        // Spec: Section 3.2.15
+        let publisher = PublisherBuilder::<serde_json::Value>::default()
+            .id(Some("pub-full".to_string()))
+            .name(Some("Full Publisher".to_string()))
+            .cattax(1)
+            .cat(Some(vec!["IAB1".to_string(), "IAB3".to_string()]))
+            .domain(Some("fullpub.com".to_string()))
+            .ext(Some(Box::new(serde_json::json!({"verified": true}))))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&publisher).unwrap();
+        let deserialized: Publisher<serde_json::Value> = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(publisher.id, deserialized.id);
+        assert_eq!(publisher.name, deserialized.name);
+        assert_eq!(publisher.cattax, deserialized.cattax);
+        assert_eq!(publisher.cat, deserialized.cat);
+        assert_eq!(publisher.domain, deserialized.domain);
+        assert_eq!(publisher.ext, deserialized.ext);
+    }
 }

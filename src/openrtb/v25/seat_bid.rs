@@ -149,4 +149,84 @@ mod tests {
 
         assert_eq!(seat_bid.ext, Some(ext_value));
     }
+
+    #[test]
+    fn test_seat_bid_group_flag_individual() {
+        // Spec: Section 4.2.2
+        let bid = Bid::builder()
+            .id("bid1".to_string())
+            .impid("imp1".to_string())
+            .price(1.0)
+            .build()
+            .unwrap();
+
+        let seat_bid = SeatBid::builder().bid(vec![bid]).group(0).build().unwrap();
+
+        assert_eq!(seat_bid.group, 0);
+    }
+
+    #[test]
+    fn test_seat_bid_group_flag_all_or_none() {
+        // Spec: Section 4.2.2
+        let bid1 = Bid::builder()
+            .id("bid1".to_string())
+            .impid("imp1".to_string())
+            .price(1.0)
+            .build()
+            .unwrap();
+
+        let bid2 = Bid::builder()
+            .id("bid2".to_string())
+            .impid("imp2".to_string())
+            .price(2.0)
+            .build()
+            .unwrap();
+
+        let seat_bid = SeatBid::builder()
+            .bid(vec![bid1, bid2])
+            .group(1)
+            .build()
+            .unwrap();
+
+        assert_eq!(seat_bid.group, 1);
+        assert_eq!(seat_bid.bid.len(), 2);
+    }
+
+    #[test]
+    fn test_seat_bid_empty_bid_array() {
+        // Spec: Section 4.2.2
+        let seat_bid = SeatBid::builder().bid(vec![]).build().unwrap();
+
+        assert!(seat_bid.bid.is_empty());
+    }
+
+    #[test]
+    fn test_seat_bid_serde_roundtrip_all_fields() {
+        // Spec: Section 4.2.2
+        let bid = BidBuilder::<serde_json::Value>::default()
+            .id("bid1".to_string())
+            .impid("imp1".to_string())
+            .price(3.50)
+            .adm(Some("<ad/>".to_string()))
+            .build()
+            .unwrap();
+
+        let seat_bid = SeatBidBuilder::<serde_json::Value>::default()
+            .bid(vec![bid])
+            .seat(Some("seat-abc".to_string()))
+            .group(1)
+            .ext(Some(Box::new(serde_json::json!({"dsp": "example"}))))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&seat_bid).unwrap();
+        let deserialized: SeatBid<serde_json::Value> = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(seat_bid.bid.len(), deserialized.bid.len());
+        assert_eq!(seat_bid.bid[0].id, deserialized.bid[0].id);
+        assert_eq!(seat_bid.bid[0].price, deserialized.bid[0].price);
+        assert_eq!(seat_bid.seat, deserialized.seat);
+        assert_eq!(seat_bid.group, deserialized.group);
+        assert_eq!(seat_bid.ext, deserialized.ext);
+    }
 }

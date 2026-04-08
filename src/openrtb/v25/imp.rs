@@ -461,4 +461,249 @@ mod tests {
         assert_eq!(imp.qty, Some(qty_bytes));
         assert_eq!(imp.refresh, Some(refresh_bytes));
     }
+
+    // === Spec-Driven Hardening Tests ===
+
+    #[test]
+    fn test_imp_with_audio() {
+        // Spec: Section 3.2.4
+        let imp = Imp::builder()
+            .id("imp-audio".to_string())
+            .audio(Some(
+                Audio::builder()
+                    .mimes(vec!["audio/mp3".to_string()])
+                    .build()
+                    .unwrap(),
+            ))
+            .build()
+            .unwrap();
+
+        assert_eq!(imp.id, "imp-audio");
+        assert!(imp.audio.is_some());
+        assert!(imp.banner.is_none());
+        assert!(imp.video.is_none());
+        assert!(imp.native.is_none());
+
+        let json = serde_json::to_string(&imp).unwrap();
+        assert!(json.contains("\"audio\""));
+        assert!(json.contains("\"audio/mp3\""));
+    }
+
+    #[test]
+    fn test_imp_with_native() {
+        // Spec: Section 3.2.4
+        let imp = Imp::builder()
+            .id("imp-native".to_string())
+            .native(Some(
+                Native::builder()
+                    .request("{\"ver\":\"1.1\",\"assets\":[]}".to_string())
+                    .build()
+                    .unwrap(),
+            ))
+            .build()
+            .unwrap();
+
+        assert_eq!(imp.id, "imp-native");
+        assert!(imp.native.is_some());
+        assert!(imp.banner.is_none());
+        assert!(imp.video.is_none());
+        assert!(imp.audio.is_none());
+
+        let json = serde_json::to_string(&imp).unwrap();
+        assert!(json.contains("\"native\""));
+    }
+
+    #[test]
+    fn test_imp_with_multiple_media_types() {
+        // Spec: Section 3.2.4
+        // An impression can offer multiple media types simultaneously
+        let banner = Banner::builder().w(Some(300)).h(Some(250)).build().unwrap();
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .build()
+            .unwrap();
+
+        let imp = Imp::builder()
+            .id("imp-multi".to_string())
+            .banner(Some(banner))
+            .video(Some(video))
+            .build()
+            .unwrap();
+
+        assert!(imp.banner.is_some());
+        assert!(imp.video.is_some());
+        assert!(imp.audio.is_none());
+        assert!(imp.native.is_none());
+
+        // Verify both serialize
+        let json = serde_json::to_string(&imp).unwrap();
+        assert!(json.contains("\"banner\""));
+        assert!(json.contains("\"video\""));
+    }
+
+    #[test]
+    fn test_imp_instl_flag() {
+        // Spec: Section 3.2.4
+        // instl: 0 = not interstitial (default), 1 = interstitial/full-screen
+
+        // Default is 0
+        let imp_default = Imp::builder().id("imp1".to_string()).build().unwrap();
+        assert_eq!(imp_default.instl, 0);
+
+        // Explicitly set to 1
+        let imp_interstitial = Imp::builder()
+            .id("imp2".to_string())
+            .instl(1)
+            .build()
+            .unwrap();
+        assert_eq!(imp_interstitial.instl, 1);
+
+        // Round-trip preserves instl=1
+        let json = serde_json::to_string(&imp_interstitial).unwrap();
+        let deserialized: Imp = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.instl, 1);
+    }
+
+    #[test]
+    fn test_imp_tagid() {
+        // Spec: Section 3.2.4
+        // tagid: Identifier for specific ad placement or ad tag
+        let imp = Imp::builder()
+            .id("imp1".to_string())
+            .tagid(Some("ad-slot-top-banner".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(imp.tagid, Some("ad-slot-top-banner".to_string()));
+
+        // Verify serialization
+        let json = serde_json::to_string(&imp).unwrap();
+        assert!(json.contains("\"tagid\":\"ad-slot-top-banner\""));
+
+        // Verify omitted when None
+        let imp_no_tagid = Imp::builder().id("imp2".to_string()).build().unwrap();
+        let json_no_tagid = serde_json::to_string(&imp_no_tagid).unwrap();
+        assert!(!json_no_tagid.contains("tagid"));
+    }
+
+    #[test]
+    fn test_imp_secure_flag() {
+        // Spec: Section 3.2.4
+        // secure: 0 = non-secure, 1 = secure (HTTPS)
+
+        // secure=0: non-secure
+        let imp_nonsecure = Imp::builder()
+            .id("imp1".to_string())
+            .secure(Some(0))
+            .build()
+            .unwrap();
+        assert_eq!(imp_nonsecure.secure, Some(0));
+
+        // secure=1: requires HTTPS
+        let imp_secure = Imp::builder()
+            .id("imp2".to_string())
+            .secure(Some(1))
+            .build()
+            .unwrap();
+        assert_eq!(imp_secure.secure, Some(1));
+
+        // Round-trip
+        let json = serde_json::to_string(&imp_secure).unwrap();
+        let deserialized: Imp = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.secure, Some(1));
+
+        // Default is None (omitted)
+        let imp_default = Imp::builder().id("imp3".to_string()).build().unwrap();
+        assert!(imp_default.secure.is_none());
+    }
+
+    #[test]
+    fn test_imp_ext_field() {
+        // Spec: Section 3.2.4
+        let ext_value = Box::new(serde_json::json!({
+            "bidder_key": "value123",
+            "floor_rule": "premium"
+        }));
+
+        let imp = ImpBuilder::<serde_json::Value>::default()
+            .id("imp-ext".to_string())
+            .ext(Some(ext_value.clone()))
+            .build()
+            .unwrap();
+
+        assert_eq!(imp.ext, Some(ext_value.clone()));
+
+        let json = serde_json::to_string(&imp).unwrap();
+        assert!(json.contains("\"bidder_key\":\"value123\""));
+        assert!(json.contains("\"floor_rule\":\"premium\""));
+
+        let deserialized: Imp<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.ext, Some(ext_value));
+    }
+
+    #[test]
+    fn test_imp_roundtrip_all_fields() {
+        // Spec: Section 3.2.4
+        let banner = Banner::builder().w(Some(728)).h(Some(90)).build().unwrap();
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .build()
+            .unwrap();
+        let audio = Audio::builder()
+            .mimes(vec!["audio/mp3".to_string()])
+            .build()
+            .unwrap();
+        let native = Native::builder()
+            .request("{\"assets\":[]}".to_string())
+            .build()
+            .unwrap();
+
+        let imp = Imp::builder()
+            .id("imp-all".to_string())
+            .banner(Some(banner))
+            .video(Some(video))
+            .audio(Some(audio))
+            .native(Some(native))
+            .displaymanager(Some("MediationSDK".to_string()))
+            .displaymanagerver(Some("3.2.1".to_string()))
+            .instl(1)
+            .tagid(Some("tag-abc".to_string()))
+            .bidfloor(2.50)
+            .bidfloorcur("EUR".to_string())
+            .clickbrowser(Some(1))
+            .secure(Some(1))
+            .iframebuster(Some(vec!["buster1.js".to_string()]))
+            .rwdd(1)
+            .ssai(1)
+            .exp(Some(300))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&imp).unwrap();
+        let deserialized: Imp = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(deserialized.id, "imp-all");
+        assert!(deserialized.banner.is_some());
+        assert!(deserialized.video.is_some());
+        assert!(deserialized.audio.is_some());
+        assert!(deserialized.native.is_some());
+        assert_eq!(
+            deserialized.displaymanager,
+            Some("MediationSDK".to_string())
+        );
+        assert_eq!(deserialized.displaymanagerver, Some("3.2.1".to_string()));
+        assert_eq!(deserialized.instl, 1);
+        assert_eq!(deserialized.tagid, Some("tag-abc".to_string()));
+        assert_eq!(deserialized.bidfloor, 2.50);
+        assert_eq!(deserialized.bidfloorcur, "EUR");
+        assert_eq!(deserialized.clickbrowser, Some(1));
+        assert_eq!(deserialized.secure, Some(1));
+        assert_eq!(
+            deserialized.iframebuster,
+            Some(vec!["buster1.js".to_string()])
+        );
+        assert_eq!(deserialized.rwdd, 1);
+        assert_eq!(deserialized.ssai, 1);
+        assert_eq!(deserialized.exp, Some(300));
+    }
 }

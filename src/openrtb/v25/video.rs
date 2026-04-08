@@ -684,4 +684,185 @@ mod tests {
         assert_eq!(video.mimes, vec!["video/mp4"]);
         assert_eq!(video.minduration, 15);
     }
+
+    // === Spec-Driven Hardening Tests ===
+
+    #[test]
+    fn test_video_protocols_array() {
+        // Spec: Section 3.2.7
+        // Protocol enum: 1=VAST1, 2=VAST2, 3=VAST3, 5=VAST2Wrapper, 6=VAST3Wrapper, 7=VAST4, 8=VAST4Wrapper
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .protocols(Some(vec![2, 3, 5, 6, 7, 8]))
+            .build()
+            .unwrap();
+
+        let protocols = video.protocols.as_ref().unwrap();
+        assert_eq!(protocols.len(), 6);
+        assert_eq!(protocols, &vec![2, 3, 5, 6, 7, 8]);
+
+        let json = serde_json::to_string(&video).unwrap();
+        let deserialized: Video = serde_json::from_str(&json).unwrap();
+        assert_eq!(video.protocols, deserialized.protocols);
+    }
+
+    #[test]
+    fn test_video_companionad() {
+        // Spec: Section 3.2.7
+        let companion = Banner::builder()
+            .w(Some(300))
+            .h(Some(250))
+            .id(Some("companion-1".to_string()))
+            .build()
+            .unwrap();
+
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .companionad(Some(vec![companion]))
+            .build()
+            .unwrap();
+
+        let companions = video.companionad.as_ref().unwrap();
+        assert_eq!(companions.len(), 1);
+        assert_eq!(companions[0].w, Some(300));
+        assert_eq!(companions[0].h, Some(250));
+        assert_eq!(companions[0].id, Some("companion-1".to_string()));
+
+        let json = serde_json::to_string(&video).unwrap();
+        let deserialized: Video = serde_json::from_str(&json).unwrap();
+        assert_eq!(video.companionad, deserialized.companionad);
+    }
+
+    #[test]
+    fn test_video_companiontype_field() {
+        // Spec: Section 3.2.7
+        // CompanionType: 1=Static, 2=HTML, 3=IframeResource
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .companiontype(Some(vec![1, 2, 3]))
+            .build()
+            .unwrap();
+
+        assert_eq!(video.companiontype, Some(vec![1, 2, 3]));
+
+        let json = serde_json::to_string(&video).unwrap();
+        assert!(json.contains("\"companiontype\":[1,2,3]"));
+    }
+
+    #[test]
+    fn test_video_linearity_field() {
+        // Spec: Section 3.2.7
+        // Linearity: 1=Linear (in-stream), 2=NonLinear (overlay)
+        let video_linear = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .linearity(Some(1))
+            .build()
+            .unwrap();
+        assert_eq!(video_linear.linearity, Some(1));
+
+        let video_nonlinear = Video::builder()
+            .mimes(vec!["video/mp4".to_string()])
+            .linearity(Some(2))
+            .build()
+            .unwrap();
+        assert_eq!(video_nonlinear.linearity, Some(2));
+
+        let json = serde_json::to_string(&video_linear).unwrap();
+        assert!(json.contains("\"linearity\":1"));
+    }
+
+    #[test]
+    fn test_video_ext_field() {
+        // Spec: Section 3.2.7
+        let ext = serde_json::json!({"skippable": true, "player_type": "html5"});
+        let video = VideoBuilder::<serde_json::Value>::default()
+            .mimes(vec!["video/mp4".to_string()])
+            .ext(Some(Box::new(ext.clone())))
+            .build()
+            .unwrap();
+
+        assert_eq!(*video.ext.as_ref().unwrap().as_ref(), ext);
+
+        let json = serde_json::to_string(&video).unwrap();
+        let deserialized: Video<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(video, deserialized);
+    }
+
+    #[test]
+    fn test_video_roundtrip_all_fields() {
+        // Spec: Section 3.2.7
+        let video = Video::builder()
+            .mimes(vec!["video/mp4".to_string(), "video/webm".to_string()])
+            .minduration(5)
+            .maxduration(Some(30))
+            .startdelay(Some(0))
+            .maxseq(Some(3))
+            .poddur(Some(120))
+            .protocols(Some(vec![2, 3, 7]))
+            .w(Some(640))
+            .h(Some(480))
+            .podid(Some("pod-1".to_string()))
+            .podseq(1)
+            .rqddurs(Some(vec![15, 30]))
+            .plcmt(Some(1))
+            .linearity(Some(1))
+            .skip(Some(1))
+            .skipmin(5)
+            .skipafter(10)
+            .slotinpod(1)
+            .mincpmpersec(Some(0.5))
+            .battr(Some(vec![1, 2]))
+            .maxextended(Some(15))
+            .minbitrate(Some(300))
+            .maxbitrate(Some(1500))
+            .boxingallowed(1)
+            .playbackmethod(Some(vec![1, 2]))
+            .playbackend(Some(1))
+            .delivery(Some(vec![1, 2]))
+            .pos(Some(1))
+            .companionad(Some(vec![
+                Banner::builder().w(Some(300)).h(Some(250)).build().unwrap(),
+            ]))
+            .api(Some(vec![1, 2]))
+            .companiontype(Some(vec![1, 2]))
+            .poddedupe(Some(vec![1]))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&video).unwrap();
+        let deserialized: Video = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(video.mimes, deserialized.mimes);
+        assert_eq!(video.minduration, deserialized.minduration);
+        assert_eq!(video.maxduration, deserialized.maxduration);
+        assert_eq!(video.startdelay, deserialized.startdelay);
+        assert_eq!(video.maxseq, deserialized.maxseq);
+        assert_eq!(video.poddur, deserialized.poddur);
+        assert_eq!(video.protocols, deserialized.protocols);
+        assert_eq!(video.w, deserialized.w);
+        assert_eq!(video.h, deserialized.h);
+        assert_eq!(video.podid, deserialized.podid);
+        assert_eq!(video.podseq, deserialized.podseq);
+        assert_eq!(video.rqddurs, deserialized.rqddurs);
+        assert_eq!(video.plcmt, deserialized.plcmt);
+        assert_eq!(video.linearity, deserialized.linearity);
+        assert_eq!(video.skip, deserialized.skip);
+        assert_eq!(video.skipmin, deserialized.skipmin);
+        assert_eq!(video.skipafter, deserialized.skipafter);
+        assert_eq!(video.slotinpod, deserialized.slotinpod);
+        assert_eq!(video.battr, deserialized.battr);
+        assert_eq!(video.maxextended, deserialized.maxextended);
+        assert_eq!(video.minbitrate, deserialized.minbitrate);
+        assert_eq!(video.maxbitrate, deserialized.maxbitrate);
+        assert_eq!(video.boxingallowed, deserialized.boxingallowed);
+        assert_eq!(video.playbackmethod, deserialized.playbackmethod);
+        assert_eq!(video.playbackend, deserialized.playbackend);
+        assert_eq!(video.delivery, deserialized.delivery);
+        assert_eq!(video.pos, deserialized.pos);
+        assert_eq!(video.companionad, deserialized.companionad);
+        assert_eq!(video.api, deserialized.api);
+        assert_eq!(video.companiontype, deserialized.companiontype);
+        assert_eq!(video.poddedupe, deserialized.poddedupe);
+        assert_eq!(video, deserialized);
+    }
 }
