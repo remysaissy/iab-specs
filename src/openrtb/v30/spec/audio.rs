@@ -115,6 +115,7 @@ impl AudioPlacement {
 mod tests {
     use super::*;
 
+    // Spec: Object: AudioPlacement — verifies builder creates placement with duration and feed fields
     #[test]
     fn test_audio_placement_creation() {
         let audio = AudioPlacement::builder()
@@ -129,6 +130,7 @@ mod tests {
         assert_eq!(audio.feed, Some(1));
     }
 
+    // Spec: Object: AudioPlacement — verifies protocol field accepts array of audio/video protocol IDs
     #[test]
     fn test_audio_placement_with_protocols() {
         let audio = AudioPlacement::builder()
@@ -139,6 +141,7 @@ mod tests {
         assert_eq!(audio.protocol.as_ref().unwrap().len(), 4);
     }
 
+    // Spec: Object: AudioPlacement — verifies mime field accepts array of MIME type strings
     #[test]
     fn test_audio_placement_with_mime_types() {
         let audio = AudioPlacement::builder()
@@ -160,6 +163,7 @@ mod tests {
         );
     }
 
+    // Spec: Object: AudioPlacement — verifies feed=3 (podcast) with duration constraints
     #[test]
     fn test_audio_placement_podcast() {
         let audio = AudioPlacement::builder()
@@ -172,6 +176,7 @@ mod tests {
         assert_eq!(audio.feed, Some(3));
     }
 
+    // Spec: Object: AudioPlacement — verifies minbitr and maxbitr fields for bitrate constraints
     #[test]
     fn test_audio_placement_bitrate() {
         let audio = AudioPlacement::builder()
@@ -184,6 +189,7 @@ mod tests {
         assert_eq!(audio.maxbitr, Some(320));
     }
 
+    // Spec: Object: AudioPlacement — verifies stitched=1 indicates continuous audio stream
     #[test]
     fn test_audio_placement_stitched() {
         let audio = AudioPlacement::builder().stitched(Some(1)).build().unwrap();
@@ -191,6 +197,7 @@ mod tests {
         assert_eq!(audio.stitched, Some(1));
     }
 
+    // Spec: Object: AudioPlacement — verifies JSON serialization includes mindur, maxdur, and feed
     #[test]
     fn test_audio_placement_serialization() {
         let audio = AudioPlacement::builder()
@@ -206,6 +213,7 @@ mod tests {
         assert!(json.contains("\"feed\":1"));
     }
 
+    // Spec: Object: AudioPlacement — verifies JSON deserialization restores fields from JSON string
     #[test]
     fn test_audio_placement_deserialization() {
         let json = r#"{
@@ -220,6 +228,7 @@ mod tests {
         assert_eq!(audio.feed, Some(1));
     }
 
+    // Spec: Object: AudioPlacement — verifies nvol field for volume normalization mode
     #[test]
     fn test_audio_placement_volume_normalization() {
         let audio = AudioPlacement::builder()
@@ -228,5 +237,84 @@ mod tests {
             .unwrap();
 
         assert_eq!(audio.nvol, Some(3));
+    }
+
+    // Spec: Object: AudioPlacement — verifies default() produces all None fields
+    #[test]
+    fn test_audio_placement_default() {
+        let audio: AudioPlacement = AudioPlacement::default();
+        assert_eq!(audio.mindur, None);
+        assert_eq!(audio.maxdur, None);
+        assert_eq!(audio.maxext, None);
+        assert_eq!(audio.protocol, None);
+        assert_eq!(audio.feed, None);
+        assert_eq!(audio.nvol, None);
+        assert_eq!(audio.mime, None);
+        assert_eq!(audio.api, None);
+        assert_eq!(audio.delivery, None);
+        assert_eq!(audio.minbitr, None);
+        assert_eq!(audio.maxbitr, None);
+        assert_eq!(audio.stitched, None);
+        assert!(audio.ext.is_none());
+    }
+
+    // Spec: Object: AudioPlacement — verifies serialize then deserialize roundtrip preserves all fields
+    #[test]
+    fn test_audio_placement_roundtrip() {
+        let audio = AudioPlacement::builder()
+            .mindur(Some(5))
+            .maxdur(Some(30))
+            .feed(Some(1))
+            .nvol(Some(2))
+            .minbitr(Some(64))
+            .maxbitr(Some(320))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&audio).unwrap();
+        let deserialized: AudioPlacement = serde_json::from_str(&json).unwrap();
+        assert_eq!(audio, deserialized);
+    }
+
+    // Spec: Object: AudioPlacement — verifies api field accepts array of API framework IDs
+    #[test]
+    fn test_audio_placement_with_api() {
+        let audio = AudioPlacement::builder()
+            .api(Some(vec![1, 2, 5]))
+            .build()
+            .unwrap();
+
+        let api = audio.api.unwrap();
+        assert_eq!(api.len(), 3);
+        assert_eq!(api, vec![1, 2, 5]);
+    }
+
+    // Spec: Object: AudioPlacement — verifies delivery field accepts array of delivery method IDs
+    #[test]
+    fn test_audio_placement_with_delivery() {
+        let audio = AudioPlacement::builder()
+            .delivery(Some(vec![1, 2, 3]))
+            .build()
+            .unwrap();
+
+        let delivery = audio.delivery.unwrap();
+        assert_eq!(delivery.len(), 3);
+        assert_eq!(delivery, vec![1, 2, 3]);
+    }
+
+    // Spec: Object: AudioPlacement — verifies maxext field for maximum extended duration
+    #[test]
+    fn test_audio_placement_with_maxext() {
+        let audio = AudioPlacement::builder().maxext(Some(15)).build().unwrap();
+
+        assert_eq!(audio.maxext, Some(15));
+    }
+
+    // Spec: Object: AudioPlacement — verifies empty placement serializes to empty JSON object
+    #[test]
+    fn test_audio_placement_optional_fields_not_in_json() {
+        let audio: AudioPlacement = AudioPlacement::default();
+        let json = serde_json::to_string(&audio).unwrap();
+        assert_eq!(json, "{}");
     }
 }

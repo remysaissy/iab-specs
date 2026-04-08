@@ -105,6 +105,7 @@ impl Response {
 mod tests {
     use super::*;
 
+    // Spec: Object: Response — id, bidid, nbr, cur fields populated correctly
     #[test]
     fn test_response_creation() {
         let response = Response::builder()
@@ -122,6 +123,7 @@ mod tests {
         assert_eq!(response.cur, Some("USD".to_string()));
     }
 
+    // Spec: Object: Response — nbr no-bid reason code with empty seatbid
     #[test]
     fn test_response_no_bid() {
         let response = Response::builder()
@@ -135,6 +137,7 @@ mod tests {
         assert_eq!(response.seatbid.len(), 0);
     }
 
+    // Spec: Object: Response — serialization produces correct JSON keys for id, bidid, cur
     #[test]
     fn test_response_serialization() {
         let response = Response::builder()
@@ -150,6 +153,7 @@ mod tests {
         assert!(json.contains("\"cur\":\"USD\""));
     }
 
+    // Spec: Object: Response — deserialization from JSON restores id, bidid, nbr, cur fields
     #[test]
     fn test_response_deserialization() {
         let json = r#"{
@@ -167,6 +171,7 @@ mod tests {
         assert_eq!(response.cur, Some("USD".to_string()));
     }
 
+    // Spec: Object: Response — cdata custom passthrough data field
     #[test]
     fn test_response_with_cdata() {
         let response = Response::builder()
@@ -179,5 +184,99 @@ mod tests {
             response.cdata,
             Some("{\"tracking_id\":\"abc123\"}".to_string())
         );
+    }
+
+    // Spec: Object: Response — default() produces empty id, empty seatbid vec, all Options None
+    #[test]
+    fn test_response_default() {
+        let response: Response = Response::default();
+        assert_eq!(response.id, "");
+        assert!(response.seatbid.is_empty());
+        assert!(response.bidid.is_none());
+        assert!(response.nbr.is_none());
+        assert!(response.cur.is_none());
+        assert!(response.cdata.is_none());
+        assert!(response.ext.is_none());
+    }
+
+    // Spec: Object: Response — roundtrip serialize/deserialize preserves all fields
+    #[test]
+    fn test_response_roundtrip() {
+        let original = Response::builder()
+            .id("resp-rt".to_string())
+            .bidid(Some("bid-rt".to_string()))
+            .nbr(Some(0))
+            .cur(Some("EUR".to_string()))
+            .cdata(Some("custom".to_string()))
+            .seatbid(vec![])
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: Response = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    // Spec: Object: Response — skip_serializing_if omits None optional fields from JSON
+    #[test]
+    fn test_response_optional_fields_not_in_json() {
+        let response = Response::builder()
+            .id("resp-minimal".to_string())
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&response).unwrap();
+        assert!(json.contains("\"id\""));
+        assert!(!json.contains("\"bidid\""));
+        assert!(!json.contains("\"nbr\""));
+        assert!(!json.contains("\"cur\""));
+        assert!(!json.contains("\"cdata\""));
+        assert!(!json.contains("\"ext\""));
+    }
+
+    // Spec: Object: Response — seatbid with actual Bid objects
+    #[test]
+    fn test_response_with_seatbid() {
+        use crate::openrtb::v30::Bid;
+
+        let bid = Bid::builder()
+            .id("bid-1".to_string())
+            .item("item1".to_string())
+            .price(3.50)
+            .build()
+            .unwrap();
+
+        let seatbid = SeatBid::builder()
+            .seat(Some("seat-1".to_string()))
+            .bid(vec![bid])
+            .build()
+            .unwrap();
+
+        let response = Response::builder()
+            .id("resp-sb".to_string())
+            .seatbid(vec![seatbid])
+            .build()
+            .unwrap();
+
+        assert_eq!(response.seatbid.len(), 1);
+        assert_eq!(response.seatbid[0].bid.len(), 1);
+        assert_eq!(response.seatbid[0].bid[0].price, 3.50);
+    }
+
+    // Spec: Object: Response — various nbr no-bid reason codes serialize correctly
+    #[test]
+    fn test_response_all_nbr_codes() {
+        let codes = [0, 1, 2, 5, 10];
+        for code in codes {
+            let response = Response::builder()
+                .id(format!("resp-nbr-{}", code))
+                .nbr(Some(code))
+                .build()
+                .unwrap();
+
+            let json = serde_json::to_string(&response).unwrap();
+            let parsed: Response = serde_json::from_str(&json).unwrap();
+            assert_eq!(parsed.nbr, Some(code), "Failed for nbr code {}", code);
+        }
     }
 }

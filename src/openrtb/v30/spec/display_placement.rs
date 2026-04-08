@@ -113,6 +113,7 @@ impl DisplayPlacement {
 mod tests {
     use super::*;
 
+    // Spec: Object: DisplayPlacement — verifies builder creates placement with position, frame, and dimensions
     #[test]
     fn test_display_placement_creation() {
         let display = DisplayPlacement::builder()
@@ -129,6 +130,7 @@ mod tests {
         assert_eq!(display.h, Some(250));
     }
 
+    // Spec: Object: DisplayPlacement — verifies displayfmt field accepts array of DisplayFormat objects
     #[test]
     fn test_display_placement_with_formats() {
         let format1 = DisplayFormat::builder()
@@ -152,6 +154,7 @@ mod tests {
         assert_eq!(display.displayfmt.as_ref().unwrap().len(), 2);
     }
 
+    // Spec: Object: DisplayPlacement — verifies instl=1 for interstitial placement
     #[test]
     fn test_display_placement_interstitial() {
         let display = DisplayPlacement::builder()
@@ -164,6 +167,7 @@ mod tests {
         assert_eq!(display.instl, Some(1));
     }
 
+    // Spec: Object: DisplayPlacement — verifies JSON serialization includes pos and dimension fields
     #[test]
     fn test_display_placement_serialization() {
         let display = DisplayPlacement::builder()
@@ -178,6 +182,7 @@ mod tests {
         assert!(json.contains("\"w\":300"));
     }
 
+    // Spec: Object: DisplayPlacement — verifies JSON deserialization restores fields from JSON string
     #[test]
     fn test_display_placement_deserialization() {
         let json = r#"{
@@ -190,5 +195,70 @@ mod tests {
         let display: DisplayPlacement = serde_json::from_str(json).unwrap();
         assert_eq!(display.pos, Some(1));
         assert_eq!(display.w, Some(300));
+    }
+
+    // Spec: Object: DisplayPlacement — verifies default() produces all None fields
+    #[test]
+    fn test_display_placement_default() {
+        let display =
+            DisplayPlacement::<crate::DefaultExt, crate::DefaultExt, crate::DefaultExt>::default();
+        assert_eq!(display.pos, None);
+        assert_eq!(display.instl, None);
+        assert_eq!(display.topframe, None);
+        assert_eq!(display.w, None);
+        assert_eq!(display.h, None);
+        assert_eq!(display.unit, None);
+        assert_eq!(display.priv_, None);
+        assert_eq!(display.displayfmt, None);
+        assert!(display.nativefmt.is_none());
+        assert_eq!(display.event, None);
+        assert!(display.ext.is_none());
+    }
+
+    // Spec: Object: DisplayPlacement — verifies serialize then deserialize roundtrip preserves all fields
+    #[test]
+    fn test_display_placement_roundtrip() {
+        let display = DisplayPlacement::builder()
+            .pos(Some(1))
+            .instl(Some(0))
+            .topframe(Some(1))
+            .w(Some(300))
+            .h(Some(250))
+            .unit(Some(1))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&display).unwrap();
+        let deserialized: DisplayPlacement = serde_json::from_str(&json).unwrap();
+        assert_eq!(display, deserialized);
+    }
+
+    // Spec: Object: DisplayPlacement — verifies priv_ field serializes as "priv" in JSON via serde rename
+    #[test]
+    fn test_display_placement_with_priv() {
+        let display = DisplayPlacement::builder().priv_(Some(1)).build().unwrap();
+
+        assert_eq!(display.priv_, Some(1));
+
+        let json = serde_json::to_string(&display).unwrap();
+        assert!(json.contains("\"priv\":1"));
+        assert!(!json.contains("\"priv_\""));
+    }
+
+    // Spec: Object: DisplayPlacement — verifies unit field for measurement unit of w/h
+    #[test]
+    fn test_display_placement_with_unit() {
+        let display = DisplayPlacement::builder().unit(Some(2)).build().unwrap();
+
+        assert_eq!(display.unit, Some(2));
+    }
+
+    // Spec: Object: DisplayPlacement — verifies empty placement serializes to empty JSON object
+    #[test]
+    fn test_display_placement_optional_fields_not_in_json() {
+        let display =
+            DisplayPlacement::<crate::DefaultExt, crate::DefaultExt, crate::DefaultExt>::default();
+        let json = serde_json::to_string(&display).unwrap();
+        assert_eq!(json, "{}");
     }
 }

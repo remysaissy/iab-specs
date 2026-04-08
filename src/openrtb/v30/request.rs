@@ -123,6 +123,7 @@ impl Request {
 mod tests {
     use super::*;
 
+    // Spec: Object: Request — id, test, tmax, at fields and item vec populated correctly
     #[test]
     fn test_request_creation() {
         let item = Item::builder().id("item1".to_string()).build().unwrap();
@@ -143,6 +144,7 @@ mod tests {
         assert_eq!(request.item.len(), 1);
     }
 
+    // Spec: Object: Request — cur field accepts multiple ISO-4217 currency codes
     #[test]
     fn test_request_with_currencies() {
         let request = Request::builder()
@@ -158,6 +160,7 @@ mod tests {
         assert!(currencies.contains(&"EUR".to_string()));
     }
 
+    // Spec: Object: Request — serialization produces correct JSON keys for id, test, tmax
     #[test]
     fn test_request_serialization() {
         let request = Request::builder()
@@ -173,6 +176,7 @@ mod tests {
         assert!(json.contains("\"tmax\":100"));
     }
 
+    // Spec: Object: Request — deserialization from JSON restores id, test, tmax, at fields
     #[test]
     fn test_request_deserialization() {
         let json = r#"{
@@ -190,6 +194,7 @@ mod tests {
         assert_eq!(request.at, Some(2));
     }
 
+    // Spec: Object: Request — wseat and bseat allowlist/blocklist seat restrictions
     #[test]
     fn test_request_with_seat_restrictions() {
         let request = Request::builder()
@@ -201,5 +206,138 @@ mod tests {
 
         assert_eq!(request.wseat.as_ref().unwrap().len(), 2);
         assert_eq!(request.bseat.as_ref().unwrap().len(), 1);
+    }
+
+    // Spec: Object: Request — default() produces empty id, empty item vec, all Options None
+    #[test]
+    fn test_request_default() {
+        let request: Request = Request::default();
+        assert_eq!(request.id, "");
+        assert!(request.item.is_empty());
+        assert!(request.test.is_none());
+        assert!(request.tmax.is_none());
+        assert!(request.at.is_none());
+        assert!(request.cur.is_none());
+        assert!(request.wseat.is_none());
+        assert!(request.bseat.is_none());
+        assert!(request.wlang.is_none());
+        assert!(request.source.is_none());
+        assert!(request.context.is_none());
+        assert!(request.ext.is_none());
+    }
+
+    // Spec: Object: Request — roundtrip serialize/deserialize preserves all fields
+    #[test]
+    fn test_request_roundtrip() {
+        let original = Request::builder()
+            .id("req-rt".to_string())
+            .test(Some(1))
+            .tmax(Some(200))
+            .at(Some(1))
+            .cur(Some(vec!["USD".to_string()]))
+            .item(vec![
+                Item::builder().id("item1".to_string()).build().unwrap(),
+            ])
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: Request = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    // Spec: Object: Request — skip_serializing_if omits None optional fields from JSON
+    #[test]
+    fn test_request_optional_fields_not_in_json() {
+        let request = Request::builder()
+            .id("req-minimal".to_string())
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&request).unwrap();
+        assert!(json.contains("\"id\""));
+        assert!(!json.contains("\"test\""));
+        assert!(!json.contains("\"tmax\""));
+        assert!(!json.contains("\"at\""));
+        assert!(!json.contains("\"cur\""));
+        assert!(!json.contains("\"wseat\""));
+        assert!(!json.contains("\"bseat\""));
+        assert!(!json.contains("\"wlang\""));
+        assert!(!json.contains("\"source\""));
+        assert!(!json.contains("\"context\""));
+        assert!(!json.contains("\"ext\""));
+    }
+
+    // Spec: Object: Request — source field accepts a Source object
+    #[test]
+    fn test_request_with_source() {
+        let source = Source::builder()
+            .tid(Some("txn-123".to_string()))
+            .build()
+            .unwrap();
+
+        let request = Request::builder()
+            .id("req-source".to_string())
+            .source(Some(source))
+            .build()
+            .unwrap();
+
+        assert!(request.source.is_some());
+        assert_eq!(
+            request.source.as_ref().unwrap().tid,
+            Some("txn-123".to_string())
+        );
+    }
+
+    // Spec: Object: Request — wlang field serializes and round-trips correctly
+    #[test]
+    fn test_request_with_wlang() {
+        let request = Request::builder()
+            .id("req-wlang".to_string())
+            .wlang(Some(vec!["en".to_string()]))
+            .build()
+            .unwrap();
+
+        assert_eq!(request.wlang, Some(vec!["en".to_string()]));
+
+        let json = serde_json::to_string(&request).unwrap();
+        let parsed: Request = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.wlang, Some(vec!["en".to_string()]));
+    }
+
+    // Spec: Object: Request — all optional fields populated and accessible after build
+    #[test]
+    fn test_request_with_all_optional_fields() {
+        let source = Source::builder()
+            .tid(Some("txn-all".to_string()))
+            .build()
+            .unwrap();
+
+        let request = Request::builder()
+            .id("req-all".to_string())
+            .test(Some(1))
+            .tmax(Some(300))
+            .at(Some(2))
+            .cur(Some(vec!["USD".to_string(), "EUR".to_string()]))
+            .wseat(Some(vec!["seat1".to_string()]))
+            .bseat(Some(vec!["seat2".to_string()]))
+            .wlang(Some(vec!["en".to_string(), "fr".to_string()]))
+            .item(vec![
+                Item::builder().id("item1".to_string()).build().unwrap(),
+            ])
+            .source(Some(source))
+            .build()
+            .unwrap();
+
+        assert_eq!(request.id, "req-all");
+        assert_eq!(request.test, Some(1));
+        assert_eq!(request.tmax, Some(300));
+        assert_eq!(request.at, Some(2));
+        assert_eq!(request.cur.as_ref().unwrap().len(), 2);
+        assert_eq!(request.wseat.as_ref().unwrap().len(), 1);
+        assert_eq!(request.bseat.as_ref().unwrap().len(), 1);
+        assert_eq!(request.wlang.as_ref().unwrap().len(), 2);
+        assert_eq!(request.item.len(), 1);
+        assert!(request.source.is_some());
     }
 }

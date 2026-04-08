@@ -166,6 +166,7 @@ impl Source {
 mod tests {
     use super::*;
 
+    // Spec: Object: SupplyChainNode — verifies builder creates node with all fields populated
     #[test]
     fn test_supply_chain_node_creation() {
         let node = SupplyChainNode::builder()
@@ -183,6 +184,7 @@ mod tests {
         assert_eq!(node.hp, Some(1));
     }
 
+    // Spec: Object: SupplyChain — verifies builder creates chain with complete flag, nodes, and version
     #[test]
     fn test_supply_chain_creation() {
         let node1 = SupplyChainNode::builder()
@@ -211,6 +213,7 @@ mod tests {
         assert_eq!(schain.ver, "1.0");
     }
 
+    // Spec: Object: Source — verifies source with embedded supply chain and transaction ID
     #[test]
     fn test_source_with_schain() {
         let node = SupplyChainNode::builder()
@@ -239,6 +242,7 @@ mod tests {
         assert_eq!(source.schain.as_ref().unwrap().nodes.len(), 1);
     }
 
+    // Spec: Object: Source — verifies minimal source with only transaction ID
     #[test]
     fn test_source_minimal() {
         let source = Source::builder()
@@ -250,6 +254,7 @@ mod tests {
         assert_eq!(source.schain, None);
     }
 
+    // Spec: Object: SupplyChain — verifies JSON serialization includes complete, ver, and node fields
     #[test]
     fn test_supply_chain_serialization() {
         let node = SupplyChainNode::builder()
@@ -272,6 +277,7 @@ mod tests {
         assert!(json.contains("\"asi\":\"exchange.com\""));
     }
 
+    // Spec: Object: SupplyChain — verifies JSON deserialization restores all fields
     #[test]
     fn test_supply_chain_deserialization() {
         let json = r#"{
@@ -292,6 +298,7 @@ mod tests {
         assert_eq!(schain.ver, "1.0");
     }
 
+    // Spec: Object: SupplyChain — verifies incomplete chain with complete=0
     #[test]
     fn test_supply_chain_incomplete() {
         let node = SupplyChainNode::builder()
@@ -310,6 +317,7 @@ mod tests {
         assert_eq!(schain.complete, 0);
     }
 
+    // Spec: Object: SupplyChainNode — verifies hp field distinguishes payment participants
     #[test]
     fn test_supply_chain_node_payment_flag() {
         let node_in_payment = SupplyChainNode::builder()
@@ -330,6 +338,7 @@ mod tests {
         assert_eq!(node_not_in_payment.hp, Some(0));
     }
 
+    // Spec: Object: Source — verifies cert field for chain of custody
     #[test]
     fn test_source_with_cert() {
         let source = Source::builder()
@@ -339,5 +348,118 @@ mod tests {
             .unwrap();
 
         assert_eq!(source.cert, Some("cert-abc123".to_string()));
+    }
+
+    // Spec: Object: Source — verifies default() produces all None fields
+    #[test]
+    fn test_source_default() {
+        let source: Source = Source::default();
+        assert_eq!(source.tid, None);
+        assert_eq!(source.ts, None);
+        assert_eq!(source.ds, None);
+        assert_eq!(source.dsmap, None);
+        assert_eq!(source.cert, None);
+        assert_eq!(source.schain, None);
+        assert!(source.ext.is_none());
+    }
+
+    // Spec: Object: Source — verifies serialize then deserialize roundtrip preserves all fields
+    #[test]
+    fn test_source_roundtrip() {
+        let source = Source::builder()
+            .tid(Some("txn-rt".to_string()))
+            .ts(Some(1700000000000))
+            .cert(Some("cert-rt".to_string()))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&source).unwrap();
+        let deserialized: Source = serde_json::from_str(&json).unwrap();
+        assert_eq!(source, deserialized);
+    }
+
+    // Spec: Object: Source — verifies ds and dsmap fields for digital signature support
+    #[test]
+    fn test_source_with_ds_and_dsmap() {
+        let source = Source::builder()
+            .ds(Some("digital-sig-value".to_string()))
+            .dsmap(Some("dsmap-value".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(source.ds, Some("digital-sig-value".to_string()));
+        assert_eq!(source.dsmap, Some("dsmap-value".to_string()));
+    }
+
+    // Spec: Object: Source — verifies empty source serializes to minimal JSON with no optional fields
+    #[test]
+    fn test_source_optional_fields_not_in_json() {
+        let source: Source = Source::default();
+        let json = serde_json::to_string(&source).unwrap();
+        assert!(!json.contains("\"tid\""));
+        assert!(!json.contains("\"ts\""));
+        assert!(!json.contains("\"ds\""));
+        assert!(!json.contains("\"dsmap\""));
+        assert!(!json.contains("\"cert\""));
+        assert!(!json.contains("\"schain\""));
+        assert!(!json.contains("\"ext\""));
+    }
+
+    // Spec: Object: SupplyChainNode — verifies node with only required fields has optional fields as None
+    #[test]
+    fn test_supply_chain_node_minimal() {
+        let node = SupplyChainNode::builder()
+            .asi("exchange.com".to_string())
+            .sid("seller1".to_string())
+            .build()
+            .unwrap();
+
+        assert_eq!(node.asi, "exchange.com");
+        assert_eq!(node.sid, "seller1");
+        assert_eq!(node.hp, None);
+        assert_eq!(node.rid, None);
+        assert_eq!(node.name, None);
+        assert_eq!(node.domain, None);
+        assert!(node.ext.is_none());
+    }
+
+    // Spec: Object: SupplyChainNode — verifies serialize then deserialize roundtrip preserves all fields
+    #[test]
+    fn test_supply_chain_node_roundtrip() {
+        let node = SupplyChainNode::builder()
+            .asi("exchange.com".to_string())
+            .sid("seller1".to_string())
+            .hp(Some(1))
+            .rid(Some("req-rt".to_string()))
+            .name(Some("Publisher RT".to_string()))
+            .domain(Some("publisher-rt.com".to_string()))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&node).unwrap();
+        let deserialized: SupplyChainNode = serde_json::from_str(&json).unwrap();
+        assert_eq!(node, deserialized);
+    }
+
+    // Spec: Object: SupplyChain — verifies serialize then deserialize roundtrip preserves all fields
+    #[test]
+    fn test_supply_chain_roundtrip() {
+        let node = SupplyChainNode::builder()
+            .asi("ssp.com".to_string())
+            .sid("seller1".to_string())
+            .hp(Some(1))
+            .build()
+            .unwrap();
+
+        let schain = SupplyChain::builder()
+            .complete(1)
+            .nodes(vec![node])
+            .ver("1.0".to_string())
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&schain).unwrap();
+        let deserialized: SupplyChain = serde_json::from_str(&json).unwrap();
+        assert_eq!(schain, deserialized);
     }
 }
