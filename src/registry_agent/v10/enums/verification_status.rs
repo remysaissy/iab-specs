@@ -95,4 +95,42 @@ mod tests {
             "Default should be Unverified"
         );
     }
+
+    #[test]
+    fn test_all_valid_values_exact_strings() {
+        // Spec: Registry Agent 1.0 — snake_case serialization is mandatory
+        let variants = [
+            (VerificationStatus::Unverified, "unverified"),
+            (VerificationStatus::Pending, "pending"),
+            (VerificationStatus::Verified, "verified"),
+            (VerificationStatus::Failed, "failed"),
+            (VerificationStatus::Expired, "expired"),
+        ];
+
+        for (variant, expected) in &variants {
+            let serialized = serde_json::to_string(variant).expect("Failed to serialize");
+            let expected_json = format!("\"{}\"", expected);
+            assert_eq!(
+                serialized, expected_json,
+                "Expected {:?} to serialize as {}, got {}",
+                variant, expected_json, serialized
+            );
+        }
+    }
+
+    #[test]
+    fn test_case_sensitive_deserialization() {
+        // Spec: Registry Agent 1.0 — snake_case serialization is mandatory
+        // Uppercase and mixed-case variants must be rejected
+        let invalid_cases = ["\"UNVERIFIED\"", "\"Pending\""];
+
+        for invalid_json in &invalid_cases {
+            let result: Result<VerificationStatus, _> = serde_json::from_str(invalid_json);
+            assert!(
+                result.is_err(),
+                "Case-insensitive variant {} should fail deserialization",
+                invalid_json
+            );
+        }
+    }
 }

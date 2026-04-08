@@ -162,4 +162,23 @@ mod tests {
         assert!(!result.has_more);
         assert!(result.ext.is_none());
     }
+
+    #[test]
+    fn test_search_result_empty_agents_roundtrip() {
+        // Spec: RegistrySearchResult — empty result set
+        let result = RegistrySearchResult::builder()
+            .agents(vec![])
+            .total_count(0)
+            .has_more(false)
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&result).unwrap();
+        assert!(json.contains("\"agents\":[]"));
+        assert!(json.contains("\"total_count\":0"));
+        assert!(json.contains("\"has_more\":false"));
+
+        let parsed: RegistrySearchResult = serde_json::from_str(&json).unwrap();
+        assert_eq!(result, parsed);
+    }
 }

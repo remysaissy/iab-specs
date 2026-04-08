@@ -200,4 +200,32 @@ mod tests {
         let parsed: RegisteredAgent = serde_json::from_str(&json).unwrap();
         assert_eq!(agent, parsed);
     }
+
+    #[test]
+    fn test_registered_agent_without_optional_fields() {
+        // Spec: RegisteredAgent — minimal construction with only required defaults
+        let agent = RegisteredAgent::builder()
+            .agent_card(
+                AgentCard::builder()
+                    .name("Minimal Agent")
+                    .version("1.0.0")
+                    .protocol_version("0.3.0")
+                    .url("https://minimal.example.com")
+                    .build()
+                    .unwrap(),
+            )
+            .trust_level(TrustLevel::Unknown)
+            .verification_status(VerificationStatus::Unverified)
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&agent).unwrap();
+        assert!(!json.contains("\"registry_id\""));
+        assert!(!json.contains("\"registered_at\""));
+        assert!(!json.contains("\"source\""));
+        assert!(!json.contains("\"ext\""));
+
+        let parsed: RegisteredAgent = serde_json::from_str(&json).unwrap();
+        assert_eq!(agent, parsed);
+    }
 }

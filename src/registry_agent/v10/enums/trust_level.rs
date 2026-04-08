@@ -88,4 +88,20 @@ mod tests {
         let default = TrustLevel::default();
         assert_eq!(default, TrustLevel::Unknown, "Default should be Unknown");
     }
+
+    #[test]
+    fn test_case_sensitive_deserialization() {
+        // Spec: Registry Agent 1.0 — snake_case serialization is mandatory
+        // Uppercase and mixed-case variants must be rejected
+        let invalid_cases = ["\"UNKNOWN\"", "\"Blocked\""];
+
+        for invalid_json in &invalid_cases {
+            let result: Result<TrustLevel, _> = serde_json::from_str(invalid_json);
+            assert!(
+                result.is_err(),
+                "Case-insensitive variant {} should fail deserialization",
+                invalid_json
+            );
+        }
+    }
 }
