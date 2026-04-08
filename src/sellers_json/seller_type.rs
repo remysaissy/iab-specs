@@ -98,4 +98,53 @@ mod tests {
         let res = SellerType::Both.to_string();
         assert_eq!(res, "both");
     }
+
+    #[test]
+    fn deserialize_with_mixed_case() {
+        // Spec: Section 2.3
+        let res = SellerType::from_str("Publisher");
+        assert!(res.is_ok_and(|v| v == SellerType::Publisher));
+
+        let res = SellerType::from_str("Intermediary");
+        assert!(res.is_ok_and(|v| v == SellerType::Intermediary));
+
+        let res = SellerType::from_str("Both");
+        assert!(res.is_ok_and(|v| v == SellerType::Both));
+    }
+
+    #[test]
+    fn deserialize_with_empty_string() {
+        // Spec: Section 2.3
+        let res = SellerType::from_str("");
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn deserialize_via_json() {
+        // Spec: Section 2.3
+        let res: Result<SellerType, _> = serde_json::from_str(r#""publisher""#);
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), SellerType::Publisher);
+
+        let res: Result<SellerType, _> = serde_json::from_str(r#""INTERMEDIARY""#);
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), SellerType::Intermediary);
+
+        let res: Result<SellerType, _> = serde_json::from_str(r#""both""#);
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), SellerType::Both);
+    }
+
+    #[test]
+    fn serialize_via_json() {
+        // Spec: Section 2.3
+        let json = serde_json::to_string(&SellerType::Publisher).unwrap();
+        assert_eq!(json, r#""publisher""#);
+
+        let json = serde_json::to_string(&SellerType::Intermediary).unwrap();
+        assert_eq!(json, r#""intermediary""#);
+
+        let json = serde_json::to_string(&SellerType::Both).unwrap();
+        assert_eq!(json, r#""both""#);
+    }
 }

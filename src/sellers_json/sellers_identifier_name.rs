@@ -77,4 +77,43 @@ mod tests {
         let res = SellersIdentifierName::Duns.to_string();
         assert_eq!(res, "duns");
     }
+
+    #[test]
+    fn deserialize_with_mixed_case() {
+        // Spec: Section 2.2
+        let res = SellersIdentifierName::from_str("Tag-Id");
+        assert!(res.is_ok_and(|v| v == SellersIdentifierName::TagId));
+
+        let res = SellersIdentifierName::from_str("Duns");
+        assert!(res.is_ok_and(|v| v == SellersIdentifierName::Duns));
+    }
+
+    #[test]
+    fn deserialize_with_empty_string() {
+        // Spec: Section 2.2
+        let res = SellersIdentifierName::from_str("");
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn deserialize_via_json() {
+        // Spec: Section 2.2
+        let res: Result<SellersIdentifierName, _> = serde_json::from_str(r#""tag-id""#);
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), SellersIdentifierName::TagId);
+
+        let res: Result<SellersIdentifierName, _> = serde_json::from_str(r#""duns""#);
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), SellersIdentifierName::Duns);
+    }
+
+    #[test]
+    fn serialize_via_json() {
+        // Spec: Section 2.2
+        let json = serde_json::to_string(&SellersIdentifierName::TagId).unwrap();
+        assert_eq!(json, r#""tag-id""#);
+
+        let json = serde_json::to_string(&SellersIdentifierName::Duns).unwrap();
+        assert_eq!(json, r#""duns""#);
+    }
 }

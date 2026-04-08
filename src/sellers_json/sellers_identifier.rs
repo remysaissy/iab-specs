@@ -159,4 +159,61 @@ mod tests {
             .unwrap();
         assert_eq!(identifier.value, "owned-string");
     }
+
+    #[test]
+    fn deserialize_missing_name_field() {
+        // Spec: Section 2.2
+        let res = serde_json::from_str::<SellersIdentifier>(r#"{"value":"123"}"#);
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn deserialize_with_empty_value() {
+        // Spec: Section 2.2
+        let res = serde_json::from_str::<SellersIdentifier>(r#"{"name":"tag-id","value":""}"#);
+        assert!(res.is_ok());
+        let identifier = res.unwrap();
+        assert_eq!(identifier.value, "");
+    }
+
+    #[test]
+    fn round_trip_json_sellers_identifier() {
+        // Spec: Section 2.2
+        let original = SellersIdentifier::builder()
+            .name(SellersIdentifierName::TagId)
+            .value("round-trip-123")
+            .build()
+            .unwrap();
+        let json_str = serde_json::to_string(&original).unwrap();
+        let value1: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        let deserialized: SellersIdentifier = serde_json::from_str(&json_str).unwrap();
+        let json_str2 = serde_json::to_string(&deserialized).unwrap();
+        let value2: serde_json::Value = serde_json::from_str(&json_str2).unwrap();
+        assert_eq!(value1, value2);
+    }
+
+    #[test]
+    fn deserialize_with_unknown_fields_tolerated() {
+        // Spec: Section 2.2
+        let res = serde_json::from_str::<SellersIdentifier>(
+            r#"{"name":"tag-id","value":"123","unknown":"extra"}"#,
+        );
+        assert!(res.is_ok());
+    }
+
+    #[test]
+    fn builder_missing_required_name() {
+        // Spec: Section 2.2
+        let res = SellersIdentifier::builder().value("123").build();
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn builder_missing_required_value() {
+        // Spec: Section 2.2
+        let res = SellersIdentifier::builder()
+            .name(SellersIdentifierName::Duns)
+            .build();
+        assert!(res.is_err());
+    }
 }
