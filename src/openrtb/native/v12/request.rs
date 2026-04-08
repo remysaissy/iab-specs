@@ -1114,43 +1114,6 @@ mod tests {
     // === Phase 2.2: Mutually Exclusive Field Tests ===
 
     #[test]
-    fn test_asset_with_no_type_fields() {
-        // Per spec: Asset must have exactly ONE of title/img/video/data
-        // Test that asset with NO type fields currently passes
-        let asset = Asset::builder().id(1).build();
-
-        assert!(asset.is_ok(), "Asset with no type fields currently passes");
-        let asset = asset.unwrap();
-        assert!(asset.title.is_none());
-        assert!(asset.img.is_none());
-        assert!(asset.video.is_none());
-        assert!(asset.data.is_none());
-        // TODO: Should be rejected - asset must have exactly one type field
-    }
-
-    #[test]
-    fn test_asset_with_multiple_type_fields_title_and_img() {
-        // Test that asset with BOTH title AND img currently passes
-        let title = Title::builder().len(90).build().unwrap();
-        let img = Image::builder().build().unwrap();
-
-        let asset = Asset::builder()
-            .id(1)
-            .title(Some(title))
-            .img(Some(img))
-            .build();
-
-        assert!(
-            asset.is_ok(),
-            "Asset with both title and img currently passes"
-        );
-        let asset = asset.unwrap();
-        assert!(asset.title.is_some());
-        assert!(asset.img.is_some());
-        // TODO: Should be rejected - violates mutually exclusive constraint
-    }
-
-    #[test]
     fn test_asset_with_multiple_type_fields_all_four() {
         // Test that asset with ALL four type fields currently passes
         let title = Title::builder().len(90).build().unwrap();
@@ -1271,5 +1234,600 @@ mod tests {
         assert!(asset.video.is_none());
         assert!(asset.data.is_none());
         // TODO: Should require at least one type field
+    }
+
+    // === A. Default Value Tests ===
+
+    #[test]
+    fn test_native_request_default() {
+        let request: NativeRequest = NativeRequest::default();
+        assert_eq!(request.ver, None);
+        assert_eq!(request.context, None);
+        assert_eq!(request.contextsubtype, None);
+        assert_eq!(request.plcmttype, None);
+        assert_eq!(request.plcmtcnt, None);
+        assert_eq!(request.seq, None);
+        assert!(request.assets.is_empty());
+        assert_eq!(request.aurlsupport, None);
+        assert_eq!(request.durlsupport, None);
+        assert_eq!(request.eventtrackers, None);
+        assert_eq!(request.privacy, None);
+        assert_eq!(request.ext, None);
+    }
+
+    #[test]
+    fn test_asset_default() {
+        let asset: Asset = Asset::default();
+        assert_eq!(asset.id, 0);
+        assert_eq!(asset.required, None);
+        assert_eq!(asset.title, None);
+        assert_eq!(asset.img, None);
+        assert_eq!(asset.video, None);
+        assert_eq!(asset.data, None);
+        assert_eq!(asset.ext, None);
+    }
+
+    #[test]
+    fn test_title_default() {
+        let title: Title = Title::default();
+        assert_eq!(title.len, 0);
+        assert_eq!(title.ext, None);
+    }
+
+    #[test]
+    fn test_image_default() {
+        let image: Image = Image::default();
+        assert_eq!(image.type_, None);
+        assert_eq!(image.w, None);
+        assert_eq!(image.h, None);
+        assert_eq!(image.wmin, None);
+        assert_eq!(image.hmin, None);
+        assert_eq!(image.wmax, None);
+        assert_eq!(image.hmax, None);
+        assert_eq!(image.mimes, None);
+        assert_eq!(image.ext, None);
+    }
+
+    #[test]
+    fn test_video_default() {
+        let video: Video = Video::default();
+        assert!(video.mimes.is_empty());
+        assert_eq!(video.minduration, None);
+        assert_eq!(video.maxduration, None);
+        assert_eq!(video.protocols, None);
+        assert_eq!(video.ext, None);
+    }
+
+    #[test]
+    fn test_data_default() {
+        let data: Data = Data::default();
+        assert_eq!(data.type_, 0);
+        assert_eq!(data.len, None);
+        assert_eq!(data.ext, None);
+    }
+
+    #[test]
+    fn test_event_tracker_default() {
+        let tracker: EventTracker = EventTracker::default();
+        assert_eq!(tracker.event, 0);
+        assert!(tracker.methods.is_empty());
+        assert_eq!(tracker.ext, None);
+    }
+
+    // === B. Serde Roundtrip Tests ===
+
+    #[test]
+    fn test_title_serde_roundtrip() {
+        let original = Title::builder().len(90).build().unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: Title = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    #[test]
+    fn test_image_full_serde_roundtrip() {
+        let original = Image::builder()
+            .type_(Some(3))
+            .w(Some(1200))
+            .h(Some(627))
+            .wmin(Some(600))
+            .hmin(Some(314))
+            .wmax(Some(1920))
+            .hmax(Some(1080))
+            .mimes(Some(vec![
+                "image/jpeg".to_string(),
+                "image/png".to_string(),
+            ]))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: Image = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    #[test]
+    fn test_video_full_serde_roundtrip() {
+        let original = Video::builder()
+            .mimes(vec!["video/mp4".to_string(), "video/webm".to_string()])
+            .minduration(Some(5))
+            .maxduration(Some(30))
+            .protocols(Some(vec![2, 3, 5, 6]))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: Video = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    #[test]
+    fn test_data_full_serde_roundtrip() {
+        let original = Data::builder().type_(2).len(Some(140)).build().unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: Data = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    #[test]
+    fn test_event_tracker_serde_roundtrip() {
+        let original = EventTracker::builder()
+            .event(1)
+            .methods(vec![1, 2])
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: EventTracker = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    #[test]
+    fn test_asset_with_title_serde_roundtrip() {
+        let original = Asset::builder()
+            .id(1)
+            .required(Some(1))
+            .title(Some(Title::builder().len(90).build().unwrap()))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: Asset = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    #[test]
+    fn test_asset_with_img_serde_roundtrip() {
+        let original = Asset::builder()
+            .id(2)
+            .required(Some(1))
+            .img(Some(
+                Image::builder()
+                    .type_(Some(3))
+                    .w(Some(1200))
+                    .h(Some(627))
+                    .build()
+                    .unwrap(),
+            ))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: Asset = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    #[test]
+    fn test_asset_with_video_serde_roundtrip() {
+        let original = Asset::builder()
+            .id(3)
+            .required(Some(1))
+            .video(Some(
+                Video::builder()
+                    .mimes(vec!["video/mp4".to_string()])
+                    .minduration(Some(5))
+                    .maxduration(Some(30))
+                    .protocols(Some(vec![2, 3]))
+                    .build()
+                    .unwrap(),
+            ))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: Asset = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    #[test]
+    fn test_asset_with_data_serde_roundtrip() {
+        let original = Asset::builder()
+            .id(4)
+            .required(Some(0))
+            .data(Some(
+                Data::builder().type_(2).len(Some(140)).build().unwrap(),
+            ))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: Asset = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    #[test]
+    fn test_native_request_full_serde_roundtrip() {
+        let original = NativeRequest::builder()
+            .ver("1.2")
+            .context(Some(1))
+            .contextsubtype(Some(10))
+            .plcmttype(Some(1))
+            .plcmtcnt(Some(3))
+            .seq(Some(0))
+            .assets(vec![
+                Asset::builder()
+                    .id(1)
+                    .required(Some(1))
+                    .title(Some(Title::builder().len(90).build().unwrap()))
+                    .build()
+                    .unwrap(),
+                Asset::builder()
+                    .id(2)
+                    .required(Some(1))
+                    .img(Some(
+                        Image::builder()
+                            .type_(Some(3))
+                            .w(Some(1200))
+                            .h(Some(627))
+                            .wmin(Some(600))
+                            .hmin(Some(314))
+                            .mimes(Some(vec!["image/jpeg".to_string()]))
+                            .build()
+                            .unwrap(),
+                    ))
+                    .build()
+                    .unwrap(),
+                Asset::builder()
+                    .id(3)
+                    .required(Some(0))
+                    .video(Some(
+                        Video::builder()
+                            .mimes(vec!["video/mp4".to_string()])
+                            .minduration(Some(5))
+                            .maxduration(Some(30))
+                            .protocols(Some(vec![2, 3, 5, 6]))
+                            .build()
+                            .unwrap(),
+                    ))
+                    .build()
+                    .unwrap(),
+                Asset::builder()
+                    .id(4)
+                    .required(Some(0))
+                    .data(Some(
+                        Data::builder().type_(2).len(Some(140)).build().unwrap(),
+                    ))
+                    .build()
+                    .unwrap(),
+            ])
+            .aurlsupport(Some(0))
+            .durlsupport(Some(1))
+            .eventtrackers(Some(vec![
+                EventTracker::builder()
+                    .event(1)
+                    .methods(vec![1, 2])
+                    .build()
+                    .unwrap(),
+                EventTracker::builder()
+                    .event(2)
+                    .methods(vec![1])
+                    .build()
+                    .unwrap(),
+            ]))
+            .privacy(Some(1))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: NativeRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    // === C. Full Realistic JSON Deserialization ===
+
+    #[test]
+    fn test_realistic_ssp_native_request_deserialization() {
+        let json = r#"{
+            "ver": "1.2",
+            "context": 1,
+            "contextsubtype": 10,
+            "plcmttype": 1,
+            "plcmtcnt": 1,
+            "seq": 0,
+            "assets": [
+                {
+                    "id": 1,
+                    "required": 1,
+                    "title": {
+                        "len": 90
+                    }
+                },
+                {
+                    "id": 2,
+                    "required": 1,
+                    "img": {
+                        "type": 1,
+                        "w": 50,
+                        "h": 50,
+                        "wmin": 30,
+                        "hmin": 30,
+                        "mimes": ["image/png", "image/jpeg"]
+                    }
+                },
+                {
+                    "id": 3,
+                    "required": 1,
+                    "img": {
+                        "type": 3,
+                        "w": 1200,
+                        "h": 627,
+                        "wmin": 600,
+                        "hmin": 314,
+                        "wmax": 1920,
+                        "hmax": 1080,
+                        "mimes": ["image/jpeg", "image/png", "image/gif"]
+                    }
+                },
+                {
+                    "id": 4,
+                    "required": 0,
+                    "video": {
+                        "mimes": ["video/mp4", "video/webm"],
+                        "minduration": 5,
+                        "maxduration": 30,
+                        "protocols": [2, 3, 5, 6]
+                    }
+                },
+                {
+                    "id": 5,
+                    "required": 1,
+                    "data": {
+                        "type": 1,
+                        "len": 25
+                    }
+                },
+                {
+                    "id": 6,
+                    "required": 0,
+                    "data": {
+                        "type": 2,
+                        "len": 140
+                    }
+                },
+                {
+                    "id": 7,
+                    "required": 0,
+                    "data": {
+                        "type": 12,
+                        "len": 15
+                    }
+                }
+            ],
+            "aurlsupport": 0,
+            "durlsupport": 0,
+            "eventtrackers": [
+                {
+                    "event": 1,
+                    "methods": [1, 2]
+                },
+                {
+                    "event": 2,
+                    "methods": [1]
+                }
+            ],
+            "privacy": 1
+        }"#;
+
+        let request: NativeRequest = serde_json::from_str(json).unwrap();
+
+        // Verify top-level fields
+        assert_eq!(request.ver, Some("1.2".to_string()));
+        assert_eq!(request.context, Some(1));
+        assert_eq!(request.contextsubtype, Some(10));
+        assert_eq!(request.plcmttype, Some(1));
+        assert_eq!(request.plcmtcnt, Some(1));
+        assert_eq!(request.seq, Some(0));
+        assert_eq!(request.aurlsupport, Some(0));
+        assert_eq!(request.durlsupport, Some(0));
+        assert_eq!(request.privacy, Some(1));
+
+        // Verify assets
+        assert_eq!(request.assets.len(), 7);
+
+        // Asset 1: Title
+        let a1 = &request.assets[0];
+        assert_eq!(a1.id, 1);
+        assert_eq!(a1.required, Some(1));
+        assert_eq!(a1.title.as_ref().unwrap().len, 90);
+
+        // Asset 2: Icon image
+        let a2 = &request.assets[1];
+        assert_eq!(a2.id, 2);
+        let img2 = a2.img.as_ref().unwrap();
+        assert_eq!(img2.type_, Some(1));
+        assert_eq!(img2.w, Some(50));
+        assert_eq!(img2.h, Some(50));
+
+        // Asset 3: Main image with wmax/hmax
+        let a3 = &request.assets[2];
+        assert_eq!(a3.id, 3);
+        let img3 = a3.img.as_ref().unwrap();
+        assert_eq!(img3.type_, Some(3));
+        assert_eq!(img3.wmax, Some(1920));
+        assert_eq!(img3.hmax, Some(1080));
+        assert_eq!(img3.mimes.as_ref().unwrap().len(), 3);
+
+        // Asset 4: Video
+        let a4 = &request.assets[3];
+        assert_eq!(a4.id, 4);
+        assert_eq!(a4.required, Some(0));
+        let vid = a4.video.as_ref().unwrap();
+        assert_eq!(vid.mimes.len(), 2);
+        assert_eq!(vid.minduration, Some(5));
+        assert_eq!(vid.maxduration, Some(30));
+        assert_eq!(vid.protocols, Some(vec![2, 3, 5, 6]));
+
+        // Asset 5: Sponsored (data type 1)
+        let a5 = &request.assets[4];
+        assert_eq!(a5.data.as_ref().unwrap().type_, 1);
+        assert_eq!(a5.data.as_ref().unwrap().len, Some(25));
+
+        // Asset 6: Description (data type 2)
+        let a6 = &request.assets[5];
+        assert_eq!(a6.data.as_ref().unwrap().type_, 2);
+
+        // Asset 7: CTA (data type 12)
+        let a7 = &request.assets[6];
+        assert_eq!(a7.data.as_ref().unwrap().type_, 12);
+
+        // Verify event trackers
+        let trackers = request.eventtrackers.as_ref().unwrap();
+        assert_eq!(trackers.len(), 2);
+        assert_eq!(trackers[0].event, 1);
+        assert_eq!(trackers[0].methods, vec![1, 2]);
+        assert_eq!(trackers[1].event, 2);
+        assert_eq!(trackers[1].methods, vec![1]);
+    }
+
+    // === D. Edge Case Tests ===
+
+    #[test]
+    fn test_contextsubtype_builder_and_serde_roundtrip() {
+        let request = NativeRequest::builder()
+            .context(Some(1))
+            .contextsubtype(Some(11))
+            .assets(vec![])
+            .build()
+            .unwrap();
+
+        assert_eq!(request.contextsubtype, Some(11));
+
+        let json = serde_json::to_string(&request).unwrap();
+        let parsed: NativeRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.contextsubtype, Some(11));
+    }
+
+    #[test]
+    fn test_image_wmax_hmax_serde_roundtrip() {
+        let original = Image::builder()
+            .wmin(Some(300))
+            .hmin(Some(200))
+            .wmax(Some(1920))
+            .hmax(Some(1080))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        assert!(json.contains(r#""wmax":1920"#));
+        assert!(json.contains(r#""hmax":1080"#));
+
+        let parsed: Image = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    #[test]
+    fn test_video_protocols_individual_roundtrip() {
+        // VAST 2.0=2, VAST 3.0=3, VAST 2.0 wrapper=5, VAST 3.0 wrapper=6
+        for protocol in [2, 3, 5, 6, 7] {
+            let original = Video::builder()
+                .mimes(vec!["video/mp4".to_string()])
+                .protocols(Some(vec![protocol]))
+                .build()
+                .unwrap();
+
+            let json = serde_json::to_string(&original).unwrap();
+            let parsed: Video = serde_json::from_str(&json).unwrap();
+            assert_eq!(parsed.protocols, Some(vec![protocol]));
+        }
+    }
+
+    #[test]
+    fn test_event_tracker_full_serde_roundtrip() {
+        let original = EventTracker::builder()
+            .event(3) // Click
+            .methods(vec![1, 2]) // Image pixel and JavaScript
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        assert!(json.contains(r#""event":3"#));
+        assert!(json.contains(r#""methods":[1,2]"#));
+
+        let parsed: EventTracker = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    #[test]
+    fn test_seq_field_serde_roundtrip() {
+        let original = NativeRequest::builder()
+            .seq(Some(5))
+            .assets(vec![])
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        assert!(json.contains(r#""seq":5"#));
+
+        let parsed: NativeRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.seq, Some(5));
+    }
+
+    #[test]
+    fn test_plcmtcnt_field_serde_roundtrip() {
+        let original = NativeRequest::builder()
+            .plcmtcnt(Some(10))
+            .assets(vec![])
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        assert!(json.contains(r#""plcmtcnt":10"#));
+
+        let parsed: NativeRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.plcmtcnt, Some(10));
+    }
+
+    #[test]
+    fn test_aurlsupport_durlsupport_serde_roundtrip() {
+        let original = NativeRequest::builder()
+            .aurlsupport(Some(1))
+            .durlsupport(Some(1))
+            .assets(vec![])
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        assert!(json.contains(r#""aurlsupport":1"#));
+        assert!(json.contains(r#""durlsupport":1"#));
+
+        let parsed: NativeRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.aurlsupport, Some(1));
+        assert_eq!(parsed.durlsupport, Some(1));
+    }
+
+    #[test]
+    fn test_privacy_field_serde_roundtrip() {
+        let original = NativeRequest::builder()
+            .privacy(Some(1))
+            .assets(vec![])
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        assert!(json.contains(r#""privacy":1"#));
+
+        let parsed: NativeRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.privacy, Some(1));
     }
 }
