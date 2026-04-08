@@ -111,4 +111,35 @@ mod tests {
         );
         assert_eq!(producer.cattax, Some(1));
     }
+
+    /// AdCOM 1.0 Section 7 - Producer serialization roundtrip
+    #[test]
+    fn test_producer_serialization_roundtrip() {
+        let original = Producer::builder()
+            .id(Some("prod_rt".to_string()))
+            .name(Some("Roundtrip Studio".to_string()))
+            .domain(Some("roundtrip.com".to_string()))
+            .cattax(Some(2))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Producer = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 7 - Producer extension field handling
+    #[test]
+    fn test_producer_ext() {
+        let obj = ProducerBuilder::<serde_json::Value>::default()
+            .id(Some("prod_ext".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Producer<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

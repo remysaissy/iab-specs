@@ -171,4 +171,35 @@ mod tests {
         assert!(display.adm.is_some());
         assert!(display.adm.as_ref().unwrap().contains("<img"));
     }
+
+    /// AdCOM 1.0 Section 3.2 - Display serialization roundtrip
+    #[test]
+    fn test_display_serialization_roundtrip() {
+        let original = Display::builder()
+            .mime(Some("image/png".to_string()))
+            .w(Some(300))
+            .h(Some(250))
+            .ctype(Some(1))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Display = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 3.2 - Display extension field handling
+    #[test]
+    fn test_display_ext() {
+        let obj = DisplayBuilder::<serde_json::Value>::default()
+            .mime(Some("image/png".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Display<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

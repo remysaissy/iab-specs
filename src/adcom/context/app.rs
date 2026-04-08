@@ -181,4 +181,36 @@ mod tests {
                 .starts_with("https://play.google.com")
         );
     }
+
+    /// AdCOM 1.0 Section 7.2 - App serialization roundtrip
+    #[test]
+    fn test_app_serialization_roundtrip() {
+        let original = App::builder()
+            .id(Some("app_rt".to_string()))
+            .name(Some("Roundtrip Game".to_string()))
+            .bundle(Some("com.example.roundtrip".to_string()))
+            .ver(Some("2.0.0".to_string()))
+            .paid(Some(1))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: App = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 7.2 - App extension field handling
+    #[test]
+    fn test_app_ext() {
+        let obj = AppBuilder::<serde_json::Value>::default()
+            .id(Some("app_ext".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: App<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

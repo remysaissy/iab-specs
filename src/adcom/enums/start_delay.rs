@@ -37,3 +37,83 @@ impl StartDelay {
         self.0 == -2
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// AdCOM 1.0 Table: Start Delay — PRE_ROLL constant is 0
+    #[test]
+    fn test_constant_pre_roll() {
+        assert_eq!(StartDelay::PRE_ROLL.0, 0);
+    }
+
+    /// AdCOM 1.0 Table: Start Delay — GENERIC_MID_ROLL constant is -1
+    #[test]
+    fn test_constant_generic_mid_roll() {
+        assert_eq!(StartDelay::GENERIC_MID_ROLL.0, -1);
+    }
+
+    /// AdCOM 1.0 Table: Start Delay — GENERIC_POST_ROLL constant is -2
+    #[test]
+    fn test_constant_generic_post_roll() {
+        assert_eq!(StartDelay::GENERIC_POST_ROLL.0, -2);
+    }
+
+    /// AdCOM 1.0 Table: Start Delay — mid_roll() creates a StartDelay with positive seconds
+    #[test]
+    fn test_mid_roll_constructor() {
+        let delay = StartDelay::mid_roll(30);
+        assert_eq!(delay.0, 30);
+    }
+
+    /// AdCOM 1.0 Table: Start Delay — is_pre_roll() returns true only for 0
+    #[test]
+    fn test_is_pre_roll() {
+        assert!(StartDelay::PRE_ROLL.is_pre_roll());
+        assert!(!StartDelay::GENERIC_MID_ROLL.is_pre_roll());
+        assert!(!StartDelay::GENERIC_POST_ROLL.is_pre_roll());
+        assert!(!StartDelay::mid_roll(30).is_pre_roll());
+    }
+
+    /// AdCOM 1.0 Table: Start Delay — is_mid_roll() returns true only for positive values
+    #[test]
+    fn test_is_mid_roll() {
+        assert!(StartDelay::mid_roll(30).is_mid_roll());
+        assert!(StartDelay::mid_roll(1).is_mid_roll());
+        assert!(!StartDelay::PRE_ROLL.is_mid_roll());
+        assert!(!StartDelay::GENERIC_MID_ROLL.is_mid_roll());
+        assert!(!StartDelay::GENERIC_POST_ROLL.is_mid_roll());
+    }
+
+    /// AdCOM 1.0 Table: Start Delay — is_post_roll() returns true only for -2
+    #[test]
+    fn test_is_post_roll() {
+        assert!(StartDelay::GENERIC_POST_ROLL.is_post_roll());
+        assert!(!StartDelay::PRE_ROLL.is_post_roll());
+        assert!(!StartDelay::GENERIC_MID_ROLL.is_post_roll());
+        assert!(!StartDelay::mid_roll(30).is_post_roll());
+    }
+
+    /// AdCOM 1.0 Table: Start Delay — serde roundtrip for all key values
+    #[test]
+    fn test_serialization_roundtrip() {
+        let values = [
+            StartDelay::PRE_ROLL,
+            StartDelay::GENERIC_MID_ROLL,
+            StartDelay::GENERIC_POST_ROLL,
+            StartDelay::mid_roll(30),
+            StartDelay::mid_roll(120),
+        ];
+
+        for original in values {
+            let json = serde_json::to_string(&original).unwrap();
+            let deserialized: StartDelay = serde_json::from_str(&json).unwrap();
+            assert_eq!(
+                original, deserialized,
+                "Serialization roundtrip failed for {:?}",
+                original
+            );
+        }
+    }
+}

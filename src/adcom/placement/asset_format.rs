@@ -145,4 +145,33 @@ mod tests {
         assert_eq!(asset.id, Some(1));
         assert_eq!(asset.req, Some(1));
     }
+
+    /// AdCOM 1.0 Section 4.5 - AssetFormat serialization roundtrip
+    #[test]
+    fn test_asset_format_serialization_roundtrip() {
+        let original = AssetFormat::builder()
+            .id(Some(1))
+            .req(Some(1))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: AssetFormat = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 4.5 - AssetFormat extension field handling
+    #[test]
+    fn test_asset_format_ext() {
+        let obj = AssetFormatBuilder::<serde_json::Value>::default()
+            .id(Some(1))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: AssetFormat<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

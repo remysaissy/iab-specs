@@ -166,4 +166,35 @@ mod tests {
         );
         assert_eq!(dooh.cattax, Some(1));
     }
+
+    /// AdCOM 1.0 Section 7.3 - Dooh serialization roundtrip
+    #[test]
+    fn test_dooh_serialization_roundtrip() {
+        let original = Dooh::builder()
+            .id(Some("dooh_rt".to_string()))
+            .name(Some("Roundtrip Billboard".to_string()))
+            .domain(Some("roundtrip-ads.com".to_string()))
+            .cattax(Some(1))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Dooh = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 7.3 - Dooh extension field handling
+    #[test]
+    fn test_dooh_ext() {
+        let obj = DoohBuilder::<serde_json::Value>::default()
+            .id(Some("dooh_ext".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Dooh<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

@@ -107,4 +107,34 @@ mod tests {
         assert_eq!(audit.init, Some(1234567890));
         assert_eq!(audit.lastmod, Some(1234567900));
     }
+
+    /// AdCOM 1.0 Section 3.14 - Audit serialization roundtrip
+    #[test]
+    fn test_audit_serialization_roundtrip() {
+        let original = Audit::builder()
+            .status(Some(1))
+            .init(Some(1234567890))
+            .lastmod(Some(1234567900))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Audit = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 3.14 - Audit extension field handling
+    #[test]
+    fn test_audit_ext() {
+        let obj = AuditBuilder::<serde_json::Value>::default()
+            .status(Some(1))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Audit<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

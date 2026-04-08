@@ -112,4 +112,17 @@ mod tests {
         assert_eq!(bv.brand, Some("Windows".to_string()));
         assert_eq!(bv.version.as_ref().unwrap().len(), 2);
     }
+
+    /// AdCOM 1.0 Section 7.5 - BrandVersion serialization roundtrip
+    #[test]
+    fn test_brand_version_serialization_roundtrip() {
+        let original = BrandVersion::builder()
+            .brand(Some("Chrome".to_string()))
+            .version(Some(vec!["120".to_string(), "0".to_string()]))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: BrandVersion = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
 }

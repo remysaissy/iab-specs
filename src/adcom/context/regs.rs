@@ -94,4 +94,33 @@ mod tests {
         assert_eq!(regs.coppa, Some(1));
         assert_eq!(regs.gdpr, Some(0));
     }
+
+    /// AdCOM 1.0 Section 7.10 - Regs serialization roundtrip
+    #[test]
+    fn test_regs_serialization_roundtrip() {
+        let original = Regs::builder()
+            .coppa(Some(1))
+            .gdpr(Some(0))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Regs = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 7.10 - Regs extension field handling
+    #[test]
+    fn test_regs_ext() {
+        let obj = RegsBuilder::<serde_json::Value>::default()
+            .coppa(Some(1))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Regs<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

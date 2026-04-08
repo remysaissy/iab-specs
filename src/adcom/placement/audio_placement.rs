@@ -217,4 +217,35 @@ mod tests {
         assert_eq!(audio.maxdur, Some(30));
         assert_eq!(audio.feed, Some(1));
     }
+
+    /// AdCOM 1.0 Section 4.11 - AudioPlacement serialization roundtrip
+    #[test]
+    fn test_audio_placement_serialization_roundtrip() {
+        let original = AudioPlacement::builder()
+            .delay(Some(0))
+            .feed(Some(1))
+            .mindur(Some(15))
+            .maxdur(Some(30))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: AudioPlacement = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 4.11 - AudioPlacement extension field handling
+    #[test]
+    fn test_audio_placement_ext() {
+        let obj = AudioPlacementBuilder::<serde_json::Value>::default()
+            .delay(Some(0))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: AudioPlacement<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

@@ -188,4 +188,36 @@ mod tests {
         assert_eq!(ad.init, Some(1234567890));
         assert_eq!(ad.lastmod, Some(1234567900));
     }
+
+    /// AdCOM 1.0 Section 3.1 - Ad serialization roundtrip
+    #[test]
+    fn test_ad_serialization_roundtrip() {
+        let original = Ad::builder()
+            .id(Some("ad-rt".to_string()))
+            .adomain(Some(vec!["advertiser.com".to_string()]))
+            .lang(Some("en".to_string()))
+            .secure(Some(1))
+            .mrating(Some(2))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Ad = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 3.1 - Ad extension field handling
+    #[test]
+    fn test_ad_ext() {
+        let obj = AdBuilder::<serde_json::Value>::default()
+            .id(Some("ad-ext".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Ad<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

@@ -121,4 +121,35 @@ mod tests {
         assert_eq!(companion.h, Some(250));
         assert_eq!(companion.type_, Some(1));
     }
+
+    /// AdCOM 1.0 Section 4.12 - Companion serialization roundtrip
+    #[test]
+    fn test_companion_serialization_roundtrip() {
+        let original = Companion::builder()
+            .id(Some("comp1".to_string()))
+            .w(Some(300))
+            .h(Some(250))
+            .type_(Some(1))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Companion = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 4.12 - Companion extension field handling
+    #[test]
+    fn test_companion_ext() {
+        let obj = CompanionBuilder::<serde_json::Value>::default()
+            .id(Some("comp_ext".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Companion<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

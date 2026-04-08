@@ -113,4 +113,33 @@ mod tests {
         assert_eq!(link.url, Some("https://example.com/page".to_string()));
         assert_eq!(link.urlfb, Some("https://example.com/fallback".to_string()));
     }
+
+    /// AdCOM 1.0 Section 3.6 - LinkAsset serialization roundtrip
+    #[test]
+    fn test_link_asset_serialization_roundtrip() {
+        let original = LinkAsset::builder()
+            .url(Some("https://example.com/product".to_string()))
+            .urlfb(Some("https://example.com/fallback".to_string()))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: LinkAsset = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 3.6 - LinkAsset extension field handling
+    #[test]
+    fn test_link_asset_ext() {
+        let obj = LinkAssetBuilder::<serde_json::Value>::default()
+            .url(Some("https://example.com/product".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: LinkAsset<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

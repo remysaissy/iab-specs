@@ -245,4 +245,36 @@ mod tests {
         assert_eq!(video.mindur, Some(15));
         assert_eq!(video.maxdur, Some(30));
     }
+
+    /// AdCOM 1.0 Section 4.10 - VideoPlacement serialization roundtrip
+    #[test]
+    fn test_video_placement_serialization_roundtrip() {
+        let original = VideoPlacement::builder()
+            .ptype(Some(1))
+            .w(Some(640))
+            .h(Some(480))
+            .mindur(Some(15))
+            .maxdur(Some(30))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: VideoPlacement = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 4.10 - VideoPlacement extension field handling
+    #[test]
+    fn test_video_placement_ext() {
+        let obj = VideoPlacementBuilder::<serde_json::Value>::default()
+            .ptype(Some(1))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: VideoPlacement<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

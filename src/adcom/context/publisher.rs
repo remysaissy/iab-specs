@@ -111,4 +111,35 @@ mod tests {
         );
         assert_eq!(publisher.cattax, Some(1));
     }
+
+    /// AdCOM 1.0 Section 7 - Publisher serialization roundtrip
+    #[test]
+    fn test_publisher_serialization_roundtrip() {
+        let original = Publisher::builder()
+            .id(Some("pub_rt".to_string()))
+            .name(Some("Roundtrip Publisher".to_string()))
+            .domain(Some("roundtrip.com".to_string()))
+            .cattax(Some(1))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Publisher = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 7 - Publisher extension field handling
+    #[test]
+    fn test_publisher_ext() {
+        let obj = PublisherBuilder::<serde_json::Value>::default()
+            .id(Some("pub_ext".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Publisher<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

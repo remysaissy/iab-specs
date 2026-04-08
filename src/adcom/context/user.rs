@@ -143,4 +143,35 @@ mod tests {
         assert!(user.consent.is_some());
         assert!(user.consent.as_ref().unwrap().starts_with("CPtRHYQ"));
     }
+
+    /// AdCOM 1.0 Section 7.7 - User serialization roundtrip
+    #[test]
+    fn test_user_serialization_roundtrip() {
+        let original = User::builder()
+            .id(Some("user_rt".to_string()))
+            .buyeruid(Some("buyer_rt".to_string()))
+            .yob(Some(1990))
+            .gender(Some("F".to_string()))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: User = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 7.7 - User extension field handling
+    #[test]
+    fn test_user_ext() {
+        let obj = UserBuilder::<serde_json::Value>::default()
+            .id(Some("user_ext".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: User<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

@@ -98,4 +98,35 @@ mod tests {
         assert_eq!(img.h, Some(50));
         assert_eq!(img.type_, Some(3));
     }
+
+    /// AdCOM 1.0 Section 3.8 - ImageAsset serialization roundtrip
+    #[test]
+    fn test_image_asset_serialization_roundtrip() {
+        let original = ImageAsset::builder()
+            .url(Some("https://example.com/image.jpg".to_string()))
+            .w(Some(300))
+            .h(Some(250))
+            .type_(Some(1))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: ImageAsset = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 3.8 - ImageAsset extension field handling
+    #[test]
+    fn test_image_asset_ext() {
+        let obj = ImageAssetBuilder::<serde_json::Value>::default()
+            .url(Some("https://example.com/image.jpg".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: ImageAsset<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

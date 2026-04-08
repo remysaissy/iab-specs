@@ -86,4 +86,34 @@ mod tests {
         assert_eq!(segment.name, Some("Behavioral".to_string()));
         assert_eq!(segment.value, Some("high_intent".to_string()));
     }
+
+    /// AdCOM 1.0 Section 7.9 - Segment serialization roundtrip
+    #[test]
+    fn test_segment_serialization_roundtrip() {
+        let original = Segment::builder()
+            .id(Some("seg_rt".to_string()))
+            .name(Some("Roundtrip Segment".to_string()))
+            .value(Some("test_value".to_string()))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Segment = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 7.9 - Segment extension field handling
+    #[test]
+    fn test_segment_ext() {
+        let obj = SegmentBuilder::<serde_json::Value>::default()
+            .id(Some("seg_ext".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Segment<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

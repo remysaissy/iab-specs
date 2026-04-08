@@ -100,4 +100,32 @@ mod tests {
             Some("https://example.com/banner.png".to_string())
         );
     }
+
+    /// AdCOM 1.0 Section 3.3 - Banner serialization roundtrip
+    #[test]
+    fn test_banner_serialization_roundtrip() {
+        let original = Banner::builder()
+            .img(Some("https://example.com/banner.jpg".to_string()))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Banner = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 3.3 - Banner extension field handling
+    #[test]
+    fn test_banner_ext() {
+        let obj = BannerBuilder::<serde_json::Value>::default()
+            .img(Some("https://example.com/banner.jpg".to_string()))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Banner<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }

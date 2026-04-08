@@ -150,4 +150,34 @@ mod tests {
         assert!(audio.adm.is_some());
         assert!(audio.adm.as_ref().unwrap().contains("<DAAST"));
     }
+
+    /// AdCOM 1.0 Section 3.13 - Audio serialization roundtrip
+    #[test]
+    fn test_audio_serialization_roundtrip() {
+        let original = Audio::builder()
+            .mimes(Some(vec!["audio/mp3".to_string()]))
+            .dur(Some(30))
+            .bitrate(Some(128))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: Audio = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, deserialized);
+    }
+
+    /// AdCOM 1.0 Section 3.13 - Audio extension field handling
+    #[test]
+    fn test_audio_ext() {
+        let obj = AudioBuilder::<serde_json::Value>::default()
+            .mimes(Some(vec!["audio/mp3".to_string()]))
+            .ext(Some(Box::new(
+                serde_json::json!({"custom_field": "custom_value"}),
+            )))
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&obj).unwrap();
+        assert!(json.contains("custom_field"));
+        let deserialized: Audio<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert!(deserialized.ext.is_some());
+    }
 }
