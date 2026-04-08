@@ -111,6 +111,7 @@ impl Openrtb {
 mod tests {
     use super::*;
 
+    // Spec: Object: Openrtb — ver, domainspec, domainver fields populated correctly for request
     #[test]
     fn test_openrtb_with_request() {
         let request = Request::builder()
@@ -133,6 +134,7 @@ mod tests {
         assert!(openrtb.response.is_none());
     }
 
+    // Spec: Object: Openrtb — ver, domainspec, domainver fields populated correctly for response
     #[test]
     fn test_openrtb_with_response() {
         let response = Response::builder()
@@ -153,6 +155,7 @@ mod tests {
         assert!(openrtb.response.is_some());
     }
 
+    // Spec: Object: Openrtb — serialization includes ver, domainspec, domainver, and request keys
     #[test]
     fn test_openrtb_serialization() {
         let request = Request::builder()
@@ -175,6 +178,7 @@ mod tests {
         assert!(json.contains("\"request\""));
     }
 
+    // Spec: Object: Openrtb — deserialization from JSON restores ver, domainspec, domainver, and request
     #[test]
     fn test_openrtb_deserialization() {
         let json = r#"{
@@ -191,5 +195,134 @@ mod tests {
         assert_eq!(openrtb.domainspec, "adcom");
         assert!(openrtb.request.is_some());
         assert_eq!(openrtb.request.unwrap().id, "req-123");
+    }
+
+    // Spec: Object: Openrtb — default() produces empty strings and None for request/response
+    #[test]
+    fn test_openrtb_default() {
+        let openrtb: Openrtb = Openrtb::default();
+        assert_eq!(openrtb.ver, "");
+        assert_eq!(openrtb.domainspec, "");
+        assert_eq!(openrtb.domainver, "");
+        assert!(openrtb.request.is_none());
+        assert!(openrtb.response.is_none());
+    }
+
+    // Spec: Object: Openrtb — builder allows both request and response set simultaneously (documents actual behavior)
+    #[test]
+    fn test_openrtb_request_xor_response_both_present() {
+        let request = Request::builder()
+            .id("req-123".to_string())
+            .build()
+            .unwrap();
+        let response = Response::builder()
+            .id("resp-123".to_string())
+            .build()
+            .unwrap();
+
+        let openrtb = Openrtb::builder()
+            .ver("3.0".to_string())
+            .domainspec("adcom".to_string())
+            .domainver("1.0".to_string())
+            .request(Some(request))
+            .response(Some(response))
+            .build()
+            .unwrap();
+
+        assert!(openrtb.request.is_some());
+        assert!(openrtb.response.is_some());
+    }
+
+    // Spec: Object: Openrtb — builder allows neither request nor response
+    #[test]
+    fn test_openrtb_request_xor_response_both_absent() {
+        let openrtb = Openrtb::builder()
+            .ver("3.0".to_string())
+            .domainspec("adcom".to_string())
+            .domainver("1.0".to_string())
+            .build()
+            .unwrap();
+
+        assert!(openrtb.request.is_none());
+        assert!(openrtb.response.is_none());
+    }
+
+    // Spec: Object: Openrtb — roundtrip serialize/deserialize with request payload
+    #[test]
+    fn test_openrtb_roundtrip_request() {
+        let original = Openrtb::builder()
+            .ver("3.0".to_string())
+            .domainspec("adcom".to_string())
+            .domainver("1.0".to_string())
+            .request(Some(
+                Request::builder()
+                    .id("req-rt".to_string())
+                    .tmax(Some(150))
+                    .build()
+                    .unwrap(),
+            ))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: Openrtb = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    // Spec: Object: Openrtb — roundtrip serialize/deserialize with response payload
+    #[test]
+    fn test_openrtb_roundtrip_response() {
+        let original = Openrtb::builder()
+            .ver("3.0".to_string())
+            .domainspec("adcom".to_string())
+            .domainver("1.0".to_string())
+            .response(Some(
+                Response::builder()
+                    .id("resp-rt".to_string())
+                    .cur(Some("EUR".to_string()))
+                    .build()
+                    .unwrap(),
+            ))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&original).unwrap();
+        let parsed: Openrtb = serde_json::from_str(&json).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    // Spec: Object: Openrtb — skip_serializing_if omits None request/response from JSON
+    #[test]
+    fn test_openrtb_optional_fields_not_in_json() {
+        let openrtb = Openrtb::builder()
+            .ver("3.0".to_string())
+            .domainspec("adcom".to_string())
+            .domainver("1.0".to_string())
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&openrtb).unwrap();
+        assert!(!json.contains("\"request\""));
+        assert!(!json.contains("\"response\""));
+    }
+
+    // Spec: Object: Openrtb — unknown fields in JSON are tolerated during deserialization
+    #[test]
+    fn test_openrtb_unknown_fields_tolerated() {
+        let json = r#"{
+            "ver": "3.0",
+            "domainspec": "adcom",
+            "domainver": "1.0",
+            "brand_new_field": "should be ignored"
+        }"#;
+
+        let result: Result<Openrtb, _> = serde_json::from_str(json);
+        assert!(
+            result.is_ok(),
+            "Deserialization should tolerate unknown fields but failed: {:?}",
+            result.err()
+        );
+        let openrtb = result.unwrap();
+        assert_eq!(openrtb.ver, "3.0");
     }
 }

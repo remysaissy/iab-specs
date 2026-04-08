@@ -167,6 +167,7 @@ impl Bid {
 mod tests {
     use super::*;
 
+    // Spec: Object: Bid — required id, item, price with optional deal and cid
     #[test]
     fn test_bid_creation() {
         let bid = Bid::builder()
@@ -184,6 +185,7 @@ mod tests {
         assert_eq!(bid.deal, Some("deal-456".to_string()));
     }
 
+    // Spec: Object: Bid — minimal bid with id, item, price only
     #[test]
     fn test_bid_minimal() {
         let bid = Bid::builder()
@@ -199,6 +201,7 @@ mod tests {
         assert_eq!(bid.deal, None);
     }
 
+    // Spec: Object: Bid — win/billing/loss notice URLs (nurl, burl, lurl)
     #[test]
     fn test_bid_with_tracking_urls() {
         let bid = Bid::builder()
@@ -220,6 +223,7 @@ mod tests {
         assert!(bid.lurl.is_some());
     }
 
+    // Spec: Object: Bid — advertiser domains (adomain) and content categories (cat)
     #[test]
     fn test_bid_with_advertiser_info() {
         let bid = Bid::builder()
@@ -235,6 +239,7 @@ mod tests {
         assert_eq!(bid.cat.as_ref().unwrap().len(), 2);
     }
 
+    // Spec: Object: Bid — creative attributes (attr) and language (lang)
     #[test]
     fn test_bid_with_creative_attributes() {
         let bid = Bid::builder()
@@ -250,6 +255,7 @@ mod tests {
         assert_eq!(bid.lang, Some("en".to_string()));
     }
 
+    // Spec: Object: Bid — JSON serialization of id, item, price, cid
     #[test]
     fn test_bid_serialization() {
         let bid = Bid::builder()
@@ -267,6 +273,7 @@ mod tests {
         assert!(json.contains("\"cid\":\"campaign-789\""));
     }
 
+    // Spec: Object: Bid — JSON deserialization of id, item, price, deal, cid
     #[test]
     fn test_bid_deserialization() {
         let json = r#"{
@@ -284,6 +291,7 @@ mod tests {
         assert_eq!(bid.deal, Some("deal-456".to_string()));
     }
 
+    // Spec: Object: Bid — bundle field for app install deep linking
     #[test]
     fn test_bid_with_bundle() {
         let bid = Bid::builder()
@@ -297,6 +305,7 @@ mod tests {
         assert_eq!(bid.bundle, Some("com.example.app".to_string()));
     }
 
+    // Spec: Object: Bid — secure flag (1=HTTPS) for rendering endpoint
     #[test]
     fn test_bid_secure_flag() {
         let bid = Bid::builder()
@@ -310,6 +319,7 @@ mod tests {
         assert_eq!(bid.secure, Some(1));
     }
 
+    // Spec: Object: Bid — expiration (exp) and delivery timestamp (dt)
     #[test]
     fn test_bid_with_expiration() {
         let bid = Bid::builder()
@@ -323,5 +333,147 @@ mod tests {
 
         assert_eq!(bid.exp, Some(3600));
         assert_eq!(bid.dt, Some(1609459200));
+    }
+
+    // Spec: Object: Bid — default() produces empty id, empty item, price 0.0
+    #[test]
+    fn test_bid_default() {
+        let bid: Bid = Bid::default();
+        assert_eq!(bid.id, "");
+        assert_eq!(bid.item, "");
+        assert_eq!(bid.price, 0.0);
+        assert_eq!(bid.deal, None);
+        assert_eq!(bid.cid, None);
+        assert_eq!(bid.tactic, None);
+        assert_eq!(bid.nurl, None);
+        assert_eq!(bid.burl, None);
+        assert_eq!(bid.lurl, None);
+        assert_eq!(bid.exp, None);
+        assert_eq!(bid.dt, None);
+        assert_eq!(bid.adomain, None);
+        assert_eq!(bid.cat, None);
+        assert_eq!(bid.attr, None);
+        assert_eq!(bid.lang, None);
+        assert_eq!(bid.media, None);
+        assert_eq!(bid.apis, None);
+        assert_eq!(bid.bundle, None);
+        assert_eq!(bid.secure, None);
+        assert_eq!(bid.purl, None);
+        assert_eq!(bid.macro_, None);
+        assert_eq!(bid.ext, None);
+    }
+
+    // Spec: Object: Bid — serialize then deserialize roundtrip preserves all fields
+    #[test]
+    fn test_bid_roundtrip() {
+        let bid = Bid::builder()
+            .id("bid-rt".to_string())
+            .item("item-rt".to_string())
+            .price(7.77)
+            .deal(Some("deal-rt".to_string()))
+            .cid(Some("camp-rt".to_string()))
+            .tactic(Some("tactic-rt".to_string()))
+            .nurl(Some("https://win.example.com".to_string()))
+            .lang(Some("en".to_string()))
+            .secure(Some(1))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&bid).unwrap();
+        let deserialized: Bid = serde_json::from_str(&json).unwrap();
+        assert_eq!(bid, deserialized);
+    }
+
+    // Spec: Object: Bid — optional fields omitted from JSON when None
+    #[test]
+    fn test_bid_optional_fields_not_in_json() {
+        let bid = Bid::builder()
+            .id("bid-min".to_string())
+            .item("item-min".to_string())
+            .price(1.00)
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&bid).unwrap();
+        assert!(json.contains("\"id\":\"bid-min\""));
+        assert!(json.contains("\"item\":\"item-min\""));
+        assert!(json.contains("\"price\":1"));
+        assert!(!json.contains("\"deal\""));
+        assert!(!json.contains("\"cid\""));
+        assert!(!json.contains("\"tactic\""));
+        assert!(!json.contains("\"nurl\""));
+        assert!(!json.contains("\"burl\""));
+        assert!(!json.contains("\"lurl\""));
+        assert!(!json.contains("\"exp\""));
+        assert!(!json.contains("\"dt\""));
+        assert!(!json.contains("\"adomain\""));
+        assert!(!json.contains("\"cat\""));
+        assert!(!json.contains("\"attr\""));
+        assert!(!json.contains("\"lang\""));
+        assert!(!json.contains("\"media\""));
+        assert!(!json.contains("\"apis\""));
+        assert!(!json.contains("\"bundle\""));
+        assert!(!json.contains("\"secure\""));
+        assert!(!json.contains("\"purl\""));
+        assert!(!json.contains("\"ext\""));
+    }
+
+    // Spec: Object: Bid — tactic field for buyer reporting labels
+    #[test]
+    fn test_bid_with_tactic() {
+        let bid = Bid::builder()
+            .id("bid-tac".to_string())
+            .item("item-tac".to_string())
+            .price(4.00)
+            .tactic(Some("retargeting-q2".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(bid.tactic, Some("retargeting-q2".to_string()));
+
+        let json = serde_json::to_string(&bid).unwrap();
+        let deserialized: Bid = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.tactic, Some("retargeting-q2".to_string()));
+    }
+
+    // Spec: Object: Bid — apis field for self-declared API framework IDs
+    #[test]
+    fn test_bid_with_apis() {
+        let bid = Bid::builder()
+            .id("bid-apis".to_string())
+            .item("item-apis".to_string())
+            .price(3.00)
+            .apis(Some(vec![3, 5, 6]))
+            .build()
+            .unwrap();
+
+        let apis = bid.apis.as_ref().unwrap();
+        assert_eq!(apis.len(), 3);
+        assert_eq!(apis[0], 3);
+        assert_eq!(apis[1], 5);
+        assert_eq!(apis[2], 6);
+    }
+
+    // Spec: Object: Bid — purl field for previously approved creative URL
+    #[test]
+    fn test_bid_purl_field() {
+        let bid = Bid::builder()
+            .id("bid-purl".to_string())
+            .item("item-purl".to_string())
+            .price(5.00)
+            .purl(Some(
+                "https://creative.example.com/approved/123".to_string(),
+            ))
+            .build()
+            .unwrap();
+
+        assert_eq!(
+            bid.purl,
+            Some("https://creative.example.com/approved/123".to_string())
+        );
+
+        let json = serde_json::to_string(&bid).unwrap();
+        let deserialized: Bid = serde_json::from_str(&json).unwrap();
+        assert_eq!(bid.purl, deserialized.purl);
     }
 }

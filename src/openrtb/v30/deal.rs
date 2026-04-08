@@ -92,6 +92,7 @@ impl Deal {
 mod tests {
     use super::*;
 
+    // Spec: Object: Deal — required id with optional flr, flrcur, and at fields
     #[test]
     fn test_deal_creation() {
         let deal = Deal::builder()
@@ -108,6 +109,7 @@ mod tests {
         assert_eq!(deal.at, Some(3));
     }
 
+    // Spec: Object: Deal — minimal deal with id only, all optionals None
     #[test]
     fn test_deal_minimal() {
         let deal = Deal::builder().id("deal-456".to_string()).build().unwrap();
@@ -117,6 +119,7 @@ mod tests {
         assert_eq!(deal.at, None);
     }
 
+    // Spec: Object: Deal — wseat allowlist for buyer seat restrictions
     #[test]
     fn test_deal_with_seat_restrictions() {
         let deal = Deal::builder()
@@ -133,6 +136,7 @@ mod tests {
         assert!(deal.wseat.as_ref().unwrap().contains(&"seat1".to_string()));
     }
 
+    // Spec: Object: Deal — wadomain allowlist for advertiser domain restrictions
     #[test]
     fn test_deal_with_domain_restrictions() {
         let deal = Deal::builder()
@@ -153,6 +157,7 @@ mod tests {
         );
     }
 
+    // Spec: Object: Deal — fixed price auction type (at=3) with floor
     #[test]
     fn test_deal_fixed_price() {
         let deal = Deal::builder()
@@ -167,6 +172,7 @@ mod tests {
         assert_eq!(deal.flr, Some(10.00));
     }
 
+    // Spec: Object: Deal — JSON serialization of id, flr, flrcur fields
     #[test]
     fn test_deal_serialization() {
         let deal = Deal::builder()
@@ -182,6 +188,7 @@ mod tests {
         assert!(json.contains("\"flrcur\":\"USD\""));
     }
 
+    // Spec: Object: Deal — JSON deserialization with wseat array
     #[test]
     fn test_deal_deserialization() {
         let json = r#"{
@@ -199,6 +206,7 @@ mod tests {
         assert_eq!(deal.wseat.as_ref().unwrap().len(), 2);
     }
 
+    // Spec: Object: Deal — combined wseat and wadomain restrictions
     #[test]
     fn test_deal_with_multiple_restrictions() {
         let deal = Deal::builder()
@@ -211,5 +219,78 @@ mod tests {
 
         assert_eq!(deal.wseat.as_ref().unwrap().len(), 1);
         assert_eq!(deal.wadomain.as_ref().unwrap().len(), 1);
+    }
+
+    // Spec: Object: Deal — default() produces empty id and None for all optionals
+    #[test]
+    fn test_deal_default() {
+        let deal: Deal = Deal::default();
+        assert_eq!(deal.id, "");
+        assert_eq!(deal.flr, None);
+        assert_eq!(deal.flrcur, None);
+        assert_eq!(deal.at, None);
+        assert_eq!(deal.wseat, None);
+        assert_eq!(deal.wadomain, None);
+        assert_eq!(deal.ext, None);
+    }
+
+    // Spec: Object: Deal — serialize then deserialize roundtrip preserves all fields
+    #[test]
+    fn test_deal_roundtrip() {
+        let deal = Deal::builder()
+            .id("deal-rt".to_string())
+            .flr(Some(3.50))
+            .flrcur(Some("EUR".to_string()))
+            .at(Some(2))
+            .wseat(Some(vec!["s1".to_string()]))
+            .wadomain(Some(vec!["adv.com".to_string()]))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&deal).unwrap();
+        let deserialized: Deal = serde_json::from_str(&json).unwrap();
+        assert_eq!(deal, deserialized);
+    }
+
+    // Spec: Object: Deal — optional fields omitted from JSON when None
+    #[test]
+    fn test_deal_optional_fields_not_in_json() {
+        let deal = Deal::builder().id("deal-min".to_string()).build().unwrap();
+
+        let json = serde_json::to_string(&deal).unwrap();
+        assert!(json.contains("\"id\":\"deal-min\""));
+        assert!(!json.contains("\"flr\""));
+        assert!(!json.contains("\"flrcur\""));
+        assert!(!json.contains("\"at\""));
+        assert!(!json.contains("\"wseat\""));
+        assert!(!json.contains("\"wadomain\""));
+        assert!(!json.contains("\"ext\""));
+    }
+
+    // Spec: Object: Deal — auction types: 1=first price, 2=second price, 3=fixed price
+    #[test]
+    fn test_deal_auction_types() {
+        let first_price = Deal::builder()
+            .id("deal-fp".to_string())
+            .at(Some(1))
+            .build()
+            .unwrap();
+        assert_eq!(first_price.at, Some(1));
+
+        let second_price = Deal::builder()
+            .id("deal-sp".to_string())
+            .at(Some(2))
+            .build()
+            .unwrap();
+        assert_eq!(second_price.at, Some(2));
+
+        let fixed_price = Deal::builder()
+            .id("deal-fix".to_string())
+            .at(Some(3))
+            .flr(Some(15.00))
+            .build()
+            .unwrap();
+        assert_eq!(fixed_price.at, Some(3));
+        assert_eq!(fixed_price.flr, Some(15.00));
     }
 }

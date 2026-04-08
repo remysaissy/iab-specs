@@ -192,6 +192,7 @@ impl VideoPlacement {
 mod tests {
     use super::*;
 
+    // Spec: Object: VideoPlacement — verifies builder creates placement with ptype, dimensions, and duration
     #[test]
     fn test_video_placement_creation() {
         let video = VideoPlacement::builder()
@@ -209,6 +210,7 @@ mod tests {
         assert_eq!(video.maxdur, Some(30));
     }
 
+    // Spec: Object: VideoPlacement — verifies skip, skipmin, and skipafter fields for skippable ads
     #[test]
     fn test_video_placement_skippable() {
         let video = VideoPlacement::builder()
@@ -223,6 +225,7 @@ mod tests {
         assert_eq!(video.skipafter, Some(5));
     }
 
+    // Spec: Object: VideoPlacement — verifies protocol field accepts array of video protocol IDs
     #[test]
     fn test_video_placement_with_protocols() {
         let video = VideoPlacement::builder()
@@ -233,6 +236,7 @@ mod tests {
         assert_eq!(video.protocol.as_ref().unwrap().len(), 4);
     }
 
+    // Spec: Object: VideoPlacement — verifies mime field accepts array of MIME type strings
     #[test]
     fn test_video_placement_with_mime_types() {
         let video = VideoPlacement::builder()
@@ -253,6 +257,7 @@ mod tests {
         );
     }
 
+    // Spec: Object: VideoPlacement — verifies playmethod and playend fields for playback control
     #[test]
     fn test_video_placement_playback_methods() {
         let video = VideoPlacement::builder()
@@ -265,6 +270,7 @@ mod tests {
         assert_eq!(video.playend, Some(1));
     }
 
+    // Spec: Object: VideoPlacement — verifies minbitr and maxbitr fields for bitrate constraints
     #[test]
     fn test_video_placement_bitrate() {
         let video = VideoPlacement::builder()
@@ -277,6 +283,7 @@ mod tests {
         assert_eq!(video.maxbitr, Some(1500));
     }
 
+    // Spec: Object: VideoPlacement — verifies JSON serialization includes ptype and duration fields
     #[test]
     fn test_video_placement_serialization() {
         let video = VideoPlacement::builder()
@@ -291,6 +298,7 @@ mod tests {
         assert!(json.contains("\"mindur\":5"));
     }
 
+    // Spec: Object: VideoPlacement — verifies JSON deserialization restores fields from JSON string
     #[test]
     fn test_video_placement_deserialization() {
         let json = r#"{
@@ -307,10 +315,92 @@ mod tests {
         assert_eq!(video.skip, Some(1));
     }
 
+    // Spec: Object: VideoPlacement — verifies linear field for in-stream vs overlay mode
     #[test]
     fn test_video_placement_linear() {
         let video = VideoPlacement::builder().linear(Some(1)).build().unwrap();
 
         assert_eq!(video.linear, Some(1));
+    }
+
+    // Spec: Object: VideoPlacement — verifies default() produces all None fields
+    #[test]
+    fn test_video_placement_default() {
+        let video: VideoPlacement = VideoPlacement::default();
+        assert_eq!(video.ptype, None);
+        assert_eq!(video.pos, None);
+        assert_eq!(video.w, None);
+        assert_eq!(video.h, None);
+        assert_eq!(video.unit, None);
+        assert_eq!(video.mindur, None);
+        assert_eq!(video.maxdur, None);
+        assert_eq!(video.maxext, None);
+        assert_eq!(video.protocol, None);
+        assert_eq!(video.skip, None);
+        assert_eq!(video.skipmin, None);
+        assert_eq!(video.skipafter, None);
+        assert_eq!(video.playmethod, None);
+        assert_eq!(video.playend, None);
+        assert_eq!(video.clktype, None);
+        assert_eq!(video.mime, None);
+        assert_eq!(video.api, None);
+        assert_eq!(video.delivery, None);
+        assert_eq!(video.minbitr, None);
+        assert_eq!(video.maxbitr, None);
+        assert_eq!(video.linear, None);
+        assert_eq!(video.comp, None);
+        assert_eq!(video.comptype, None);
+        assert!(video.ext.is_none());
+    }
+
+    // Spec: Object: VideoPlacement — verifies serialize then deserialize roundtrip preserves all fields
+    #[test]
+    fn test_video_placement_roundtrip() {
+        let video = VideoPlacement::builder()
+            .ptype(Some(1))
+            .w(Some(640))
+            .h(Some(480))
+            .mindur(Some(5))
+            .maxdur(Some(30))
+            .skip(Some(1))
+            .linear(Some(1))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&video).unwrap();
+        let deserialized: VideoPlacement = serde_json::from_str(&json).unwrap();
+        assert_eq!(video, deserialized);
+    }
+
+    // Spec: Object: VideoPlacement — verifies clktype field for click behavior
+    #[test]
+    fn test_video_placement_with_clktype() {
+        let video = VideoPlacement::builder().clktype(Some(1)).build().unwrap();
+
+        assert_eq!(video.clktype, Some(1));
+    }
+
+    // Spec: Object: VideoPlacement — verifies unit field for measurement unit of w/h
+    #[test]
+    fn test_video_placement_with_unit() {
+        let video = VideoPlacement::builder().unit(Some(2)).build().unwrap();
+
+        assert_eq!(video.unit, Some(2));
+    }
+
+    // Spec: Object: VideoPlacement — verifies pos field for placement position on screen
+    #[test]
+    fn test_video_placement_with_pos() {
+        let video = VideoPlacement::builder().pos(Some(1)).build().unwrap();
+
+        assert_eq!(video.pos, Some(1));
+    }
+
+    // Spec: Object: VideoPlacement — verifies empty placement serializes to empty JSON object
+    #[test]
+    fn test_video_placement_optional_fields_not_in_json() {
+        let video: VideoPlacement = VideoPlacement::default();
+        let json = serde_json::to_string(&video).unwrap();
+        assert_eq!(json, "{}");
     }
 }

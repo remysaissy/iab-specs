@@ -63,6 +63,7 @@ impl DisplayFormat {
 mod tests {
     use super::*;
 
+    // Spec: Object: DisplayFormat — verifies wratio and hratio fields for flexible aspect ratio ads
     #[test]
     fn test_display_format_with_aspect_ratio() {
         let format = DisplayFormat::builder()
@@ -75,6 +76,7 @@ mod tests {
         assert_eq!(format.hratio, Some(9));
     }
 
+    // Spec: Object: DisplayFormat — verifies expdir field for expandable ad directions
     #[test]
     fn test_display_format_expandable() {
         let format = DisplayFormat::builder()
@@ -85,5 +87,81 @@ mod tests {
             .unwrap();
 
         assert_eq!(format.expdir.as_ref().unwrap().len(), 4);
+    }
+
+    // Spec: Object: DisplayFormat — verifies default() produces all None fields
+    #[test]
+    fn test_display_format_default() {
+        let format: DisplayFormat = DisplayFormat::default();
+        assert_eq!(format.w, None);
+        assert_eq!(format.h, None);
+        assert_eq!(format.wratio, None);
+        assert_eq!(format.hratio, None);
+        assert_eq!(format.expdir, None);
+        assert!(format.ext.is_none());
+    }
+
+    // Spec: Object: DisplayFormat — verifies fixed dimensions w=300, h=250
+    #[test]
+    fn test_display_format_fixed_dimensions() {
+        let format = DisplayFormat::builder()
+            .w(Some(300))
+            .h(Some(250))
+            .build()
+            .unwrap();
+
+        assert_eq!(format.w, Some(300));
+        assert_eq!(format.h, Some(250));
+    }
+
+    // Spec: Object: DisplayFormat — verifies serialize then deserialize roundtrip preserves all fields
+    #[test]
+    fn test_display_format_roundtrip() {
+        let format = DisplayFormat::builder()
+            .w(Some(300))
+            .h(Some(250))
+            .wratio(Some(16))
+            .hratio(Some(9))
+            .expdir(Some(vec![1, 2]))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&format).unwrap();
+        let deserialized: DisplayFormat = serde_json::from_str(&json).unwrap();
+        assert_eq!(format, deserialized);
+    }
+
+    // Spec: Object: DisplayFormat — verifies JSON serialization includes dimension field values
+    #[test]
+    fn test_display_format_serialization() {
+        let format = DisplayFormat::builder()
+            .w(Some(728))
+            .h(Some(90))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&format).unwrap();
+        assert!(json.contains("\"w\":728"));
+        assert!(json.contains("\"h\":90"));
+    }
+
+    // Spec: Object: DisplayFormat — verifies JSON deserialization from a JSON string
+    #[test]
+    fn test_display_format_deserialization() {
+        let json = r#"{"w":300,"h":250,"wratio":4,"hratio":3}"#;
+
+        let format: DisplayFormat = serde_json::from_str(json).unwrap();
+        assert_eq!(format.w, Some(300));
+        assert_eq!(format.h, Some(250));
+        assert_eq!(format.wratio, Some(4));
+        assert_eq!(format.hratio, Some(3));
+    }
+
+    // Spec: Object: DisplayFormat — verifies empty format serializes to empty JSON object
+    #[test]
+    fn test_display_format_optional_fields_not_in_json() {
+        let format: DisplayFormat = DisplayFormat::default();
+        let json = serde_json::to_string(&format).unwrap();
+        assert_eq!(json, "{}");
     }
 }

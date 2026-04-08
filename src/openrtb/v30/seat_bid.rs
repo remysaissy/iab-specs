@@ -85,6 +85,7 @@ impl SeatBid {
 mod tests {
     use super::*;
 
+    // Spec: Object: SeatBid — seat, package flag, and bid array with multiple bids
     #[test]
     fn test_seatbid_creation() {
         let bid1 = Bid::builder()
@@ -113,6 +114,7 @@ mod tests {
         assert_eq!(seatbid.bid.len(), 2);
     }
 
+    // Spec: Object: SeatBid — single bid in bid array
     #[test]
     fn test_seatbid_single_bid() {
         let bid = Bid::builder()
@@ -132,6 +134,7 @@ mod tests {
         assert_eq!(seatbid.bid[0].price, 10.00);
     }
 
+    // Spec: Object: SeatBid — package=1 for all-or-nothing bidding
     #[test]
     fn test_seatbid_package_bid() {
         let bid1 = Bid::builder()
@@ -159,6 +162,7 @@ mod tests {
         assert_eq!(seatbid.bid.len(), 2);
     }
 
+    // Spec: Object: SeatBid — seat is optional, None when omitted
     #[test]
     fn test_seatbid_without_seat_id() {
         let bid = Bid::builder()
@@ -178,6 +182,7 @@ mod tests {
         assert_eq!(seatbid.bid.len(), 1);
     }
 
+    // Spec: Object: SeatBid — JSON serialization of seat, package, bid array
     #[test]
     fn test_seatbid_serialization() {
         let bid = Bid::builder()
@@ -200,6 +205,7 @@ mod tests {
         assert!(json.contains("\"bid\""));
     }
 
+    // Spec: Object: SeatBid — JSON deserialization of seat, package, bid array
     #[test]
     fn test_seatbid_deserialization() {
         let json = r#"{
@@ -220,6 +226,7 @@ mod tests {
         assert_eq!(seatbid.bid.len(), 1);
     }
 
+    // Spec: Object: SeatBid — multiple bids at different price points for same/different items
     #[test]
     fn test_seatbid_multiple_bids_different_prices() {
         let bid1 = Bid::builder()
@@ -255,6 +262,7 @@ mod tests {
         assert_eq!(seatbid.bid[2].price, 6.00);
     }
 
+    // Spec: Object: SeatBid — empty bid array is allowed by builder
     #[test]
     fn test_seatbid_empty_bid_array() {
         let seatbid = SeatBid::builder()
@@ -264,5 +272,56 @@ mod tests {
             .unwrap();
 
         assert_eq!(seatbid.bid.len(), 0);
+    }
+
+    // Spec: Object: SeatBid — default() has None seat, None package, empty bid vec
+    #[test]
+    fn test_seatbid_default() {
+        let seatbid = SeatBid::<crate::DefaultExt>::default();
+        assert_eq!(seatbid.seat, None);
+        assert_eq!(seatbid.package, None);
+        assert!(seatbid.bid.is_empty());
+        assert_eq!(seatbid.ext, None);
+    }
+
+    // Spec: Object: SeatBid — serialize then deserialize roundtrip preserves all fields
+    #[test]
+    fn test_seatbid_roundtrip() {
+        let bid = Bid::builder()
+            .id("bid-rt".to_string())
+            .item("item-rt".to_string())
+            .price(4.50)
+            .build()
+            .unwrap();
+
+        let seatbid = SeatBid::builder()
+            .seat(Some("seat-rt".to_string()))
+            .package(Some(1))
+            .bid(vec![bid])
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&seatbid).unwrap();
+        let deserialized: SeatBid = serde_json::from_str(&json).unwrap();
+        assert_eq!(seatbid, deserialized);
+    }
+
+    // Spec: Object: SeatBid — optional seat and package omitted from JSON when None
+    #[test]
+    fn test_seatbid_optional_fields_not_in_json() {
+        let bid = Bid::builder()
+            .id("bid-min".to_string())
+            .item("item-min".to_string())
+            .price(2.00)
+            .build()
+            .unwrap();
+
+        let seatbid = SeatBid::builder().bid(vec![bid]).build().unwrap();
+
+        let json = serde_json::to_string(&seatbid).unwrap();
+        assert!(json.contains("\"bid\""));
+        assert!(!json.contains("\"seat\""));
+        assert!(!json.contains("\"package\""));
+        assert!(!json.contains("\"ext\""));
     }
 }

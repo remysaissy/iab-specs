@@ -125,6 +125,7 @@ impl Item {
 mod tests {
     use super::*;
 
+    // Spec: Object: Item — required id field and optional inventory fields (qty, seq, flr, flrcur)
     #[test]
     fn test_item_creation() {
         let item = Item::builder()
@@ -143,6 +144,7 @@ mod tests {
         assert_eq!(item.flrcur, Some("USD".to_string()));
     }
 
+    // Spec: Object: Item — minimal item with id only, optionals are None
     #[test]
     fn test_item_minimal() {
         let item = Item::builder().id("item1".to_string()).build().unwrap();
@@ -152,6 +154,7 @@ mod tests {
         assert_eq!(item.flr, None);
     }
 
+    // Spec: Object: Item — floor price (flr) with EUR currency (flrcur)
     #[test]
     fn test_item_with_floor() {
         let item = Item::builder()
@@ -165,6 +168,7 @@ mod tests {
         assert_eq!(item.flrcur, Some("EUR".to_string()));
     }
 
+    // Spec: Object: Item — expiration (exp) and delivery timestamp (dt)
     #[test]
     fn test_item_with_expiration() {
         let item = Item::builder()
@@ -178,6 +182,7 @@ mod tests {
         assert_eq!(item.dt, Some(1609459200));
     }
 
+    // Spec: Object: Item — private auction flag (private=1) restricts to deals only
     #[test]
     fn test_item_private_auction() {
         let item = Item::builder()
@@ -191,6 +196,7 @@ mod tests {
         assert!(item.deal.is_some());
     }
 
+    // Spec: Object: Item — JSON serialization of id, qty, flr, flrcur fields
     #[test]
     fn test_item_serialization() {
         let item = Item::builder()
@@ -208,6 +214,7 @@ mod tests {
         assert!(json.contains("\"flrcur\":\"USD\""));
     }
 
+    // Spec: Object: Item — JSON deserialization of id, qty, seq, flr, flrcur
     #[test]
     fn test_item_deserialization() {
         let json = r#"{
@@ -226,6 +233,7 @@ mod tests {
         assert_eq!(item.flrcur, Some("USD".to_string()));
     }
 
+    // Spec: Object: Item — delivery method (dlvy) enumeration value
     #[test]
     fn test_item_with_delivery_method() {
         let item = Item::builder()
@@ -237,6 +245,7 @@ mod tests {
         assert_eq!(item.dlvy, Some(2));
     }
 
+    // Spec: Object: Item — spec field with serde_json::Value for placement details
     #[test]
     fn test_item_with_spec() {
         let spec = Box::new(serde_json::json!({
@@ -253,5 +262,129 @@ mod tests {
             .unwrap();
 
         assert!(item.spec.is_some());
+    }
+
+    // Spec: Object: Item — default() produces empty id and None for all optionals
+    #[test]
+    fn test_item_default() {
+        let item: Item = Item::default();
+        assert_eq!(item.id, "");
+        assert_eq!(item.qty, None);
+        assert_eq!(item.seq, None);
+        assert_eq!(item.flr, None);
+        assert_eq!(item.flrcur, None);
+        assert_eq!(item.exp, None);
+        assert_eq!(item.dt, None);
+        assert_eq!(item.dlvy, None);
+        assert_eq!(item.metric, None);
+        assert_eq!(item.deal, None);
+        assert_eq!(item.private, None);
+        assert_eq!(item.spec, None);
+        assert_eq!(item.ext, None);
+    }
+
+    // Spec: Object: Item — serialize then deserialize roundtrip preserves all fields
+    #[test]
+    fn test_item_roundtrip() {
+        let item = Item::builder()
+            .id("item-rt".to_string())
+            .qty(Some(2))
+            .seq(Some(1))
+            .flr(Some(1.50))
+            .flrcur(Some("USD".to_string()))
+            .exp(Some(300))
+            .dt(Some(1700000000))
+            .dlvy(Some(1))
+            .private(Some(0))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&item).unwrap();
+        let deserialized: Item = serde_json::from_str(&json).unwrap();
+        assert_eq!(item, deserialized);
+    }
+
+    // Spec: Object: Item — optional fields omitted from JSON when None
+    #[test]
+    fn test_item_optional_fields_not_in_json() {
+        let item = Item::builder().id("item-min".to_string()).build().unwrap();
+
+        let json = serde_json::to_string(&item).unwrap();
+        assert!(json.contains("\"id\":\"item-min\""));
+        assert!(!json.contains("\"qty\""));
+        assert!(!json.contains("\"seq\""));
+        assert!(!json.contains("\"flr\""));
+        assert!(!json.contains("\"flrcur\""));
+        assert!(!json.contains("\"exp\""));
+        assert!(!json.contains("\"dt\""));
+        assert!(!json.contains("\"dlvy\""));
+        assert!(!json.contains("\"metric\""));
+        assert!(!json.contains("\"deal\""));
+        assert!(!json.contains("\"private\""));
+        assert!(!json.contains("\"spec\""));
+        assert!(!json.contains("\"ext\""));
+    }
+
+    // Spec: Object: Item — metric array populated with actual Metric objects
+    #[test]
+    fn test_item_with_metrics() {
+        let m1 = Metric::builder()
+            .type_("viewability".to_string())
+            .val(0.80)
+            .vendor(Some("vendor1.com".to_string()))
+            .build()
+            .unwrap();
+
+        let m2 = Metric::builder()
+            .type_("completion".to_string())
+            .val(0.90)
+            .build()
+            .unwrap();
+
+        let item = Item::builder()
+            .id("item-met".to_string())
+            .metric(Some(vec![m1, m2]))
+            .build()
+            .unwrap();
+
+        let metrics = item.metric.as_ref().unwrap();
+        assert_eq!(metrics.len(), 2);
+        assert_eq!(metrics[0].type_, "viewability");
+        assert_eq!(metrics[0].val, 0.80);
+        assert_eq!(metrics[1].type_, "completion");
+    }
+
+    // Spec: Object: Item — deal array populated with actual Deal objects
+    #[test]
+    fn test_item_with_deals() {
+        let d1 = Deal::builder()
+            .id("deal-1".to_string())
+            .flr(Some(5.00))
+            .flrcur(Some("USD".to_string()))
+            .at(Some(3))
+            .build()
+            .unwrap();
+
+        let d2 = Deal::builder()
+            .id("deal-2".to_string())
+            .flr(Some(2.00))
+            .at(Some(1))
+            .wseat(Some(vec!["seat-a".to_string()]))
+            .build()
+            .unwrap();
+
+        let item = Item::builder()
+            .id("item-deals".to_string())
+            .private(Some(1))
+            .deal(Some(vec![d1, d2]))
+            .build()
+            .unwrap();
+
+        let deals = item.deal.as_ref().unwrap();
+        assert_eq!(deals.len(), 2);
+        assert_eq!(deals[0].id, "deal-1");
+        assert_eq!(deals[0].at, Some(3));
+        assert_eq!(deals[1].id, "deal-2");
+        assert_eq!(deals[1].wseat.as_ref().unwrap().len(), 1);
     }
 }
