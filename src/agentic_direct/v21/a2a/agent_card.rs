@@ -397,4 +397,32 @@ mod tests {
         let parsed: SecurityScheme = serde_json::from_str(&json).unwrap();
         assert_eq!(scheme, parsed);
     }
+
+    #[test]
+    fn test_agent_card_default() {
+        // Spec: A2A Protocol — AgentCard default values
+        let card = AgentCard::builder().build().unwrap();
+        assert_eq!(card.name, String::new());
+        assert_eq!(card.version, String::new());
+        assert_eq!(card.protocol_version, String::new());
+        assert_eq!(card.url, String::new());
+        assert!(card.description.is_none());
+        assert!(card.skills.is_empty());
+        assert!(card.capabilities.is_none());
+        assert!(card.additional_interfaces.is_empty());
+        assert!(card.security_schemes.is_empty());
+        assert!(card.ext.is_none());
+    }
+
+    #[test]
+    fn test_agent_card_rejects_snake_case_keys() {
+        // Spec: A2A Protocol — camelCase serialization is mandatory
+        let json =
+            r#"{"name":"Test","version":"1.0","protocol_version":"0.3.0","url":"https://t.com"}"#;
+        let result: Result<AgentCard, _> = serde_json::from_str(json);
+        assert!(
+            result.is_err(),
+            "snake_case keys should fail deserialization when camelCase is required"
+        );
+    }
 }

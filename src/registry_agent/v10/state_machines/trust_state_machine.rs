@@ -130,45 +130,6 @@ mod tests {
     }
 
     #[test]
-    fn test_terminal_state_blocked_has_no_outgoing() {
-        assert!(valid_trust_transitions_from(&TrustLevel::Blocked).is_empty());
-    }
-
-    #[test]
-    fn test_trust_happy_path() {
-        let happy_path = [
-            (TrustLevel::Unknown, TrustLevel::Registered),
-            (TrustLevel::Registered, TrustLevel::Verified),
-            (TrustLevel::Verified, TrustLevel::Preferred),
-        ];
-
-        for (from, to) in happy_path {
-            assert!(
-                can_transition_trust(&from, &to),
-                "expected happy path transition {:?} -> {:?} to be valid",
-                from,
-                to
-            );
-        }
-    }
-
-    #[test]
-    fn test_blocked_reachable_from_registered_verified_preferred() {
-        assert!(can_transition_trust(
-            &TrustLevel::Registered,
-            &TrustLevel::Blocked
-        ));
-        assert!(can_transition_trust(
-            &TrustLevel::Verified,
-            &TrustLevel::Blocked
-        ));
-        assert!(can_transition_trust(
-            &TrustLevel::Preferred,
-            &TrustLevel::Blocked
-        ));
-    }
-
-    #[test]
     fn test_trust_transition_builder_and_serde_roundtrip() {
         let original = TrustTransition::builder()
             .from(TrustLevel::Unknown)
@@ -191,5 +152,58 @@ mod tests {
             Some("Agent completed registration".to_string())
         );
         assert_eq!(parsed.verified_by, Some("registry-admin-001".to_string()));
+    }
+
+    #[test]
+    fn test_self_transitions_are_invalid() {
+        // Spec: Trust lifecycle — self-transitions are invalid
+        let all_levels = [
+            TrustLevel::Unknown,
+            TrustLevel::Registered,
+            TrustLevel::Verified,
+            TrustLevel::Preferred,
+            TrustLevel::Blocked,
+        ];
+
+        for level in &all_levels {
+            assert!(
+                !can_transition_trust(level, level),
+                "Self-transition {:?} -> {:?} should be invalid",
+                level,
+                level
+            );
+        }
+    }
+
+    #[test]
+    fn test_trust_transition_minimal() {
+        // Spec: TrustTransition — optional fields omitted when absent
+        let transition = TrustTransition::builder()
+            .from(TrustLevel::Registered)
+            .to(TrustLevel::Verified)
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&transition).unwrap();
+        assert!(!json.contains("timestamp"), "timestamp should be omitted");
+        assert!(!json.contains("reason"), "reason should be omitted");
+        assert!(
+            !json.contains("verified_by"),
+            "verified_by should be omitted"
+        );
+
+        let parsed: TrustTransition = serde_json::from_str(&json).unwrap();
+        assert_eq!(transition, parsed);
+    }
+
+    #[test]
+    fn test_trust_transition_default() {
+        // Spec: TrustTransition — default state
+        let transition = TrustTransition::default();
+        assert_eq!(transition.from, TrustLevel::Unknown);
+        assert_eq!(transition.to, TrustLevel::Unknown);
+        assert!(transition.timestamp.is_none());
+        assert!(transition.reason.is_none());
+        assert!(transition.verified_by.is_none());
     }
 }

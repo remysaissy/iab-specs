@@ -148,35 +148,27 @@ mod tests {
     }
 
     #[test]
-    fn test_happy_path() {
-        let path = vec![
+    fn test_self_transitions_are_invalid() {
+        // Spec: Agentic Direct 2.1 — order self-transitions are invalid
+        let all_statuses = [
             OrderStatus::Draft,
             OrderStatus::PendingReview,
             OrderStatus::Approved,
             OrderStatus::InProgress,
+            OrderStatus::Paused,
             OrderStatus::Completed,
+            OrderStatus::Cancelled,
+            OrderStatus::Rejected,
+            OrderStatus::Expired,
         ];
-
-        for window in path.windows(2) {
+        for status in &all_statuses {
             assert!(
-                can_transition_order(&window[0], &window[1]),
-                "Happy path transition from {:?} to {:?} should be valid",
-                window[0],
-                window[1]
+                !can_transition_order(status, status),
+                "Self-transition {:?} -> {:?} should be invalid",
+                status,
+                status
             );
         }
-    }
-
-    #[test]
-    fn test_pause_resume() {
-        assert!(can_transition_order(
-            &OrderStatus::InProgress,
-            &OrderStatus::Paused
-        ));
-        assert!(can_transition_order(
-            &OrderStatus::Paused,
-            &OrderStatus::InProgress
-        ));
     }
 
     #[test]
@@ -193,5 +185,32 @@ mod tests {
         let json = serde_json::to_string(&transition).unwrap();
         let parsed: OrderTransition = serde_json::from_str(&json).unwrap();
         assert_eq!(transition, parsed);
+    }
+
+    #[test]
+    fn test_transition_minimal() {
+        // Spec: Agentic Direct 2.1 — OrderTransition optional fields omitted
+        let transition = OrderTransition::builder()
+            .from(OrderStatus::Draft)
+            .to(OrderStatus::PendingReview)
+            .build()
+            .unwrap();
+        let json = serde_json::to_string(&transition).unwrap();
+        assert!(!json.contains("timestamp"));
+        assert!(!json.contains("reason"));
+        assert!(!json.contains("actor"));
+        let parsed: OrderTransition = serde_json::from_str(&json).unwrap();
+        assert_eq!(transition, parsed);
+    }
+
+    #[test]
+    fn test_transition_default() {
+        // Spec: Agentic Direct 2.1 — OrderTransition defaults
+        let transition = OrderTransition::default();
+        assert_eq!(transition.from, OrderStatus::Draft);
+        assert_eq!(transition.to, OrderStatus::Draft);
+        assert!(transition.timestamp.is_none());
+        assert!(transition.reason.is_none());
+        assert!(transition.actor.is_none());
     }
 }

@@ -63,4 +63,17 @@ mod tests {
         let default = SkillInputMode::default();
         assert_eq!(default, SkillInputMode::Text, "Default should be Text");
     }
+
+    #[test]
+    fn test_case_sensitive_deserialization() {
+        // Spec: Agentic Direct 2.1 — snake_case serialization is mandatory
+        let invalid = ["\"Text\"", "\"FILE\""];
+        for json in &invalid {
+            assert!(
+                serde_json::from_str::<SkillInputMode>(json).is_err(),
+                "{} should be rejected",
+                json
+            );
+        }
+    }
 }

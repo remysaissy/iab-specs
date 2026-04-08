@@ -62,4 +62,17 @@ mod tests {
         let default = TransportType::default();
         assert_eq!(default, TransportType::Http, "Default should be Http");
     }
+
+    #[test]
+    fn test_case_sensitive_deserialization() {
+        // Spec: Agentic Direct 2.1 — snake_case serialization is mandatory
+        let invalid = ["\"Http\"", "\"SSE\""];
+        for json in &invalid {
+            assert!(
+                serde_json::from_str::<TransportType>(json).is_err(),
+                "{} should be rejected",
+                json
+            );
+        }
+    }
 }

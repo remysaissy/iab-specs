@@ -67,4 +67,17 @@ mod tests {
             "Default should be Available"
         );
     }
+
+    #[test]
+    fn test_case_sensitive_deserialization() {
+        // Spec: Agentic Direct 2.1 — snake_case serialization is mandatory
+        let invalid = ["\"Available\"", "\"OUT_OF_STOCK\""];
+        for json in &invalid {
+            assert!(
+                serde_json::from_str::<ProductAvailability>(json).is_err(),
+                "{} should be rejected",
+                json
+            );
+        }
+    }
 }

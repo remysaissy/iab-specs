@@ -70,4 +70,17 @@ mod tests {
         let default = TaskState::default();
         assert_eq!(default, TaskState::Working, "Default should be Working");
     }
+
+    #[test]
+    fn test_case_sensitive_deserialization() {
+        // Spec: Agentic Direct 2.1 — snake_case serialization is mandatory
+        let invalid = ["\"Working\"", "\"INPUT_REQUIRED\""];
+        for json in &invalid {
+            assert!(
+                serde_json::from_str::<TaskState>(json).is_err(),
+                "{} should be rejected",
+                json
+            );
+        }
+    }
 }

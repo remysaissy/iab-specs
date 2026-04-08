@@ -79,4 +79,17 @@ mod tests {
         let default = CreativeStatus::default();
         assert_eq!(default, CreativeStatus::Draft, "Default should be Draft");
     }
+
+    #[test]
+    fn test_case_sensitive_deserialization() {
+        // Spec: Agentic Direct 2.1 — snake_case serialization is mandatory
+        let invalid = ["\"Draft\"", "\"APPROVED\""];
+        for json in &invalid {
+            assert!(
+                serde_json::from_str::<CreativeStatus>(json).is_err(),
+                "{} should be rejected",
+                json
+            );
+        }
+    }
 }

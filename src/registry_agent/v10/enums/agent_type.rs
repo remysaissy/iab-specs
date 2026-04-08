@@ -90,4 +90,20 @@ mod tests {
         let default = AgentType::default();
         assert_eq!(default, AgentType::Dsp, "Default should be Dsp");
     }
+
+    #[test]
+    fn test_case_sensitive_deserialization() {
+        // Spec: Registry Agent 1.0 — snake_case serialization is mandatory
+        // Uppercase and mixed-case variants must be rejected
+        let invalid_cases = ["\"DSP\"", "\"Ssp\""];
+
+        for invalid_json in &invalid_cases {
+            let result: Result<AgentType, _> = serde_json::from_str(invalid_json);
+            assert!(
+                result.is_err(),
+                "Case-insensitive variant {} should fail deserialization",
+                invalid_json
+            );
+        }
+    }
 }

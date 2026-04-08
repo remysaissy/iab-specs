@@ -160,4 +160,53 @@ mod tests {
         let parsed: TaskTransition = serde_json::from_str(&json).unwrap();
         assert_eq!(transition, parsed);
     }
+
+    #[test]
+    fn test_self_transitions_are_invalid() {
+        // Spec: A2A Protocol — self-transitions are invalid
+        let all_states = [
+            TaskState::Working,
+            TaskState::InputRequired,
+            TaskState::Completed,
+            TaskState::Failed,
+            TaskState::Cancelled,
+        ];
+        for state in &all_states {
+            assert!(
+                !can_transition_task(state, state),
+                "Self-transition {:?} -> {:?} should be invalid",
+                state,
+                state
+            );
+        }
+    }
+
+    #[test]
+    fn test_task_transition_minimal() {
+        // Spec: A2A Protocol — TaskTransition optional fields omitted when absent
+        let transition = TaskTransition::builder()
+            .from(TaskState::Working)
+            .to(TaskState::Completed)
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&transition).unwrap();
+        assert!(!json.contains("timestamp"));
+        assert!(!json.contains("reason"));
+        assert!(!json.contains("actor"));
+
+        let parsed: TaskTransition = serde_json::from_str(&json).unwrap();
+        assert_eq!(transition, parsed);
+    }
+
+    #[test]
+    fn test_task_transition_default() {
+        // Spec: A2A Protocol — TaskTransition default state
+        let transition = TaskTransition::default();
+        assert_eq!(transition.from, TaskState::Working);
+        assert_eq!(transition.to, TaskState::Working);
+        assert!(transition.timestamp.is_none());
+        assert!(transition.reason.is_none());
+        assert!(transition.actor.is_none());
+    }
 }

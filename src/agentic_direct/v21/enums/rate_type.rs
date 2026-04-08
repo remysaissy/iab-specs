@@ -70,4 +70,17 @@ mod tests {
         let default = RateType::default();
         assert_eq!(default, RateType::Cpm, "Default should be Cpm");
     }
+
+    #[test]
+    fn test_case_sensitive_deserialization() {
+        // Spec: Agentic Direct 2.1 — snake_case serialization is mandatory
+        let invalid = ["\"Cpm\"", "\"CPM\""];
+        for json in &invalid {
+            assert!(
+                serde_json::from_str::<RateType>(json).is_err(),
+                "{} should be rejected",
+                json
+            );
+        }
+    }
 }

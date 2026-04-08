@@ -86,4 +86,17 @@ mod tests {
         let default = OrderStatus::default();
         assert_eq!(default, OrderStatus::Draft, "Default should be Draft");
     }
+
+    #[test]
+    fn test_case_sensitive_deserialization() {
+        // Spec: Agentic Direct 2.1 — snake_case serialization is mandatory
+        let invalid = ["\"Draft\"", "\"PENDING_REVIEW\""];
+        for json in &invalid {
+            assert!(
+                serde_json::from_str::<OrderStatus>(json).is_err(),
+                "{} should be rejected",
+                json
+            );
+        }
+    }
 }
