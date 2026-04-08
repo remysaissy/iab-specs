@@ -61,6 +61,7 @@ mod tests {
 
     #[test]
     fn test_refresh_with_settings() {
+        // Spec: Section 3.2.33
         let refresh = Refresh::builder()
             .refsettings(Some(vec![
                 RefSettings::builder()
@@ -83,6 +84,7 @@ mod tests {
 
     #[test]
     fn test_refresh_serialization() {
+        // Spec: Section 3.2.33
         let refresh = Refresh::builder()
             .refsettings(Some(vec![
                 RefSettings::builder()
@@ -101,8 +103,85 @@ mod tests {
 
     #[test]
     fn test_skip_serializing_none() {
+        // Spec: Section 3.2.33
         let refresh = Refresh::builder().build().unwrap();
         let json = serde_json::to_string(&refresh).unwrap();
         assert_eq!(json, "{}");
+    }
+
+    #[test]
+    fn test_refresh_ext_field() {
+        // Spec: Section 3.2.33
+        let ext = serde_json::json!({"custom_field": "value", "priority": 5});
+        let refresh = RefreshBuilder::<serde_json::Value>::default()
+            .refsettings(Some(vec![RefSettings {
+                reftype: Some(1),
+                minint: Some(30),
+                ext: None,
+            }]))
+            .ext(Some(Box::new(ext.clone())))
+            .build()
+            .unwrap();
+
+        assert_eq!(*refresh.ext.as_ref().unwrap().as_ref(), ext);
+
+        let json = serde_json::to_string(&refresh).unwrap();
+        let deserialized: Refresh<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(refresh, deserialized);
+    }
+
+    #[test]
+    fn test_refresh_deserialization_from_json() {
+        // Spec: Section 3.2.33
+        let json = r#"{"refsettings":[{"reftype":1,"minint":30},{"reftype":2,"minint":60}]}"#;
+        let refresh: Refresh = serde_json::from_str(json).unwrap();
+        assert!(refresh.refsettings.is_some());
+        let settings = refresh.refsettings.as_ref().unwrap();
+        assert_eq!(settings.len(), 2);
+        assert_eq!(settings[0].reftype, Some(1));
+        assert_eq!(settings[0].minint, Some(30));
+        assert_eq!(settings[1].reftype, Some(2));
+        assert_eq!(settings[1].minint, Some(60));
+    }
+
+    #[test]
+    fn test_refresh_empty_settings() {
+        // Spec: Section 3.2.33
+        let refresh = Refresh::builder()
+            .refsettings(Some(vec![]))
+            .build()
+            .unwrap();
+
+        assert!(refresh.refsettings.is_some());
+        assert_eq!(refresh.refsettings.as_ref().unwrap().len(), 0);
+
+        let json = serde_json::to_string(&refresh).unwrap();
+        assert!(json.contains("\"refsettings\":[]"));
+    }
+
+    #[test]
+    fn test_refresh_roundtrip_all_fields() {
+        // Spec: Section 3.2.33
+        let refresh = Refresh::builder()
+            .refsettings(Some(vec![
+                RefSettings::builder()
+                    .reftype(Some(1))
+                    .minint(Some(30))
+                    .build()
+                    .unwrap(),
+                RefSettings::builder()
+                    .reftype(Some(2))
+                    .minint(Some(90))
+                    .build()
+                    .unwrap(),
+            ]))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&refresh).unwrap();
+        let deserialized: Refresh = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(refresh.refsettings, deserialized.refsettings);
+        assert_eq!(refresh, deserialized);
     }
 }

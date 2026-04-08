@@ -71,6 +71,7 @@ mod tests {
 
     #[test]
     fn test_durfloors_serialization() {
+        // Spec: Section 3.2.35
         let floor = DurFloors::builder()
             .minduration(Some(10))
             .maxduration(Some(20))
@@ -89,6 +90,7 @@ mod tests {
 
     #[test]
     fn test_durfloors_tiered_pricing() {
+        // Spec: Section 3.2.35
         // Test multiple duration tiers
         let short_floor = DurFloors::builder()
             .minduration(Some(5))
@@ -116,5 +118,85 @@ mod tests {
 
         assert!(short_floor.bidfloor.unwrap() < medium_floor.bidfloor.unwrap());
         assert!(medium_floor.bidfloor.unwrap() < long_floor.bidfloor.unwrap());
+    }
+
+    #[test]
+    fn test_durfloors_default_builder() {
+        // Spec: Section 3.2.35
+        let floor = DurFloors::builder().build().unwrap();
+        assert!(floor.minduration.is_none());
+        assert!(floor.maxduration.is_none());
+        assert!(floor.bidfloor.is_none());
+        assert!(floor.bidfloorcur.is_none());
+        assert!(floor.ext.is_none());
+        let json = serde_json::to_string(&floor).unwrap();
+        assert_eq!(json, "{}");
+    }
+
+    #[test]
+    fn test_durfloors_ext_field() {
+        // Spec: Section 3.2.35
+        let ext = serde_json::json!({"custom_field": "value", "priority": 5});
+        let floor = DurFloorsBuilder::<serde_json::Value>::default()
+            .minduration(Some(15))
+            .maxduration(Some(30))
+            .ext(Some(Box::new(ext.clone())))
+            .build()
+            .unwrap();
+
+        assert_eq!(*floor.ext.as_ref().unwrap().as_ref(), ext);
+
+        let json = serde_json::to_string(&floor).unwrap();
+        let deserialized: DurFloors<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(floor, deserialized);
+    }
+
+    #[test]
+    fn test_durfloors_deserialization_from_json() {
+        // Spec: Section 3.2.35
+        let json = r#"{"minduration":15,"maxduration":30,"bidfloor":5.0,"bidfloorcur":"USD"}"#;
+        let floor: DurFloors = serde_json::from_str(json).unwrap();
+        assert_eq!(floor.minduration, Some(15));
+        assert_eq!(floor.maxduration, Some(30));
+        assert_eq!(floor.bidfloor, Some(5.0));
+        assert_eq!(floor.bidfloorcur, Some("USD".to_string()));
+    }
+
+    #[test]
+    fn test_durfloors_roundtrip_all_fields() {
+        // Spec: Section 3.2.35
+        let floor = DurFloors::builder()
+            .minduration(Some(10))
+            .maxduration(Some(60))
+            .bidfloor(Some(7.5))
+            .bidfloorcur(Some("EUR".to_string()))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&floor).unwrap();
+        let deserialized: DurFloors = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(floor.minduration, deserialized.minduration);
+        assert_eq!(floor.maxduration, deserialized.maxduration);
+        assert_eq!(floor.bidfloor, deserialized.bidfloor);
+        assert_eq!(floor.bidfloorcur, deserialized.bidfloorcur);
+        assert_eq!(floor, deserialized);
+    }
+
+    #[test]
+    fn test_durfloors_partial_fields() {
+        // Spec: Section 3.2.35
+        let floor = DurFloors::builder().bidfloor(Some(3.0)).build().unwrap();
+
+        assert!(floor.minduration.is_none());
+        assert!(floor.maxduration.is_none());
+        assert_eq!(floor.bidfloor, Some(3.0));
+        assert!(floor.bidfloorcur.is_none());
+
+        let json = serde_json::to_string(&floor).unwrap();
+        assert!(json.contains("\"bidfloor\":3.0"));
+        assert!(!json.contains("minduration"));
+        assert!(!json.contains("maxduration"));
+        assert!(!json.contains("bidfloorcur"));
     }
 }

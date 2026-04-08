@@ -56,8 +56,92 @@ mod tests {
 
     #[test]
     fn test_skip_serializing_none() {
+        // Spec: Section 3.2.34
         let ref_settings = RefSettings::builder().build().unwrap();
         let json = serde_json::to_string(&ref_settings).unwrap();
         assert_eq!(json, "{}");
+    }
+
+    #[test]
+    fn test_ref_settings_serialization_roundtrip() {
+        // Spec: Section 3.2.34
+        let settings = RefSettings::builder()
+            .reftype(Some(1))
+            .minint(Some(30))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&settings).unwrap();
+        let deserialized: RefSettings = serde_json::from_str(&json).unwrap();
+        assert_eq!(settings, deserialized);
+    }
+
+    #[test]
+    fn test_ref_settings_ext_field() {
+        // Spec: Section 3.2.34
+        let ext = serde_json::json!({"custom_field": "value", "priority": 5});
+        let settings = RefSettingsBuilder::<serde_json::Value>::default()
+            .reftype(Some(1))
+            .ext(Some(Box::new(ext.clone())))
+            .build()
+            .unwrap();
+
+        assert_eq!(*settings.ext.as_ref().unwrap().as_ref(), ext);
+
+        let json = serde_json::to_string(&settings).unwrap();
+        let deserialized: RefSettings<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(settings, deserialized);
+    }
+
+    #[test]
+    fn test_ref_settings_deserialization_from_json() {
+        // Spec: Section 3.2.34
+        let json = r#"{"reftype":2,"minint":60}"#;
+        let settings: RefSettings = serde_json::from_str(json).unwrap();
+        assert_eq!(settings.reftype, Some(2));
+        assert_eq!(settings.minint, Some(60));
+    }
+
+    #[test]
+    fn test_ref_settings_user_initiated_refresh() {
+        // Spec: Section 3.2.34
+        let settings = RefSettings::builder()
+            .reftype(Some(1))
+            .minint(Some(30))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&settings).unwrap();
+        assert!(json.contains("\"reftype\":1"));
+    }
+
+    #[test]
+    fn test_ref_settings_auto_refresh() {
+        // Spec: Section 3.2.34
+        let settings = RefSettings::builder()
+            .reftype(Some(2))
+            .minint(Some(60))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&settings).unwrap();
+        assert!(json.contains("\"reftype\":2"));
+    }
+
+    #[test]
+    fn test_ref_settings_roundtrip_all_fields() {
+        // Spec: Section 3.2.34
+        let settings = RefSettings::builder()
+            .reftype(Some(2))
+            .minint(Some(45))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&settings).unwrap();
+        let deserialized: RefSettings = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(settings.reftype, deserialized.reftype);
+        assert_eq!(settings.minint, deserialized.minint);
+        assert_eq!(settings, deserialized);
     }
 }
