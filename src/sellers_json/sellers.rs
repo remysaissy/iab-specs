@@ -123,4 +123,104 @@ mod tests {
             r#"{"contact_address":"Advertising System Inc., 101 Main Street, New York, NY 10101","contact_email":"adops@advertisingsystem.com","version":"1.0","identifiers":[{"name":"tag-id","value":"28cb65e5bbc0bd5f"}],"sellers":[{"seller_id":"1942009976","seller_type":"publisher","name":"Publisher1","domain":"publisher1.com"}]}"#
         );
     }
+
+    #[test]
+    fn deserialize_with_required_fields_only() {
+        // Spec: Section 2.1
+        let res = Sellers::from_str(r#"{"version":"1.0","identifiers":[],"sellers":[]}"#);
+        assert!(res.is_ok());
+        let sellers = res.unwrap();
+        assert!(sellers.contact_email.is_none());
+        assert!(sellers.contact_address.is_none());
+        assert!(sellers.ext.is_none());
+        assert!(sellers.identifiers.is_empty());
+        assert!(sellers.sellers.is_empty());
+    }
+
+    #[test]
+    fn round_trip_json_sellers() {
+        // Spec: Section 2.1
+        let original = Sellers::builder()
+            .contact_email(Some("test@example.com".to_string()))
+            .contact_address(Some("123 Main St".to_string()))
+            .version(SellersVersion::OneZero)
+            .ext(Some("ext-data".to_string()))
+            .identifiers(vec![
+                SellersIdentifier::builder()
+                    .name(SellersIdentifierName::TagId)
+                    .value("abc123")
+                    .build()
+                    .unwrap(),
+            ])
+            .sellers(vec![
+                Seller::builder()
+                    .seller_id("s1")
+                    .seller_type(SellerType::Publisher)
+                    .name(Some("Pub1".to_string()))
+                    .build()
+                    .unwrap(),
+            ])
+            .build()
+            .unwrap();
+        let json_str = serde_json::to_string(&original).unwrap();
+        let value1: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        let deserialized: Sellers = serde_json::from_str(&json_str).unwrap();
+        let json_str2 = serde_json::to_string(&deserialized).unwrap();
+        let value2: serde_json::Value = serde_json::from_str(&json_str2).unwrap();
+        assert_eq!(value1, value2);
+    }
+
+    #[test]
+    fn deserialize_with_unknown_fields_tolerated() {
+        // Spec: Section 2.1
+        let res = Sellers::from_str(
+            r#"{"version":"1.0","identifiers":[],"sellers":[],"unknown_field":"should be ignored","another":42}"#,
+        );
+        assert!(res.is_ok());
+    }
+
+    #[test]
+    fn builder_with_required_only() {
+        // Spec: Section 2.1
+        let res = Sellers::builder().version(SellersVersion::OneZero).build();
+        assert!(res.is_ok());
+        let sellers = res.unwrap();
+        let json = serde_json::to_string(&sellers).unwrap();
+        assert!(json.contains("\"version\":\"1.0\""));
+    }
+
+    #[test]
+    fn deserialize_with_null_optional_fields() {
+        // Spec: Section 2.1
+        let res = Sellers::from_str(
+            r#"{"version":"1.0","contact_email":null,"contact_address":null,"ext":null,"identifiers":[],"sellers":[]}"#,
+        );
+        assert!(res.is_ok());
+        let sellers = res.unwrap();
+        assert!(sellers.contact_email.is_none());
+        assert!(sellers.contact_address.is_none());
+        assert!(sellers.ext.is_none());
+    }
+
+    #[test]
+    fn deserialize_with_empty_sellers_array() {
+        // Spec: Section 2.1
+        let res = Sellers::from_str(r#"{"version":"1.0","identifiers":[],"sellers":[]}"#);
+        assert!(res.is_ok());
+        let sellers = res.unwrap();
+        assert!(sellers.sellers.is_empty());
+    }
+
+    #[test]
+    fn deserialize_with_multiple_identifiers() {
+        // Spec: Section 2.1, 2.2
+        let res = Sellers::from_str(
+            r#"{"version":"1.0","identifiers":[{"name":"tag-id","value":"abc"},{"name":"duns","value":"123"}],"sellers":[]}"#,
+        );
+        assert!(res.is_ok());
+        let sellers = res.unwrap();
+        assert_eq!(sellers.identifiers.len(), 2);
+        assert_eq!(sellers.identifiers[0].name, SellersIdentifierName::TagId);
+        assert_eq!(sellers.identifiers[1].name, SellersIdentifierName::Duns);
+    }
 }
