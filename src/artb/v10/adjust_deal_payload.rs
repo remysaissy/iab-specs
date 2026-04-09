@@ -120,4 +120,31 @@ mod tests {
         let parsed: AdjustDealPayload = serde_json::from_str(&json).unwrap();
         assert_eq!(payload, parsed);
     }
+
+    #[test]
+    fn test_adjust_deal_payload_default() {
+        // Spec: AdjustDealPayload default values
+        let payload = AdjustDealPayload::builder().build().unwrap();
+        assert_eq!(payload.bidfloor, 0.0);
+        assert!(payload.margin.is_none());
+        assert!(payload.ext.is_none());
+    }
+
+    #[test]
+    fn test_adjust_deal_payload_deserialization_without_margin() {
+        // Spec: AdjustDealPayload.margin is optional
+        let json = r#"{"bidfloor": 3.50}"#;
+        let payload: AdjustDealPayload = serde_json::from_str(json).unwrap();
+        assert_eq!(payload.bidfloor, 3.50);
+        assert!(payload.margin.is_none());
+    }
+
+    #[test]
+    fn test_adjust_deal_payload_deserialization_extra_fields() {
+        // Spec: extra JSON fields silently ignored
+        let json = r#"{"bidfloor": 2.0, "margin": {"value": 0.1, "calculation_type": 1}, "extra": "ignored"}"#;
+        let payload: AdjustDealPayload = serde_json::from_str(json).unwrap();
+        assert_eq!(payload.bidfloor, 2.0);
+        assert!(payload.margin.is_some());
+    }
 }

@@ -117,4 +117,26 @@ mod tests {
         let parsed: DataPayload<serde_json::Value> = serde_json::from_str(&json).unwrap();
         assert_eq!(payload, parsed);
     }
+
+    #[test]
+    fn test_data_payload_multiple_entries() {
+        // Spec: DataPayload.data is repeated — multiple Data objects
+        let payload = DataPayloadBuilder::<serde_json::Value, Vec<u8>>::default()
+            .data(vec![
+                serde_json::json!({"id": "dp-1", "name": "Provider 1", "segment": []}),
+                serde_json::json!({"id": "dp-2", "name": "Provider 2", "segment": [{"id": "s1"}]}),
+                serde_json::json!({"id": "dp-3", "name": "Provider 3"}),
+            ])
+            .build()
+            .unwrap();
+        assert_eq!(payload.data.len(), 3);
+    }
+
+    #[test]
+    fn test_data_payload_deserialization_extra_fields() {
+        // Spec: extra JSON fields silently ignored
+        let json = r#"{"data": [{"id": "dp-1"}], "unknown": true}"#;
+        let payload: DataPayload<serde_json::Value> = serde_json::from_str(json).unwrap();
+        assert_eq!(payload.data.len(), 1);
+    }
 }

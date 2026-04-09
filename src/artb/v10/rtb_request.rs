@@ -234,4 +234,70 @@ mod tests {
         let json = serde_json::to_string(&request).unwrap();
         assert!(json.contains("\"applicable_intents\":[]"));
     }
+
+    #[test]
+    fn test_rtb_request_deserialization_extra_fields() {
+        // Spec: ARTB JSON payloads must tolerate unknown fields
+        let json = r#"{
+            "lifecycle": 1,
+            "id": "req-extra",
+            "tmax": 50,
+            "applicable_intents": [],
+            "unknown_field": "should be ignored"
+        }"#;
+
+        let request: RTBRequest = serde_json::from_str(json).unwrap();
+        assert_eq!(request.id, "req-extra");
+        assert_eq!(request.tmax, Some(50));
+    }
+
+    #[test]
+    fn test_rtb_request_with_extension() {
+        // Spec: RTBRequest.ext field (proto field 99) for exchange-specific data
+        let request = RTBRequestBuilder::<serde_json::Value, serde_json::Value>::default()
+            .id("req-ext".to_string())
+            .lifecycle(Lifecycle::PublisherBidRequest)
+            .ext(Some(Box::new(serde_json::json!({"custom": true}))))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&request).unwrap();
+        assert!(json.contains("\"custom\":true"));
+        let parsed: RTBRequest<serde_json::Value, serde_json::Value> =
+            serde_json::from_str(&json).unwrap();
+        assert_eq!(request, parsed);
+    }
+
+    #[test]
+    fn test_rtb_request_minimal_json() {
+        // Spec: RTBRequest requires lifecycle and id; other fields optional
+        let json = r#"{"lifecycle": 0, "id": "", "applicable_intents": []}"#;
+        let request: RTBRequest = serde_json::from_str(json).unwrap();
+        assert_eq!(request.lifecycle, Lifecycle::Unspecified);
+        assert!(request.id.is_empty());
+        assert!(request.tmax.is_none());
+        assert!(request.bid_request.is_none());
+    }
+
+    #[test]
+    fn test_rtb_request_all_lifecycle_values() {
+        // Spec: Lifecycle enum - Unspecified(0), PublisherBidRequest(1), DspBidResponse(2)
+        let cases = [
+            (0, Lifecycle::Unspecified),
+            (1, Lifecycle::PublisherBidRequest),
+            (2, Lifecycle::DspBidResponse),
+        ];
+        for (val, expected) in cases {
+            let json = format!(
+                r#"{{"lifecycle": {}, "id": "req-lc", "applicable_intents": []}}"#,
+                val
+            );
+            let request: RTBRequest = serde_json::from_str(&json).unwrap();
+            assert_eq!(
+                request.lifecycle, expected,
+                "Lifecycle value {} mismatch",
+                val
+            );
+        }
+    }
 }

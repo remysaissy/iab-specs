@@ -98,4 +98,23 @@ mod tests {
         let parsed: IDsPayload = serde_json::from_str(&json).unwrap();
         assert_eq!(payload, parsed);
     }
+
+    #[test]
+    fn test_ids_payload_single_id() {
+        // Spec: IDsPayload with single ID (common for deal activation)
+        let payload = IDsPayload::builder()
+            .id(vec!["single-id".to_string()])
+            .build()
+            .unwrap();
+        assert_eq!(payload.id.len(), 1);
+        assert_eq!(payload.id[0], "single-id");
+    }
+
+    #[test]
+    fn test_ids_payload_deserialization_extra_fields() {
+        // Spec: extra JSON fields silently ignored
+        let json = r#"{"id": ["a", "b"], "extra": "ignored"}"#;
+        let payload: IDsPayload = serde_json::from_str(json).unwrap();
+        assert_eq!(payload.id.len(), 2);
+    }
 }

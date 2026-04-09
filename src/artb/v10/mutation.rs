@@ -121,6 +121,10 @@ impl Mutation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artb::v10::adjust_deal_payload::AdjustDealPayload;
+    use crate::artb::v10::data_payload::DataPayloadBuilder;
+    use crate::artb::v10::enums::CalculationType;
+    use crate::artb::v10::margin::Margin;
 
     #[test]
     fn test_mutation_activate_segments() {
@@ -266,5 +270,112 @@ mod tests {
         assert_eq!(mutation.intent, Intent::Unspecified);
         assert_eq!(mutation.op, Operation::Unspecified);
         assert!(mutation.path.is_empty());
+    }
+
+    #[test]
+    fn test_mutation_adjust_deal_margin() {
+        // Spec: Intent AdjustDealMargin(5) uses AdjustDealPayload with margin
+        let mutation = Mutation::builder()
+            .intent(Intent::AdjustDealMargin)
+            .op(Operation::Replace)
+            .path("/imp/imp-1/pmp/deals/deal-1".to_string())
+            .adjust_deal(Some(
+                AdjustDealPayload::builder()
+                    .margin(Some(
+                        Margin::builder()
+                            .value(0.15)
+                            .calculation_type(CalculationType::Percent)
+                            .build()
+                            .unwrap(),
+                    ))
+                    .build()
+                    .unwrap(),
+            ))
+            .build()
+            .unwrap();
+
+        assert_eq!(mutation.intent, Intent::AdjustDealMargin);
+        assert!(mutation.adjust_deal.is_some());
+        let deal = mutation.adjust_deal.as_ref().unwrap();
+        assert!(deal.margin.is_some());
+        assert_eq!(deal.margin.as_ref().unwrap().value, 0.15);
+    }
+
+    #[test]
+    fn test_mutation_suppress_deals() {
+        // Spec: Intent SuppressDeals(3) uses IDsPayload with Operation Remove
+        let mutation = Mutation::builder()
+            .intent(Intent::SuppressDeals)
+            .op(Operation::Remove)
+            .path("/imp/imp-1".to_string())
+            .ids(Some(
+                IDsPayload::builder()
+                    .id(vec!["deal-99".to_string()])
+                    .build()
+                    .unwrap(),
+            ))
+            .build()
+            .unwrap();
+
+        assert_eq!(mutation.intent, Intent::SuppressDeals);
+        assert_eq!(mutation.op, Operation::Remove);
+        assert!(mutation.ids.is_some());
+        assert_eq!(mutation.ids.as_ref().unwrap().id[0], "deal-99");
+    }
+
+    #[test]
+    fn test_mutation_add_cids() {
+        // Spec: Intent AddCids(8) uses DataPayload for content data
+        let mutation = MutationBuilder::<serde_json::Value, Vec<u8>>::default()
+            .intent(Intent::AddCids)
+            .op(Operation::Add)
+            .path("/user/data".to_string())
+            .content_data(Some(
+                DataPayloadBuilder::<serde_json::Value, Vec<u8>>::default()
+                    .data(vec![serde_json::json!({
+                        "id": "dp-1",
+                        "name": "Content Provider"
+                    })])
+                    .build()
+                    .unwrap(),
+            ))
+            .build()
+            .unwrap();
+
+        assert_eq!(mutation.intent, Intent::AddCids);
+        assert!(mutation.content_data.is_some());
+        assert_eq!(mutation.content_data.as_ref().unwrap().data.len(), 1);
+    }
+
+    #[test]
+    fn test_mutation_deserialization_extra_fields() {
+        // Spec: ARTB JSON payloads must tolerate unknown fields
+        let json = r#"{
+            "intent": 1,
+            "op": 1,
+            "path": "/user/data/segment",
+            "ids": {"id": ["s1"]},
+            "unknown": true
+        }"#;
+        let mutation: Mutation = serde_json::from_str(json).unwrap();
+        assert_eq!(mutation.intent, Intent::ActivateSegments);
+        assert_eq!(mutation.op, Operation::Add);
+    }
+
+    #[test]
+    fn test_mutation_with_extension() {
+        // Spec: Mutation ext field for exchange-specific data
+        let mutation = MutationBuilder::<serde_json::Value, serde_json::Value>::default()
+            .intent(Intent::ActivateSegments)
+            .op(Operation::Add)
+            .path("/user/data/segment".to_string())
+            .ext(Some(Box::new(serde_json::json!({"priority": "high"}))))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&mutation).unwrap();
+        let parsed: Mutation<serde_json::Value, serde_json::Value> =
+            serde_json::from_str(&json).unwrap();
+        assert_eq!(mutation, parsed);
     }
 }
