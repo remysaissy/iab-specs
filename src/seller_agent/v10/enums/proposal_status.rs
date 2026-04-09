@@ -106,4 +106,80 @@ mod tests {
         let default = ProposalStatus::default();
         assert_eq!(default, ProposalStatus::Draft, "Default should be Draft");
     }
+
+    /// Seller Agent 1.0 § ProposalStatus — Clone and Copy traits enable value semantics
+    #[test]
+    fn test_clone_copy_traits() {
+        let a = ProposalStatus::Draft;
+        let b = a; // Copy semantics
+        assert_eq!(a, b);
+        assert_eq!(a, ProposalStatus::Draft);
+    }
+
+    /// Seller Agent 1.0 § ProposalStatus — Hash trait enables HashSet usage
+    #[test]
+    fn test_hash_trait_with_hashset() {
+        use std::collections::HashSet;
+
+        let mut set = HashSet::new();
+        set.insert(ProposalStatus::Draft);
+        set.insert(ProposalStatus::Submitted);
+        set.insert(ProposalStatus::UnderReview);
+        set.insert(ProposalStatus::Countered);
+        set.insert(ProposalStatus::Accepted);
+        set.insert(ProposalStatus::Rejected);
+        set.insert(ProposalStatus::Expired);
+        set.insert(ProposalStatus::Withdrawn);
+
+        assert_eq!(set.len(), 8);
+        assert!(set.contains(&ProposalStatus::Draft));
+        assert!(set.contains(&ProposalStatus::Withdrawn));
+    }
+
+    /// Seller Agent 1.0 § ProposalStatus — PartialEq and Eq verify inequality of different variants
+    #[test]
+    fn test_eq_different_variants() {
+        assert_ne!(ProposalStatus::Draft, ProposalStatus::Submitted);
+        assert_ne!(ProposalStatus::Submitted, ProposalStatus::UnderReview);
+        assert_ne!(ProposalStatus::UnderReview, ProposalStatus::Countered);
+        assert_ne!(ProposalStatus::Countered, ProposalStatus::Accepted);
+        assert_ne!(ProposalStatus::Accepted, ProposalStatus::Rejected);
+        assert_ne!(ProposalStatus::Rejected, ProposalStatus::Expired);
+        assert_ne!(ProposalStatus::Expired, ProposalStatus::Withdrawn);
+    }
+
+    /// Seller Agent 1.0 § ProposalStatus — serde rename_all = "snake_case" rejects PascalCase
+    #[test]
+    fn test_case_sensitivity_rejected() {
+        let pascal_case_examples = ["\"Draft\"", "\"UnderReview\""];
+
+        for example in &pascal_case_examples {
+            let result: Result<ProposalStatus, _> = serde_json::from_str(example);
+            assert!(result.is_err(), "PascalCase {} should be rejected", example);
+        }
+    }
+
+    /// Seller Agent 1.0 § ProposalStatus — Exact snake_case serialization values per spec
+    #[test]
+    fn test_exact_snake_case_values() {
+        let expected = [
+            (ProposalStatus::Draft, "\"draft\""),
+            (ProposalStatus::Submitted, "\"submitted\""),
+            (ProposalStatus::UnderReview, "\"under_review\""),
+            (ProposalStatus::Countered, "\"countered\""),
+            (ProposalStatus::Accepted, "\"accepted\""),
+            (ProposalStatus::Rejected, "\"rejected\""),
+            (ProposalStatus::Expired, "\"expired\""),
+            (ProposalStatus::Withdrawn, "\"withdrawn\""),
+        ];
+
+        for (variant, expected_json) in &expected {
+            let json = serde_json::to_string(variant).unwrap();
+            assert_eq!(
+                &json, expected_json,
+                "Mismatch for {:?}: got {}, expected {}",
+                variant, json, expected_json
+            );
+        }
+    }
 }

@@ -297,4 +297,111 @@ mod tests {
         assert!(json.contains("\"concession\":0.25"));
         assert!(json.contains("\"accepted\":false"));
     }
+
+    // ========== Hardened: NegotiationConfig ==========
+
+    /// Seller Agent 1.0 § NegotiationConfig — default builder yields zero-valued config
+    #[test]
+    fn test_negotiation_config_default() {
+        let config = NegotiationConfig::builder().build().unwrap();
+        assert_eq!(config.max_rounds, 0);
+        assert_eq!(config.per_round_concession_cap, 0.0);
+        assert_eq!(config.total_concession_cap, 0.0);
+        assert_eq!(
+            config.strategy,
+            crate::seller_agent::v10::enums::NegotiationStrategyType::Standard
+        );
+        assert!(config.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § NegotiationConfig — optional fields omitted from JSON when None
+    #[test]
+    fn test_negotiation_config_optional_fields_skipped() {
+        let config = NegotiationConfig::builder().max_rounds(3).build().unwrap();
+
+        let json = serde_json::to_string(&config).unwrap();
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § NegotiationConfig — clone produces identical value
+    #[test]
+    fn test_negotiation_config_clone() {
+        let config = NegotiationConfig::builder()
+            .max_rounds(5)
+            .per_round_concession_cap(0.50)
+            .total_concession_cap(2.00)
+            .strategy(crate::seller_agent::v10::enums::NegotiationStrategyType::Aggressive)
+            .build()
+            .unwrap();
+
+        let cloned = config.clone();
+        assert_eq!(config, cloned);
+    }
+
+    /// Seller Agent 1.0 § NegotiationConfig — deserialization from minimal JSON
+    #[test]
+    fn test_negotiation_config_deserialization_minimal() {
+        let json = r#"{"max_rounds":3,"per_round_concession_cap":0.5,"total_concession_cap":1.0,"strategy":"standard"}"#;
+        let config: NegotiationConfig = serde_json::from_str(json).unwrap();
+        assert_eq!(config.max_rounds, 3);
+        assert_eq!(config.per_round_concession_cap, 0.5);
+        assert_eq!(config.total_concession_cap, 1.0);
+        assert_eq!(
+            config.strategy,
+            crate::seller_agent::v10::enums::NegotiationStrategyType::Standard
+        );
+        assert!(config.ext.is_none());
+    }
+
+    // ========== Hardened: NegotiationRound ==========
+
+    /// Seller Agent 1.0 § NegotiationRound — default builder yields zero-valued round
+    #[test]
+    fn test_negotiation_round_default() {
+        let round = NegotiationRound::builder().build().unwrap();
+        assert_eq!(round.round_number, 0);
+        assert_eq!(round.buyer_price, 0.0);
+        assert_eq!(round.seller_price, 0.0);
+        assert_eq!(round.concession, 0.0);
+        assert!(!round.accepted);
+        assert!(round.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § NegotiationRound — optional fields omitted from JSON when None
+    #[test]
+    fn test_negotiation_round_optional_fields_skipped() {
+        let round = NegotiationRound::builder().round_number(1).build().unwrap();
+
+        let json = serde_json::to_string(&round).unwrap();
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § NegotiationRound — clone produces identical value
+    #[test]
+    fn test_negotiation_round_clone() {
+        let round = NegotiationRound::builder()
+            .round_number(2)
+            .buyer_price(3.50)
+            .seller_price(4.00)
+            .concession(0.25)
+            .accepted(true)
+            .build()
+            .unwrap();
+
+        let cloned = round.clone();
+        assert_eq!(round, cloned);
+    }
+
+    /// Seller Agent 1.0 § NegotiationRound — deserialization from minimal JSON
+    #[test]
+    fn test_negotiation_round_deserialization_minimal() {
+        let json = r#"{"round_number":1,"buyer_price":3.0,"seller_price":4.0,"concession":0.5,"accepted":false}"#;
+        let round: NegotiationRound = serde_json::from_str(json).unwrap();
+        assert_eq!(round.round_number, 1);
+        assert_eq!(round.buyer_price, 3.0);
+        assert_eq!(round.seller_price, 4.0);
+        assert_eq!(round.concession, 0.5);
+        assert!(!round.accepted);
+        assert!(round.ext.is_none());
+    }
 }

@@ -357,4 +357,170 @@ mod tests {
         );
         assert!(proposal.updated_at.is_none());
     }
+
+    /// Seller Agent 1.0 § Proposal — optional fields omitted from JSON when None
+    #[test]
+    fn test_proposal_optional_fields_skipped() {
+        let proposal = Proposal::builder()
+            .buyer_id("b")
+            .seller_id("s")
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&proposal).unwrap();
+        assert!(!json.contains("\"id\""));
+        assert!(!json.contains("\"current_revision_id\""));
+        assert!(!json.contains("\"created_at\""));
+        assert!(!json.contains("\"updated_at\""));
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § Proposal — clone produces identical value
+    #[test]
+    fn test_proposal_clone() {
+        let proposal = Proposal::builder()
+            .id("prop-c")
+            .buyer_id("buyer")
+            .seller_id("seller")
+            .status(ProposalStatus::Submitted)
+            .build()
+            .unwrap();
+
+        let cloned = proposal.clone();
+        assert_eq!(proposal, cloned);
+    }
+
+    /// Seller Agent 1.0 § Proposal — deserialization from minimal JSON
+    #[test]
+    fn test_proposal_deserialization_minimal() {
+        let json = r#"{"buyer_id":"b","seller_id":"s","status":"draft"}"#;
+        let proposal: Proposal = serde_json::from_str(json).unwrap();
+        assert_eq!(proposal.buyer_id, "b");
+        assert_eq!(proposal.seller_id, "s");
+        assert_eq!(proposal.status, ProposalStatus::Draft);
+        assert!(proposal.id.is_none());
+    }
+
+    /// Seller Agent 1.0 § ProposalRevision — default builder yields empty revision
+    #[test]
+    fn test_proposal_revision_default() {
+        let rev = ProposalRevision::builder().build().unwrap();
+        assert_eq!(rev.proposal_id, "");
+        assert_eq!(rev.revision_number, 0);
+        assert!(rev.items.is_empty());
+        assert!(rev.total_budget.is_none());
+        assert!(rev.notes.is_none());
+        assert!(rev.created_at.is_none());
+        assert!(rev.id.is_none());
+        assert!(rev.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § ProposalRevision — optional fields omitted from JSON when None
+    #[test]
+    fn test_proposal_revision_optional_fields_skipped() {
+        let rev = ProposalRevision::builder()
+            .proposal_id("p")
+            .revision_number(1)
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&rev).unwrap();
+        assert!(!json.contains("\"id\""));
+        assert!(!json.contains("\"total_budget\""));
+        assert!(!json.contains("\"notes\""));
+        assert!(!json.contains("\"created_at\""));
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § ProposalRevision — clone produces identical value
+    #[test]
+    fn test_proposal_revision_clone() {
+        let rev = ProposalRevision::builder()
+            .id("rev-c")
+            .proposal_id("p")
+            .revision_number(2)
+            .total_budget(Some(5000.0))
+            .notes("note")
+            .build()
+            .unwrap();
+
+        let cloned = rev.clone();
+        assert_eq!(rev, cloned);
+    }
+
+    /// Seller Agent 1.0 § ProposalRevision — deserialization from minimal JSON
+    #[test]
+    fn test_proposal_revision_deserialization_minimal() {
+        let json = r#"{"proposal_id":"p","revision_number":1,"items":[]}"#;
+        let rev: ProposalRevision = serde_json::from_str(json).unwrap();
+        assert_eq!(rev.proposal_id, "p");
+        assert_eq!(rev.revision_number, 1);
+        assert!(rev.items.is_empty());
+        assert!(rev.total_budget.is_none());
+    }
+
+    /// Seller Agent 1.0 § ProposalItem — default builder yields empty item
+    #[test]
+    fn test_proposal_item_default() {
+        let item = ProposalItem::builder().build().unwrap();
+        assert_eq!(item.product_id, "");
+        assert_eq!(item.quantity, 0);
+        assert_eq!(item.rate, 0.0);
+        assert_eq!(item.rate_type, RateType::Cpm);
+        assert_eq!(item.start_date, "");
+        assert_eq!(item.end_date, "");
+        assert!(item.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § ProposalItem — optional fields omitted from JSON when None
+    #[test]
+    fn test_proposal_item_optional_fields_skipped() {
+        let item = ProposalItem::builder()
+            .product_id("p")
+            .quantity(100)
+            .rate(1.0)
+            .rate_type(RateType::Cpm)
+            .start_date("2026-01-01")
+            .end_date("2026-02-01")
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&item).unwrap();
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § ProposalItem — clone produces identical value
+    #[test]
+    fn test_proposal_item_clone() {
+        let item = ProposalItem::builder()
+            .product_id("prod-c")
+            .quantity(500)
+            .rate(3.0)
+            .rate_type(RateType::Cpc)
+            .start_date("2026-01-01")
+            .end_date("2026-03-01")
+            .build()
+            .unwrap();
+
+        let cloned = item.clone();
+        assert_eq!(item, cloned);
+    }
+
+    /// Seller Agent 1.0 § ProposalItem — deserialization from minimal JSON
+    #[test]
+    fn test_proposal_item_deserialization_minimal() {
+        let json = r#"{
+            "product_id":"prod-1",
+            "quantity":100,
+            "rate":2.0,
+            "rate_type":"cpm",
+            "start_date":"2026-01-01",
+            "end_date":"2026-02-01"
+        }"#;
+        let item: ProposalItem = serde_json::from_str(json).unwrap();
+        assert_eq!(item.product_id, "prod-1");
+        assert_eq!(item.quantity, 100);
+        assert_eq!(item.rate, 2.0);
+        assert_eq!(item.rate_type, RateType::Cpm);
+    }
 }

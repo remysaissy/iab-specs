@@ -91,4 +91,71 @@ mod tests {
         let default = SyncStatus::default();
         assert_eq!(default, SyncStatus::Pending, "Default should be Pending");
     }
+
+    /// Seller Agent 1.0 § SyncStatus — Clone and Copy traits enable value semantics
+    #[test]
+    fn test_clone_copy_traits() {
+        let a = SyncStatus::Pending;
+        let b = a; // Copy semantics
+        assert_eq!(a, b);
+        assert_eq!(a, SyncStatus::Pending);
+    }
+
+    /// Seller Agent 1.0 § SyncStatus — Hash trait enables HashSet usage
+    #[test]
+    fn test_hash_trait_with_hashset() {
+        use std::collections::HashSet;
+
+        let mut set = HashSet::new();
+        set.insert(SyncStatus::Pending);
+        set.insert(SyncStatus::Syncing);
+        set.insert(SyncStatus::Synced);
+        set.insert(SyncStatus::Failed);
+        set.insert(SyncStatus::Stale);
+
+        assert_eq!(set.len(), 5);
+        assert!(set.contains(&SyncStatus::Pending));
+        assert!(set.contains(&SyncStatus::Stale));
+    }
+
+    /// Seller Agent 1.0 § SyncStatus — PartialEq and Eq verify inequality of different variants
+    #[test]
+    fn test_eq_different_variants() {
+        assert_ne!(SyncStatus::Pending, SyncStatus::Syncing);
+        assert_ne!(SyncStatus::Syncing, SyncStatus::Synced);
+        assert_ne!(SyncStatus::Synced, SyncStatus::Failed);
+        assert_ne!(SyncStatus::Failed, SyncStatus::Stale);
+    }
+
+    /// Seller Agent 1.0 § SyncStatus — serde rename_all = "snake_case" rejects PascalCase
+    #[test]
+    fn test_case_sensitivity_rejected() {
+        let pascal_case_examples = ["\"Pending\"", "\"Syncing\""];
+
+        for example in &pascal_case_examples {
+            let result: Result<SyncStatus, _> = serde_json::from_str(example);
+            assert!(result.is_err(), "PascalCase {} should be rejected", example);
+        }
+    }
+
+    /// Seller Agent 1.0 § SyncStatus — Exact snake_case serialization values per spec
+    #[test]
+    fn test_exact_snake_case_values() {
+        let expected = [
+            (SyncStatus::Pending, "\"pending\""),
+            (SyncStatus::Syncing, "\"syncing\""),
+            (SyncStatus::Synced, "\"synced\""),
+            (SyncStatus::Failed, "\"failed\""),
+            (SyncStatus::Stale, "\"stale\""),
+        ];
+
+        for (variant, expected_json) in &expected {
+            let json = serde_json::to_string(variant).unwrap();
+            assert_eq!(
+                &json, expected_json,
+                "Mismatch for {:?}: got {}, expected {}",
+                variant, json, expected_json
+            );
+        }
+    }
 }

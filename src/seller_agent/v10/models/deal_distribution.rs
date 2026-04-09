@@ -369,4 +369,98 @@ mod tests {
         assert!(json.contains("\"deal_id\":\"deal-serialize\""));
         assert!(json.contains("\"distributed_at\":\"2026-02-01T00:00:00Z\""));
     }
+
+    /// Seller Agent 1.0 § DspIntegration — default builder yields empty integration
+    #[test]
+    fn test_dsp_integration_default() {
+        let dsp = DspIntegration::builder().build().unwrap();
+        assert_eq!(dsp.dsp_name, "");
+        assert_eq!(dsp.seat_id, "");
+        assert_eq!(dsp.status, DistributionStatus::Pending);
+        assert!(dsp.deal_id_at_dsp.is_none());
+        assert!(dsp.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § DspIntegration — optional fields omitted from JSON when None
+    #[test]
+    fn test_dsp_integration_optional_fields_skipped() {
+        let dsp = DspIntegration::builder()
+            .dsp_name("TestDSP")
+            .seat_id("s1")
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&dsp).unwrap();
+        assert!(!json.contains("\"deal_id_at_dsp\""));
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § DspIntegration — clone produces identical value
+    #[test]
+    fn test_dsp_integration_clone() {
+        let dsp = DspIntegration::builder()
+            .dsp_name("PubMatic")
+            .seat_id("pm-1")
+            .deal_id_at_dsp(Some("dsp-d".to_string()))
+            .status(DistributionStatus::Confirmed)
+            .build()
+            .unwrap();
+
+        let cloned = dsp.clone();
+        assert_eq!(dsp, cloned);
+    }
+
+    /// Seller Agent 1.0 § DspIntegration — deserialization from minimal JSON
+    #[test]
+    fn test_dsp_integration_deserialization_minimal() {
+        let json = r#"{"dsp_name":"IX","seat_id":"ix-1","status":"sent"}"#;
+        let dsp: DspIntegration = serde_json::from_str(json).unwrap();
+        assert_eq!(dsp.dsp_name, "IX");
+        assert_eq!(dsp.seat_id, "ix-1");
+        assert_eq!(dsp.status, DistributionStatus::Sent);
+        assert!(dsp.deal_id_at_dsp.is_none());
+    }
+
+    /// Seller Agent 1.0 § DealDistribution — optional fields omitted from JSON when None
+    #[test]
+    fn test_deal_distribution_optional_fields_skipped() {
+        let dist = DealDistribution::builder().deal_id("d1").build().unwrap();
+
+        let json = serde_json::to_string(&dist).unwrap();
+        assert!(!json.contains("\"distributed_at\""));
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § DealDistribution — clone produces identical value
+    #[test]
+    fn test_deal_distribution_clone() {
+        let dist = DealDistribution::builder()
+            .deal_id("deal-c")
+            .buyer_seats(vec!["s1".to_string()])
+            .dsp_integrations(vec![
+                DspIntegration::builder()
+                    .dsp_name("PubMatic")
+                    .seat_id("pm")
+                    .status(DistributionStatus::Sent)
+                    .build()
+                    .unwrap(),
+            ])
+            .distributed_at(Some("2026-01-01T00:00:00Z".to_string()))
+            .build()
+            .unwrap();
+
+        let cloned = dist.clone();
+        assert_eq!(dist, cloned);
+    }
+
+    /// Seller Agent 1.0 § DealDistribution — deserialization from minimal JSON
+    #[test]
+    fn test_deal_distribution_deserialization_minimal() {
+        let json = r#"{"deal_id":"d1","buyer_seats":[],"dsp_integrations":[]}"#;
+        let dist: DealDistribution = serde_json::from_str(json).unwrap();
+        assert_eq!(dist.deal_id, "d1");
+        assert!(dist.buyer_seats.is_empty());
+        assert!(dist.dsp_integrations.is_empty());
+        assert!(dist.distributed_at.is_none());
+    }
 }

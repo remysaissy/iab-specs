@@ -289,4 +289,165 @@ mod tests {
         assert!(deserialized.ext.is_none());
         Ok(())
     }
+
+    /// Seller Agent 1.0 § SellerProduct — default builder yields empty product
+    #[test]
+    fn test_seller_product_default() {
+        let product = SellerProduct::builder().build().unwrap();
+        assert_eq!(product.id, "");
+        assert_eq!(product.name, "");
+        assert_eq!(product.base_cpm, 0.0);
+        assert!(product.segments.is_empty());
+        assert!(product.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § SellerProduct — optional fields omitted from JSON when None
+    #[test]
+    fn test_seller_product_optional_fields_skipped() {
+        let product = SellerProduct::builder()
+            .id("p".to_string())
+            .name("n".to_string())
+            .base_cpm(1.0)
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&product).unwrap();
+        assert!(!json.contains("\"segments\""));
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § SellerProduct — clone produces identical value
+    #[test]
+    fn test_seller_product_clone() {
+        let product = SellerProduct::builder()
+            .id("prod-c".to_string())
+            .name("Clone Test".to_string())
+            .base_cpm(4.0)
+            .segments(vec![
+                InventorySegment::builder()
+                    .id("s1".to_string())
+                    .name("seg".to_string())
+                    .ad_format("300x250".to_string())
+                    .estimated_impressions(1000)
+                    .build()
+                    .unwrap(),
+            ])
+            .build()
+            .unwrap();
+
+        let cloned = product.clone();
+        assert_eq!(product, cloned);
+    }
+
+    /// Seller Agent 1.0 § SellerProduct — deserialization from minimal JSON
+    #[test]
+    fn test_seller_product_deserialization_minimal() {
+        let json = r#"{"id":"p","name":"n","base_cpm":2.0}"#;
+        let product: SellerProduct = serde_json::from_str(json).unwrap();
+        assert_eq!(product.id, "p");
+        assert_eq!(product.name, "n");
+        assert_eq!(product.base_cpm, 2.0);
+        assert!(product.segments.is_empty());
+        assert!(product.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § SellerProduct — segments default when missing from JSON
+    #[test]
+    fn test_seller_product_deserialization_missing_segments() {
+        let json = r#"{"id":"p","name":"n","base_cpm":1.0}"#;
+        let product: SellerProduct = serde_json::from_str(json).unwrap();
+        assert!(product.segments.is_empty());
+    }
+
+    /// Seller Agent 1.0 § SellerProduct — deserialization with populated segments
+    #[test]
+    fn test_seller_product_deserialization_with_segments() {
+        let json = r#"{
+            "id": "prod-1",
+            "name": "Bundle",
+            "base_cpm": 3.5,
+            "segments": [
+                {"id":"s1","name":"Seg1","ad_format":"728x90","estimated_impressions":5000}
+            ]
+        }"#;
+        let product: SellerProduct = serde_json::from_str(json).unwrap();
+        assert_eq!(product.segments.len(), 1);
+        assert_eq!(product.segments[0].id, "s1");
+        assert_eq!(product.segments[0].ad_format, "728x90");
+    }
+
+    /// Seller Agent 1.0 § InventorySegment — default builder yields empty segment
+    #[test]
+    fn test_inventory_segment_default() {
+        let segment = InventorySegment::builder().build().unwrap();
+        assert_eq!(segment.id, "");
+        assert_eq!(segment.name, "");
+        assert_eq!(segment.ad_format, "");
+        assert_eq!(segment.estimated_impressions, 0);
+        assert!(segment.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § InventorySegment — optional fields omitted from JSON when None
+    #[test]
+    fn test_inventory_segment_optional_fields_skipped() {
+        let segment = InventorySegment::builder()
+            .id("s".to_string())
+            .name("n".to_string())
+            .ad_format("300x250".to_string())
+            .estimated_impressions(100)
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&segment).unwrap();
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § InventorySegment — clone produces identical value
+    #[test]
+    fn test_inventory_segment_clone() {
+        let segment = InventorySegment::builder()
+            .id("seg-c".to_string())
+            .name("Clone".to_string())
+            .ad_format("160x600".to_string())
+            .estimated_impressions(25000)
+            .build()
+            .unwrap();
+
+        let cloned = segment.clone();
+        assert_eq!(segment, cloned);
+    }
+
+    /// Seller Agent 1.0 § InventorySegment — deserialization from minimal JSON
+    #[test]
+    fn test_inventory_segment_deserialization_minimal() {
+        let json = r#"{"id":"s","name":"n","ad_format":"300x250","estimated_impressions":500}"#;
+        let segment: InventorySegment = serde_json::from_str(json).unwrap();
+        assert_eq!(segment.id, "s");
+        assert_eq!(segment.name, "n");
+        assert_eq!(segment.ad_format, "300x250");
+        assert_eq!(segment.estimated_impressions, 500);
+        assert!(segment.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § SellerProduct — Default trait yields same as default builder
+    #[test]
+    fn test_seller_product_default_trait() {
+        let product = SellerProduct::<crate::DefaultExt>::default();
+        assert_eq!(product.id, "");
+        assert_eq!(product.name, "");
+        assert_eq!(product.base_cpm, 0.0);
+        assert!(product.segments.is_empty());
+        assert!(product.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § InventorySegment — Default trait yields same as default builder
+    #[test]
+    fn test_inventory_segment_default_trait() {
+        let segment = InventorySegment::<crate::DefaultExt>::default();
+        assert_eq!(segment.id, "");
+        assert_eq!(segment.name, "");
+        assert_eq!(segment.ad_format, "");
+        assert_eq!(segment.estimated_impressions, 0);
+        assert!(segment.ext.is_none());
+    }
 }

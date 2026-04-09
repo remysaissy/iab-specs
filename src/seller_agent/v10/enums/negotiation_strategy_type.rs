@@ -90,4 +90,77 @@ mod tests {
             "Default should be Standard"
         );
     }
+
+    /// Seller Agent 1.0 § NegotiationStrategyType — Clone and Copy traits enable value semantics
+    #[test]
+    fn test_clone_copy_traits() {
+        let a = NegotiationStrategyType::Standard;
+        let b = a; // Copy semantics
+        assert_eq!(a, b);
+        assert_eq!(a, NegotiationStrategyType::Standard);
+    }
+
+    /// Seller Agent 1.0 § NegotiationStrategyType — Hash trait enables HashSet usage
+    #[test]
+    fn test_hash_trait_with_hashset() {
+        use std::collections::HashSet;
+
+        let mut set = HashSet::new();
+        set.insert(NegotiationStrategyType::Aggressive);
+        set.insert(NegotiationStrategyType::Standard);
+        set.insert(NegotiationStrategyType::Collaborative);
+        set.insert(NegotiationStrategyType::Premium);
+
+        assert_eq!(set.len(), 4);
+        assert!(set.contains(&NegotiationStrategyType::Aggressive));
+        assert!(set.contains(&NegotiationStrategyType::Premium));
+    }
+
+    /// Seller Agent 1.0 § NegotiationStrategyType — PartialEq and Eq verify inequality of different variants
+    #[test]
+    fn test_eq_different_variants() {
+        assert_ne!(
+            NegotiationStrategyType::Aggressive,
+            NegotiationStrategyType::Standard
+        );
+        assert_ne!(
+            NegotiationStrategyType::Standard,
+            NegotiationStrategyType::Collaborative
+        );
+        assert_ne!(
+            NegotiationStrategyType::Collaborative,
+            NegotiationStrategyType::Premium
+        );
+    }
+
+    /// Seller Agent 1.0 § NegotiationStrategyType — serde rename_all = "snake_case" rejects PascalCase
+    #[test]
+    fn test_case_sensitivity_rejected() {
+        let pascal_case_examples = ["\"Aggressive\"", "\"Standard\""];
+
+        for example in &pascal_case_examples {
+            let result: Result<NegotiationStrategyType, _> = serde_json::from_str(example);
+            assert!(result.is_err(), "PascalCase {} should be rejected", example);
+        }
+    }
+
+    /// Seller Agent 1.0 § NegotiationStrategyType — Exact snake_case serialization values per spec
+    #[test]
+    fn test_exact_snake_case_values() {
+        let expected = [
+            (NegotiationStrategyType::Aggressive, "\"aggressive\""),
+            (NegotiationStrategyType::Standard, "\"standard\""),
+            (NegotiationStrategyType::Collaborative, "\"collaborative\""),
+            (NegotiationStrategyType::Premium, "\"premium\""),
+        ];
+
+        for (variant, expected_json) in &expected {
+            let json = serde_json::to_string(variant).unwrap();
+            assert_eq!(
+                &json, expected_json,
+                "Mismatch for {:?}: got {}, expected {}",
+                variant, json, expected_json
+            );
+        }
+    }
 }

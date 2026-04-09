@@ -93,4 +93,74 @@ mod tests {
             "Default should be DateShift"
         );
     }
+
+    /// Seller Agent 1.0 § ChangeType — Clone and Copy traits enable value semantics
+    #[test]
+    fn test_clone_copy_traits() {
+        let a = ChangeType::DateShift;
+        let b = a; // Copy semantics
+        assert_eq!(a, b);
+        assert_eq!(a, ChangeType::DateShift);
+    }
+
+    /// Seller Agent 1.0 § ChangeType — Hash trait enables HashSet usage
+    #[test]
+    fn test_hash_trait_with_hashset() {
+        use std::collections::HashSet;
+
+        let mut set = HashSet::new();
+        set.insert(ChangeType::DateShift);
+        set.insert(ChangeType::ImpressionAdjustment);
+        set.insert(ChangeType::PriceChange);
+        set.insert(ChangeType::Cancellation);
+        set.insert(ChangeType::CreativeSwap);
+
+        assert_eq!(set.len(), 5);
+        assert!(set.contains(&ChangeType::DateShift));
+        assert!(set.contains(&ChangeType::CreativeSwap));
+    }
+
+    /// Seller Agent 1.0 § ChangeType — PartialEq and Eq verify inequality of different variants
+    #[test]
+    fn test_eq_different_variants() {
+        assert_ne!(ChangeType::DateShift, ChangeType::ImpressionAdjustment);
+        assert_ne!(ChangeType::ImpressionAdjustment, ChangeType::PriceChange);
+        assert_ne!(ChangeType::PriceChange, ChangeType::Cancellation);
+        assert_ne!(ChangeType::Cancellation, ChangeType::CreativeSwap);
+    }
+
+    /// Seller Agent 1.0 § ChangeType — serde rename_all = "snake_case" rejects PascalCase
+    #[test]
+    fn test_case_sensitivity_rejected() {
+        let pascal_case_examples = ["\"DateShift\"", "\"ImpressionAdjustment\""];
+
+        for example in &pascal_case_examples {
+            let result: Result<ChangeType, _> = serde_json::from_str(example);
+            assert!(result.is_err(), "PascalCase {} should be rejected", example);
+        }
+    }
+
+    /// Seller Agent 1.0 § ChangeType — Exact snake_case serialization values per spec
+    #[test]
+    fn test_exact_snake_case_values() {
+        let expected = [
+            (ChangeType::DateShift, "\"date_shift\""),
+            (
+                ChangeType::ImpressionAdjustment,
+                "\"impression_adjustment\"",
+            ),
+            (ChangeType::PriceChange, "\"price_change\""),
+            (ChangeType::Cancellation, "\"cancellation\""),
+            (ChangeType::CreativeSwap, "\"creative_swap\""),
+        ];
+
+        for (variant, expected_json) in &expected {
+            let json = serde_json::to_string(variant).unwrap();
+            assert_eq!(
+                &json, expected_json,
+                "Mismatch for {:?}: got {}, expected {}",
+                variant, json, expected_json
+            );
+        }
+    }
 }

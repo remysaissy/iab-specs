@@ -296,4 +296,98 @@ mod tests {
         let parsed: VolumeDiscount = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed.discount_percent, 7.555555);
     }
+
+    /// Seller Agent 1.0 § PricingRule — default builder yields empty rule
+    #[test]
+    fn test_pricing_rule_default() {
+        let rule = PricingRule::builder().build().unwrap();
+        assert_eq!(rule.condition, serde_json::Value::Null);
+        assert_eq!(rule.adjustment, 0.0);
+        assert_eq!(rule.adjustment_type, "");
+        assert!(rule.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § PricingRule — optional fields omitted from JSON when None
+    #[test]
+    fn test_pricing_rule_optional_fields_skipped() {
+        let rule = PricingRule::builder()
+            .condition(serde_json::json!({}))
+            .adjustment(0.1)
+            .adjustment_type("flat")
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&rule).unwrap();
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § PricingRule — clone produces identical value
+    #[test]
+    fn test_pricing_rule_clone() {
+        let rule = PricingRule::builder()
+            .condition(serde_json::json!({"region": "EU"}))
+            .adjustment(0.15)
+            .adjustment_type("multiplier")
+            .build()
+            .unwrap();
+
+        let cloned = rule.clone();
+        assert_eq!(rule, cloned);
+    }
+
+    /// Seller Agent 1.0 § PricingRule — deserialization from minimal JSON
+    #[test]
+    fn test_pricing_rule_deserialization_minimal() {
+        let json = r#"{"condition":{"x":1},"adjustment":0.5,"adjustment_type":"flat"}"#;
+        let rule: PricingRule = serde_json::from_str(json).unwrap();
+        assert_eq!(rule.condition, serde_json::json!({"x": 1}));
+        assert_eq!(rule.adjustment, 0.5);
+        assert_eq!(rule.adjustment_type, "flat");
+        assert!(rule.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § VolumeDiscount — default builder yields zero values
+    #[test]
+    fn test_volume_discount_default() {
+        let discount = VolumeDiscount::builder().build().unwrap();
+        assert_eq!(discount.threshold, 0);
+        assert_eq!(discount.discount_percent, 0.0);
+        assert!(discount.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § VolumeDiscount — optional fields omitted from JSON when None
+    #[test]
+    fn test_volume_discount_optional_fields_skipped() {
+        let discount = VolumeDiscount::builder()
+            .threshold(1000)
+            .discount_percent(5.0)
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&discount).unwrap();
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § VolumeDiscount — clone produces identical value
+    #[test]
+    fn test_volume_discount_clone() {
+        let discount = VolumeDiscount::builder()
+            .threshold(50000)
+            .discount_percent(7.5)
+            .build()
+            .unwrap();
+
+        let cloned = discount.clone();
+        assert_eq!(discount, cloned);
+    }
+
+    /// Seller Agent 1.0 § VolumeDiscount — deserialization from minimal JSON
+    #[test]
+    fn test_volume_discount_deserialization_minimal() {
+        let json = r#"{"threshold":10000,"discount_percent":3.0}"#;
+        let discount: VolumeDiscount = serde_json::from_str(json).unwrap();
+        assert_eq!(discount.threshold, 10000);
+        assert_eq!(discount.discount_percent, 3.0);
+        assert!(discount.ext.is_none());
+    }
 }

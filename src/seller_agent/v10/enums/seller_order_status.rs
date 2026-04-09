@@ -131,4 +131,101 @@ mod tests {
         let default = SellerOrderStatus::default();
         assert_eq!(default, SellerOrderStatus::Draft, "Default should be Draft");
     }
+
+    /// Seller Agent 1.0 § SellerOrderStatus — Clone and Copy traits enable value semantics
+    #[test]
+    fn test_clone_copy_traits() {
+        let a = SellerOrderStatus::Draft;
+        let b = a; // Copy semantics
+        assert_eq!(a, b);
+        assert_eq!(a, SellerOrderStatus::Draft);
+    }
+
+    /// Seller Agent 1.0 § SellerOrderStatus — Hash trait enables HashSet usage
+    #[test]
+    fn test_hash_trait_with_hashset() {
+        use std::collections::HashSet;
+
+        let mut set = HashSet::new();
+        set.insert(SellerOrderStatus::Draft);
+        set.insert(SellerOrderStatus::Submitted);
+        set.insert(SellerOrderStatus::PendingApproval);
+        set.insert(SellerOrderStatus::Approved);
+        set.insert(SellerOrderStatus::Rejected);
+        set.insert(SellerOrderStatus::InProgress);
+        set.insert(SellerOrderStatus::Syncing);
+        set.insert(SellerOrderStatus::Booked);
+        set.insert(SellerOrderStatus::Paused);
+        set.insert(SellerOrderStatus::Completed);
+        set.insert(SellerOrderStatus::Failed);
+        set.insert(SellerOrderStatus::Cancelled);
+        set.insert(SellerOrderStatus::Expired);
+
+        assert_eq!(set.len(), 13);
+        assert!(set.contains(&SellerOrderStatus::Draft));
+        assert!(set.contains(&SellerOrderStatus::Expired));
+    }
+
+    /// Seller Agent 1.0 § SellerOrderStatus — PartialEq and Eq verify inequality of different variants
+    #[test]
+    fn test_eq_different_variants() {
+        assert_ne!(SellerOrderStatus::Draft, SellerOrderStatus::Submitted);
+        assert_ne!(
+            SellerOrderStatus::Submitted,
+            SellerOrderStatus::PendingApproval
+        );
+        assert_ne!(
+            SellerOrderStatus::PendingApproval,
+            SellerOrderStatus::Approved
+        );
+        assert_ne!(SellerOrderStatus::Approved, SellerOrderStatus::Rejected);
+        assert_ne!(SellerOrderStatus::Rejected, SellerOrderStatus::InProgress);
+        assert_ne!(SellerOrderStatus::InProgress, SellerOrderStatus::Syncing);
+        assert_ne!(SellerOrderStatus::Syncing, SellerOrderStatus::Booked);
+        assert_ne!(SellerOrderStatus::Booked, SellerOrderStatus::Paused);
+        assert_ne!(SellerOrderStatus::Paused, SellerOrderStatus::Completed);
+        assert_ne!(SellerOrderStatus::Completed, SellerOrderStatus::Failed);
+        assert_ne!(SellerOrderStatus::Failed, SellerOrderStatus::Cancelled);
+        assert_ne!(SellerOrderStatus::Cancelled, SellerOrderStatus::Expired);
+    }
+
+    /// Seller Agent 1.0 § SellerOrderStatus — serde rename_all = "snake_case" rejects PascalCase
+    #[test]
+    fn test_case_sensitivity_rejected() {
+        let pascal_case_examples = ["\"Draft\"", "\"PendingApproval\""];
+
+        for example in &pascal_case_examples {
+            let result: Result<SellerOrderStatus, _> = serde_json::from_str(example);
+            assert!(result.is_err(), "PascalCase {} should be rejected", example);
+        }
+    }
+
+    /// Seller Agent 1.0 § SellerOrderStatus — Exact snake_case serialization values per spec
+    #[test]
+    fn test_exact_snake_case_values() {
+        let expected = [
+            (SellerOrderStatus::Draft, "\"draft\""),
+            (SellerOrderStatus::Submitted, "\"submitted\""),
+            (SellerOrderStatus::PendingApproval, "\"pending_approval\""),
+            (SellerOrderStatus::Approved, "\"approved\""),
+            (SellerOrderStatus::Rejected, "\"rejected\""),
+            (SellerOrderStatus::InProgress, "\"in_progress\""),
+            (SellerOrderStatus::Syncing, "\"syncing\""),
+            (SellerOrderStatus::Booked, "\"booked\""),
+            (SellerOrderStatus::Paused, "\"paused\""),
+            (SellerOrderStatus::Completed, "\"completed\""),
+            (SellerOrderStatus::Failed, "\"failed\""),
+            (SellerOrderStatus::Cancelled, "\"cancelled\""),
+            (SellerOrderStatus::Expired, "\"expired\""),
+        ];
+
+        for (variant, expected_json) in &expected {
+            let json = serde_json::to_string(variant).unwrap();
+            assert_eq!(
+                &json, expected_json,
+                "Mismatch for {:?}: got {}, expected {}",
+                variant, json, expected_json
+            );
+        }
+    }
 }
