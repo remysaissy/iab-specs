@@ -84,4 +84,32 @@ mod tests {
         let payload = AdjustBidPayload::builder().build().unwrap();
         assert_eq!(payload.price, 0.0);
     }
+
+    #[test]
+    fn test_adjust_bid_payload_zero_price() {
+        // Spec: AdjustBidPayload.price — zero is a valid bid price
+        let payload = AdjustBidPayload::builder().price(0.0).build().unwrap();
+        assert_eq!(payload.price, 0.0);
+        let json = serde_json::to_string(&payload).unwrap();
+        let parsed: AdjustBidPayload = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.price, 0.0);
+    }
+
+    #[test]
+    fn test_adjust_bid_payload_negative_price() {
+        // Edge case: negative price (no validation at struct level)
+        let payload = AdjustBidPayload::builder().price(-1.0).build().unwrap();
+        assert_eq!(payload.price, -1.0);
+        let json = serde_json::to_string(&payload).unwrap();
+        let parsed: AdjustBidPayload = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.price, -1.0);
+    }
+
+    #[test]
+    fn test_adjust_bid_payload_deserialization_extra_fields() {
+        // Spec: extra JSON fields silently ignored
+        let json = r#"{"price": 5.0, "unknown_field": true}"#;
+        let payload: AdjustBidPayload = serde_json::from_str(json).unwrap();
+        assert_eq!(payload.price, 5.0);
+    }
 }

@@ -247,4 +247,38 @@ mod tests {
         assert!(response.mutations.is_empty());
         assert!(response.metadata.is_none());
     }
+
+    #[test]
+    fn test_rtb_response_deserialization_extra_fields() {
+        // Spec: ARTB JSON payloads must tolerate unknown fields
+        let json = r#"{"id": "resp-extra", "mutations": [], "extra": "ignored"}"#;
+        let response: RTBResponse = serde_json::from_str(json).unwrap();
+        assert_eq!(response.id, "resp-extra");
+        assert!(response.mutations.is_empty());
+    }
+
+    #[test]
+    fn test_rtb_response_with_extension() {
+        // Spec: RTBResponse.ext field for exchange-specific data
+        let response: RTBResponse<Vec<u8>, serde_json::Value> = RTBResponseBuilder::default()
+            .id("resp-ext".to_string())
+            .ext(Some(Box::new(serde_json::json!({"agent_id": "a1"}))))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&response).unwrap();
+        assert!(json.contains("\"agent_id\":\"a1\""));
+        let parsed: RTBResponse<Vec<u8>, serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(response, parsed);
+    }
+
+    #[test]
+    fn test_rtb_response_deserialization_empty_mutations_array() {
+        // Spec: RTBResponse.mutations is a repeated field; empty array is valid
+        let json = r#"{"id": "resp-empty-mut", "mutations": []}"#;
+        let response: RTBResponse = serde_json::from_str(json).unwrap();
+        assert_eq!(response.id, "resp-empty-mut");
+        assert!(response.mutations.is_empty());
+        assert!(response.metadata.is_none());
+    }
 }

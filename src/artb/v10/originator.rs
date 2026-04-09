@@ -133,4 +133,48 @@ mod tests {
         assert!(originator.name.is_none());
         assert!(originator.domain.is_none());
     }
+
+    #[test]
+    fn test_originator_exchange_type() {
+        // Spec: Originator.Type Exchange(3)
+        let originator = Originator::builder()
+            .type_(OriginatorType::Exchange)
+            .name("Test Exchange")
+            .domain("exchange.test.com")
+            .build()
+            .unwrap();
+        assert_eq!(originator.type_, OriginatorType::Exchange);
+        assert_eq!(originator.name, Some("Test Exchange".to_string()));
+        assert_eq!(originator.domain, Some("exchange.test.com".to_string()));
+    }
+
+    #[test]
+    fn test_originator_dsp_type() {
+        // Spec: Originator.Type DSP(4)
+        let originator = Originator::builder()
+            .type_(OriginatorType::Dsp)
+            .name("Demand Platform")
+            .build()
+            .unwrap();
+        assert_eq!(originator.type_, OriginatorType::Dsp);
+        assert!(originator.domain.is_none());
+    }
+
+    #[test]
+    fn test_originator_deserialization_minimal() {
+        // Spec: Originator with only type field set
+        let json = r#"{"type": 2}"#;
+        let originator: Originator = serde_json::from_str(json).unwrap();
+        assert_eq!(originator.type_, OriginatorType::Ssp);
+        assert!(originator.name.is_none());
+        assert!(originator.domain.is_none());
+    }
+
+    #[test]
+    fn test_originator_deserialization_extra_fields() {
+        // Spec: extra JSON fields silently ignored
+        let json = r#"{"type": 1, "name": "Pub", "extra": "ignored"}"#;
+        let originator: Originator = serde_json::from_str(json).unwrap();
+        assert_eq!(originator.type_, OriginatorType::Publisher);
+    }
 }
