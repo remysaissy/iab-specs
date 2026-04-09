@@ -245,4 +245,97 @@ mod tests {
         assert_eq!(parsed.from, DealStatus::Negotiating);
         assert_eq!(parsed.to, DealStatus::Accepted);
     }
+
+    /// Buyer Agent 1.0 § Deal State Machine — exhaustive 13×13 transition matrix
+    #[test]
+    fn test_exhaustive_13x13_deal_transition_matrix() {
+        let all_states = [
+            DealStatus::Quoted,
+            DealStatus::Negotiating,
+            DealStatus::Accepted,
+            DealStatus::Booking,
+            DealStatus::Booked,
+            DealStatus::Delivering,
+            DealStatus::Completed,
+            DealStatus::Cancelled,
+            DealStatus::Rejected,
+            DealStatus::Expired,
+            DealStatus::Failed,
+            DealStatus::MakegoodPending,
+            DealStatus::PartiallyCanceled,
+        ];
+
+        for from in &all_states {
+            for to in &all_states {
+                let expected = VALID_DEAL_TRANSITIONS.contains(&(*from, *to));
+                assert_eq!(
+                    can_transition_deal(from, to),
+                    expected,
+                    "Mismatch for {:?} -> {:?}: expected {}, got {}",
+                    from,
+                    to,
+                    expected,
+                    !expected
+                );
+            }
+        }
+    }
+
+    /// Buyer Agent 1.0 § Deal State Machine — self-transitions are never valid
+    #[test]
+    fn test_self_transition_deal_always_rejected() {
+        let all_states = [
+            DealStatus::Quoted,
+            DealStatus::Negotiating,
+            DealStatus::Accepted,
+            DealStatus::Booking,
+            DealStatus::Booked,
+            DealStatus::Delivering,
+            DealStatus::Completed,
+            DealStatus::Cancelled,
+            DealStatus::Rejected,
+            DealStatus::Expired,
+            DealStatus::Failed,
+            DealStatus::MakegoodPending,
+            DealStatus::PartiallyCanceled,
+        ];
+
+        for state in &all_states {
+            assert!(
+                !can_transition_deal(state, state),
+                "Self-transition for {:?} should be rejected",
+                state
+            );
+        }
+    }
+
+    /// Buyer Agent 1.0 § DealTransition — Default trait produces valid zero-state
+    #[test]
+    fn test_deal_transition_record_default() {
+        let t: DealTransition = DealTransition::default();
+        assert_eq!(t.from, DealStatus::Quoted);
+        assert_eq!(t.to, DealStatus::Quoted);
+        assert!(t.timestamp.is_none());
+        assert!(t.reason.is_none());
+        assert!(t.actor.is_none());
+    }
+
+    /// Buyer Agent 1.0 § DealTransition — optional fields skipped when None
+    #[test]
+    fn test_deal_transition_optional_fields_none() {
+        let t = DealTransition::builder()
+            .from(DealStatus::Quoted)
+            .to(DealStatus::Negotiating)
+            .build()
+            .unwrap();
+
+        assert!(t.timestamp.is_none());
+        assert!(t.reason.is_none());
+        assert!(t.actor.is_none());
+
+        let json = serde_json::to_string(&t).unwrap();
+        assert!(!json.contains("timestamp"));
+        assert!(!json.contains("reason"));
+        assert!(!json.contains("actor"));
+    }
 }

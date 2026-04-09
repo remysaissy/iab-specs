@@ -159,4 +159,51 @@ mod tests {
         assert_eq!(brief.objectives, roundtripped.objectives);
         assert_eq!(brief.constraints, roundtripped.constraints);
     }
+
+    #[test]
+    fn test_channel_brief_default_trait() {
+        let brief: ChannelBrief = ChannelBrief::default();
+        assert_eq!(brief.channel, "");
+        assert_eq!(brief.budget, 0.0);
+        assert!(brief.objectives.is_empty());
+        assert!(brief.constraints.is_none());
+        assert!(brief.ext.is_none());
+    }
+
+    #[test]
+    fn test_channel_brief_zero_budget() {
+        let brief = ChannelBrief::builder()
+            .channel("test")
+            .budget(0.0)
+            .build()
+            .unwrap();
+        assert_eq!(brief.budget, 0.0);
+    }
+
+    #[test]
+    fn test_channel_brief_deserialization_from_json_string() {
+        let json_str = r#"{"channel":"audio","budget":5000.0,"objectives":["reach"]}"#;
+        let brief: ChannelBrief = serde_json::from_str(json_str).unwrap();
+        assert_eq!(brief.channel, "audio");
+        assert_eq!(brief.budget, 5000.0);
+        assert_eq!(brief.objectives, vec!["reach"]);
+        assert!(brief.constraints.is_none());
+    }
+
+    #[test]
+    fn test_channel_brief_with_json_extension() {
+        let brief = ChannelBriefBuilder::<serde_json::Value>::default()
+            .channel("ctv".to_string())
+            .budget(20000.0)
+            .ext(Some(Box::new(json!({"targeting": "household"}))))
+            .build()
+            .unwrap();
+
+        assert!(brief.ext.is_some());
+        assert_eq!(brief.ext.as_ref().unwrap()["targeting"], "household");
+
+        let json_str = serde_json::to_string(&brief).unwrap();
+        let parsed: ChannelBrief<serde_json::Value> = serde_json::from_str(&json_str).unwrap();
+        assert_eq!(parsed.ext.as_ref().unwrap()["targeting"], "household");
+    }
 }

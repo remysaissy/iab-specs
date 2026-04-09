@@ -267,4 +267,45 @@ mod tests {
 
         assert_eq!(params.makegood_policy, Some("Full replacement".to_string()));
     }
+
+    #[test]
+    fn test_linear_tv_params_explicit_default_trait() {
+        let params: LinearTVParams = LinearTVParams::default();
+        assert!(params.flighting.is_none());
+        assert!(params.cancellation_terms.is_none());
+        assert!(params.makegood_policy.is_none());
+        assert!(params.ext.is_none());
+    }
+
+    #[test]
+    fn test_linear_tv_params_deserialization_from_raw_json() {
+        let json = r#"{"cancellation_terms":"14 days","makegood_policy":"full replacement"}"#;
+        let params: LinearTVParams = serde_json::from_str(json).unwrap();
+        assert_eq!(params.cancellation_terms, Some("14 days".to_string()));
+        assert_eq!(params.makegood_policy, Some("full replacement".to_string()));
+        assert!(params.flighting.is_none());
+    }
+
+    #[test]
+    fn test_linear_tv_params_null_flighting_in_json() {
+        let json = r#"{"flighting":null}"#;
+        let params: LinearTVParams = serde_json::from_str(json).unwrap();
+        assert!(params.flighting.is_none());
+    }
+
+    #[test]
+    fn test_linear_tv_params_with_json_extension() {
+        let params = LinearTVParamsBuilder::<serde_json::Value>::default()
+            .cancellation_terms("30 days")
+            .ext(Some(Box::new(serde_json::json!({"network": "NBC"}))))
+            .build()
+            .unwrap();
+
+        assert!(params.ext.is_some());
+        assert_eq!(params.ext.as_ref().unwrap()["network"], "NBC");
+
+        let json = serde_json::to_string(&params).unwrap();
+        let parsed: LinearTVParams<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.ext.as_ref().unwrap()["network"], "NBC");
+    }
 }

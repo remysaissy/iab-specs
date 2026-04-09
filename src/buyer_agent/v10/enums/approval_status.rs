@@ -85,4 +85,66 @@ mod tests {
             "Default should be Pending"
         );
     }
+
+    /// Buyer Agent 1.0 § ApprovalStatus — Clone and Copy traits enable value semantics
+    #[test]
+    fn test_clone_copy_traits() {
+        let a = ApprovalStatus::Approved;
+        let b = a; // Copy semantics
+        assert_eq!(a, b);
+        assert_eq!(a, ApprovalStatus::Approved);
+    }
+
+    /// Buyer Agent 1.0 § ApprovalStatus — Hash trait enables HashSet usage
+    #[test]
+    fn test_hash_trait_with_hashset() {
+        use std::collections::HashSet;
+
+        let mut set = HashSet::new();
+        set.insert(ApprovalStatus::Pending);
+        set.insert(ApprovalStatus::Approved);
+        set.insert(ApprovalStatus::Rejected);
+
+        assert_eq!(set.len(), 3);
+        assert!(set.contains(&ApprovalStatus::Pending));
+        assert!(set.contains(&ApprovalStatus::Rejected));
+    }
+
+    /// Buyer Agent 1.0 § ApprovalStatus — PartialEq and Eq verify inequality of different variants
+    #[test]
+    fn test_eq_different_variants() {
+        assert_ne!(ApprovalStatus::Pending, ApprovalStatus::Approved);
+        assert_ne!(ApprovalStatus::Approved, ApprovalStatus::Rejected);
+        assert_ne!(ApprovalStatus::Rejected, ApprovalStatus::Pending);
+    }
+
+    /// Buyer Agent 1.0 § ApprovalStatus — serde rename_all = "snake_case" rejects PascalCase
+    #[test]
+    fn test_case_sensitivity_rejected() {
+        let pascal_case_examples = ["\"Approved\"", "\"Pending\""];
+
+        for example in &pascal_case_examples {
+            let result: Result<ApprovalStatus, _> = serde_json::from_str(example);
+            assert!(result.is_err(), "PascalCase {} should be rejected", example);
+        }
+    }
+
+    /// Buyer Agent 1.0 § ApprovalStatus — Exact snake_case serialization values per spec
+    #[test]
+    fn test_exact_snake_case_values() {
+        let expected = [
+            (ApprovalStatus::Pending, "\"pending\""),
+            (ApprovalStatus::Approved, "\"approved\""),
+            (ApprovalStatus::Rejected, "\"rejected\""),
+        ];
+
+        for (variant, expected_json) in &expected {
+            let json = serde_json::to_string(variant).unwrap();
+            assert_eq!(
+                &json, expected_json,
+                "Mismatch for {:?}: got {}, expected {}",
+                variant, json, expected_json
+            );
+        }
+    }
 }

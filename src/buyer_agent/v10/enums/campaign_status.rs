@@ -115,4 +115,92 @@ mod tests {
             "Default should be Initialized"
         );
     }
+
+    /// Buyer Agent 1.0 § CampaignStatus — Clone and Copy traits enable value semantics
+    #[test]
+    fn test_clone_copy_traits() {
+        let a = CampaignStatus::BriefReceived;
+        let b = a; // Copy semantics
+        assert_eq!(a, b);
+        assert_eq!(a, CampaignStatus::BriefReceived);
+    }
+
+    /// Buyer Agent 1.0 § CampaignStatus — Hash trait enables HashSet usage
+    #[test]
+    fn test_hash_trait_with_hashset() {
+        use std::collections::HashSet;
+
+        let mut set = HashSet::new();
+        set.insert(CampaignStatus::Initialized);
+        set.insert(CampaignStatus::BriefReceived);
+        set.insert(CampaignStatus::BudgetAllocated);
+        set.insert(CampaignStatus::Researching);
+        set.insert(CampaignStatus::AwaitingApproval);
+        set.insert(CampaignStatus::ExecutingBookings);
+        set.insert(CampaignStatus::Completed);
+        set.insert(CampaignStatus::Failed);
+        set.insert(CampaignStatus::Cancelled);
+
+        assert_eq!(set.len(), 9);
+        assert!(set.contains(&CampaignStatus::Initialized));
+        assert!(set.contains(&CampaignStatus::Failed));
+    }
+
+    /// Buyer Agent 1.0 § CampaignStatus — PartialEq and Eq verify inequality of different variants
+    #[test]
+    fn test_eq_different_variants() {
+        assert_ne!(CampaignStatus::Initialized, CampaignStatus::BriefReceived);
+        assert_ne!(
+            CampaignStatus::BriefReceived,
+            CampaignStatus::BudgetAllocated
+        );
+        assert_ne!(CampaignStatus::BudgetAllocated, CampaignStatus::Researching);
+        assert_ne!(
+            CampaignStatus::Researching,
+            CampaignStatus::AwaitingApproval
+        );
+        assert_ne!(
+            CampaignStatus::AwaitingApproval,
+            CampaignStatus::ExecutingBookings
+        );
+        assert_ne!(CampaignStatus::ExecutingBookings, CampaignStatus::Completed);
+        assert_ne!(CampaignStatus::Completed, CampaignStatus::Failed);
+        assert_ne!(CampaignStatus::Failed, CampaignStatus::Cancelled);
+    }
+
+    /// Buyer Agent 1.0 § CampaignStatus — serde rename_all = "snake_case" rejects PascalCase
+    #[test]
+    fn test_case_sensitivity_rejected() {
+        let pascal_case_examples = ["\"BriefReceived\"", "\"Initialized\""];
+
+        for example in &pascal_case_examples {
+            let result: Result<CampaignStatus, _> = serde_json::from_str(example);
+            assert!(result.is_err(), "PascalCase {} should be rejected", example);
+        }
+    }
+
+    /// Buyer Agent 1.0 § CampaignStatus — Exact snake_case serialization values per spec
+    #[test]
+    fn test_exact_snake_case_values() {
+        let expected = [
+            (CampaignStatus::Initialized, "\"initialized\""),
+            (CampaignStatus::BriefReceived, "\"brief_received\""),
+            (CampaignStatus::BudgetAllocated, "\"budget_allocated\""),
+            (CampaignStatus::Researching, "\"researching\""),
+            (CampaignStatus::AwaitingApproval, "\"awaiting_approval\""),
+            (CampaignStatus::ExecutingBookings, "\"executing_bookings\""),
+            (CampaignStatus::Completed, "\"completed\""),
+            (CampaignStatus::Failed, "\"failed\""),
+            (CampaignStatus::Cancelled, "\"cancelled\""),
+        ];
+
+        for (variant, expected_json) in &expected {
+            let json = serde_json::to_string(variant).unwrap();
+            assert_eq!(
+                &json, expected_json,
+                "Mismatch for {:?}: got {}, expected {}",
+                variant, json, expected_json
+            );
+        }
+    }
 }

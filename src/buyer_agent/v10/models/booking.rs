@@ -501,4 +501,65 @@ mod tests {
         assert_eq!(parsed.rationale, original.rationale);
         assert_eq!(parsed.channel, original.channel);
     }
+
+    #[test]
+    fn test_booking_job_default_trait() {
+        let job: BookingJob = BookingJob::default();
+        assert_eq!(job.campaign_brief_id, "");
+        assert_eq!(job.status, CampaignStatus::Initialized);
+        assert!(job.allocations.is_empty());
+        assert!(job.recommendations.is_empty());
+        assert!(job.approved.is_none());
+        assert!(job.approved_by.is_none());
+        assert!(job.approved_at.is_none());
+        assert!(job.id.is_none());
+        assert!(job.ext.is_none());
+    }
+
+    #[test]
+    fn test_booking_recommendation_default_trait() {
+        let rec: BookingRecommendation = BookingRecommendation::default();
+        assert_eq!(rec.seller_name, "");
+        assert_eq!(rec.product_id, "");
+        assert_eq!(rec.price, 0.0);
+        assert_eq!(rec.impressions, 0);
+        assert!(rec.rationale.is_none());
+        assert!(rec.channel.is_none());
+        assert!(rec.ext.is_none());
+    }
+
+    #[test]
+    fn test_booking_recommendation_negative_impressions() {
+        let rec = BookingRecommendation::builder()
+            .seller_name("Test")
+            .product_id("prod-1")
+            .impressions(-1)
+            .build()
+            .unwrap();
+        assert_eq!(rec.impressions, -1);
+    }
+
+    #[test]
+    fn test_booking_job_deserialization_from_json_string() {
+        let json = r#"{"campaign_brief_id":"brief-1","status":"researching","allocations":[],"recommendations":[]}"#;
+        let job: BookingJob = serde_json::from_str(json).unwrap();
+        assert_eq!(job.campaign_brief_id, "brief-1");
+        assert_eq!(job.status, CampaignStatus::Researching);
+    }
+
+    #[test]
+    fn test_booking_job_with_json_extension() {
+        let job = BookingJobBuilder::<serde_json::Value>::default()
+            .campaign_brief_id("brief-ext".to_string())
+            .ext(Some(Box::new(serde_json::json!({"tracking": "abc123"}))))
+            .build()
+            .unwrap();
+
+        assert!(job.ext.is_some());
+        assert_eq!(job.ext.as_ref().unwrap()["tracking"], "abc123");
+
+        let json = serde_json::to_string(&job).unwrap();
+        let parsed: BookingJob<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.ext.as_ref().unwrap()["tracking"], "abc123");
+    }
 }

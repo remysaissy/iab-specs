@@ -208,4 +208,50 @@ mod tests {
         assert_eq!(line.rate, 0.0);
         assert_eq!(line.quantity, 100);
     }
+
+    #[test]
+    fn test_booked_line_default_trait() {
+        let line: BookedLine = BookedLine::default();
+        assert_eq!(line.line_id, "");
+        assert_eq!(line.order_id, "");
+        assert_eq!(line.product_id, "");
+        assert_eq!(line.status, "");
+        assert_eq!(line.rate, 0.0);
+        assert_eq!(line.quantity, 0);
+        assert!(line.ext.is_none());
+    }
+
+    #[test]
+    fn test_booked_line_negative_quantity() {
+        let line = BookedLine::builder()
+            .line_id("line-neg")
+            .order_id("order-neg")
+            .product_id("prod-neg")
+            .status("booked")
+            .quantity(-1000)
+            .build()
+            .unwrap();
+        assert_eq!(line.quantity, -1000);
+    }
+
+    #[test]
+    fn test_booked_line_with_json_extension() {
+        let line = BookedLineBuilder::<serde_json::Value>::default()
+            .line_id("line-ext".to_string())
+            .order_id("order-ext".to_string())
+            .product_id("prod-ext".to_string())
+            .status("booked".to_string())
+            .rate(2.0)
+            .quantity(100)
+            .ext(Some(Box::new(serde_json::json!({"source": "direct"}))))
+            .build()
+            .unwrap();
+
+        assert!(line.ext.is_some());
+        assert_eq!(line.ext.as_ref().unwrap()["source"], "direct");
+
+        let json = serde_json::to_string(&line).unwrap();
+        let parsed: BookedLine<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.ext.as_ref().unwrap()["source"], "direct");
+    }
 }

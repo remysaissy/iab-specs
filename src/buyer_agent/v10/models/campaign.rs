@@ -425,4 +425,95 @@ mod tests {
         assert_eq!(parsed.priority, original.priority);
         assert_eq!(parsed.rationale, original.rationale);
     }
+
+    #[test]
+    fn test_campaign_brief_default_trait() {
+        let brief: CampaignBrief = CampaignBrief::default();
+        assert_eq!(brief.name, "");
+        assert_eq!(brief.budget, 0.0);
+        assert_eq!(brief.start_date, "");
+        assert_eq!(brief.end_date, "");
+        assert!(brief.objectives.is_empty());
+        assert!(brief.channels.is_empty());
+        assert!(brief.target_audience.is_none());
+        assert!(brief.kpis.is_none());
+        assert!(brief.constraints.is_none());
+        assert!(brief.ext.is_none());
+    }
+
+    #[test]
+    fn test_campaign_allocation_default_trait() {
+        let alloc: CampaignAllocation = CampaignAllocation::default();
+        assert_eq!(alloc.channel, "");
+        assert_eq!(alloc.budget_share, 0.0);
+        assert_eq!(alloc.priority, 0);
+        assert!(alloc.rationale.is_none());
+        assert!(alloc.ext.is_none());
+    }
+
+    #[test]
+    fn test_campaign_allocation_negative_budget_share() {
+        let alloc = CampaignAllocation::builder()
+            .channel("test")
+            .budget_share(-0.5)
+            .build()
+            .unwrap();
+        assert_eq!(alloc.budget_share, -0.5);
+    }
+
+    #[test]
+    fn test_campaign_allocation_over_one_budget_share() {
+        let alloc = CampaignAllocation::builder()
+            .channel("test")
+            .budget_share(1.5)
+            .build()
+            .unwrap();
+        assert_eq!(alloc.budget_share, 1.5);
+    }
+
+    #[test]
+    fn test_campaign_brief_empty_name_accepted() {
+        let brief = CampaignBrief::builder()
+            .name("")
+            .budget(100.0)
+            .start_date("2024-01-01")
+            .end_date("2024-12-31")
+            .build()
+            .unwrap();
+        assert_eq!(brief.name, "");
+    }
+
+    #[test]
+    fn test_campaign_brief_deserialization_missing_optional_fields() {
+        let json =
+            r#"{"name":"Test","budget":100.0,"start_date":"2024-01-01","end_date":"2024-12-31"}"#;
+        let brief: CampaignBrief = serde_json::from_str(json).unwrap();
+        assert_eq!(brief.name, "Test");
+        assert!(brief.objectives.is_empty());
+        assert!(brief.channels.is_empty());
+        assert!(brief.target_audience.is_none());
+        assert!(brief.kpis.is_none());
+        assert!(brief.constraints.is_none());
+    }
+
+    #[test]
+    fn test_campaign_brief_with_json_extension() {
+        let brief = CampaignBriefBuilder::<serde_json::Value>::default()
+            .name("Ext Test".to_string())
+            .budget(1000.0)
+            .start_date("2024-01-01".to_string())
+            .end_date("2024-12-31".to_string())
+            .ext(Some(Box::new(serde_json::json!({"custom_field": "value"}))))
+            .build()
+            .unwrap();
+
+        assert!(brief.ext.is_some());
+        assert_eq!(brief.ext.as_ref().unwrap()["custom_field"], "value");
+
+        let json = serde_json::to_string(&brief).unwrap();
+        assert!(json.contains("\"custom_field\":\"value\""));
+
+        let parsed: CampaignBrief<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.ext.as_ref().unwrap()["custom_field"], "value");
+    }
 }
