@@ -382,4 +382,75 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn test_ucp_embedding_default_trait() {
+        let emb: UCPEmbedding = UCPEmbedding::default();
+        assert!(emb.vector.is_empty());
+        assert_eq!(emb.model_descriptor, "");
+        assert_eq!(emb.dimension, 0);
+        assert!(emb.consent.is_none());
+        assert!(emb.ttl.is_none());
+        assert!(emb.ext.is_none());
+    }
+
+    #[test]
+    fn test_ucp_embedding_dimension_mismatch_accepted() {
+        let emb = UCPEmbedding::builder()
+            .vector(vec![0.1, 0.2, 0.3])
+            .model_descriptor("test-model")
+            .dimension(384)
+            .build()
+            .unwrap();
+        assert_eq!(emb.vector.len(), 3);
+        assert_eq!(emb.dimension, 384);
+    }
+
+    #[test]
+    fn test_ucp_embedding_negative_ttl() {
+        let emb = UCPEmbedding::builder()
+            .vector(vec![0.1])
+            .model_descriptor("test")
+            .dimension(1)
+            .ttl(Some(-1))
+            .build()
+            .unwrap();
+        assert_eq!(emb.ttl, Some(-1));
+    }
+
+    #[test]
+    fn test_audience_plan_default_trait() {
+        let plan: AudiencePlan = AudiencePlan::default();
+        assert!(plan.query_embedding.is_empty());
+        assert!(plan.coverage_estimates.is_none());
+        assert!(plan.targeting_criteria.is_none());
+        assert!(plan.ext.is_none());
+    }
+
+    #[test]
+    fn test_audience_plan_empty_embedding_accepted() {
+        let plan = AudiencePlan::builder()
+            .query_embedding(vec![])
+            .build()
+            .unwrap();
+        assert!(plan.query_embedding.is_empty());
+    }
+
+    #[test]
+    fn test_ucp_embedding_with_json_extension() {
+        let emb = UCPEmbeddingBuilder::<serde_json::Value>::default()
+            .vector(vec![0.5])
+            .model_descriptor("ext-model".to_string())
+            .dimension(1)
+            .ext(Some(Box::new(serde_json::json!({"provider": "openai"}))))
+            .build()
+            .unwrap();
+
+        assert!(emb.ext.is_some());
+        assert_eq!(emb.ext.as_ref().unwrap()["provider"], "openai");
+
+        let json = serde_json::to_string(&emb).unwrap();
+        let parsed: UCPEmbedding<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.ext.as_ref().unwrap()["provider"], "openai");
+    }
 }

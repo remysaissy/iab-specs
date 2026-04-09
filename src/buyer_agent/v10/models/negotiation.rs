@@ -401,4 +401,66 @@ mod tests {
         assert_eq!(parsed.accepted, original.accepted);
         assert_eq!(parsed.counter_price, original.counter_price);
     }
+
+    #[test]
+    fn test_negotiation_strategy_default_trait() {
+        let s: NegotiationStrategy = NegotiationStrategy::default();
+        assert_eq!(s.target_cpm, 0.0);
+        assert_eq!(s.max_cpm, 0.0);
+        assert_eq!(s.concession_step, 0.0);
+        assert_eq!(s.max_rounds, 0);
+        assert!(s.ext.is_none());
+    }
+
+    #[test]
+    fn test_negotiation_strategy_negative_cpm_accepted() {
+        let s = NegotiationStrategy::builder()
+            .target_cpm(-1.0)
+            .max_cpm(-0.5)
+            .build()
+            .unwrap();
+        assert_eq!(s.target_cpm, -1.0);
+        assert_eq!(s.max_cpm, -0.5);
+    }
+
+    #[test]
+    fn test_negotiation_offer_default_trait() {
+        let o: NegotiationOffer = NegotiationOffer::default();
+        assert_eq!(o.price, 0.0);
+        assert_eq!(o.round, 0);
+        assert!(!o.from_buyer);
+        assert!(o.accepted.is_none());
+        assert!(o.counter_price.is_none());
+        assert!(o.ext.is_none());
+    }
+
+    #[test]
+    fn test_negotiation_offer_round_zero() {
+        let o = NegotiationOffer::builder()
+            .price(1.0)
+            .round(0)
+            .from_buyer(true)
+            .build()
+            .unwrap();
+        assert_eq!(o.round, 0);
+    }
+
+    #[test]
+    fn test_negotiation_strategy_with_json_extension() {
+        let s = NegotiationStrategyBuilder::<serde_json::Value>::default()
+            .target_cpm(2.0)
+            .max_cpm(5.0)
+            .concession_step(0.5)
+            .max_rounds(3)
+            .ext(Some(Box::new(serde_json::json!({"algo": "linear"}))))
+            .build()
+            .unwrap();
+
+        assert!(s.ext.is_some());
+        assert_eq!(s.ext.as_ref().unwrap()["algo"], "linear");
+
+        let json = serde_json::to_string(&s).unwrap();
+        let parsed: NegotiationStrategy<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.ext.as_ref().unwrap()["algo"], "linear");
+    }
 }

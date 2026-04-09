@@ -131,4 +131,95 @@ mod tests {
         let default = DealStatus::default();
         assert_eq!(default, DealStatus::Quoted, "Default should be Quoted");
     }
+
+    /// Buyer Agent 1.0 § DealStatus — Clone and Copy traits enable value semantics
+    #[test]
+    fn test_clone_copy_traits() {
+        let a = DealStatus::Negotiating;
+        let b = a; // Copy semantics
+        assert_eq!(a, b);
+        assert_eq!(a, DealStatus::Negotiating);
+    }
+
+    /// Buyer Agent 1.0 § DealStatus — Hash trait enables HashSet usage
+    #[test]
+    fn test_hash_trait_with_hashset() {
+        use std::collections::HashSet;
+
+        let mut set = HashSet::new();
+        set.insert(DealStatus::Quoted);
+        set.insert(DealStatus::Negotiating);
+        set.insert(DealStatus::Accepted);
+        set.insert(DealStatus::Booking);
+        set.insert(DealStatus::Booked);
+        set.insert(DealStatus::Delivering);
+        set.insert(DealStatus::Completed);
+        set.insert(DealStatus::Cancelled);
+        set.insert(DealStatus::Rejected);
+        set.insert(DealStatus::Expired);
+        set.insert(DealStatus::Failed);
+        set.insert(DealStatus::MakegoodPending);
+        set.insert(DealStatus::PartiallyCanceled);
+
+        assert_eq!(set.len(), 13);
+        assert!(set.contains(&DealStatus::Quoted));
+        assert!(set.contains(&DealStatus::PartiallyCanceled));
+    }
+
+    /// Buyer Agent 1.0 § DealStatus — PartialEq and Eq verify inequality of different variants
+    #[test]
+    fn test_eq_different_variants() {
+        assert_ne!(DealStatus::Quoted, DealStatus::Negotiating);
+        assert_ne!(DealStatus::Negotiating, DealStatus::Accepted);
+        assert_ne!(DealStatus::Accepted, DealStatus::Booking);
+        assert_ne!(DealStatus::Booking, DealStatus::Booked);
+        assert_ne!(DealStatus::Booked, DealStatus::Delivering);
+        assert_ne!(DealStatus::Delivering, DealStatus::Completed);
+        assert_ne!(DealStatus::Completed, DealStatus::Cancelled);
+        assert_ne!(DealStatus::Cancelled, DealStatus::Rejected);
+        assert_ne!(DealStatus::Rejected, DealStatus::Expired);
+        assert_ne!(DealStatus::Expired, DealStatus::Failed);
+        assert_ne!(DealStatus::Failed, DealStatus::MakegoodPending);
+        assert_ne!(DealStatus::MakegoodPending, DealStatus::PartiallyCanceled);
+    }
+
+    /// Buyer Agent 1.0 § DealStatus — serde rename_all = "snake_case" rejects PascalCase
+    #[test]
+    fn test_case_sensitivity_rejected() {
+        let pascal_case_examples = ["\"Negotiating\"", "\"BriefReceived\""];
+
+        for example in &pascal_case_examples {
+            let result: Result<DealStatus, _> = serde_json::from_str(example);
+            assert!(result.is_err(), "PascalCase {} should be rejected", example);
+        }
+    }
+
+    /// Buyer Agent 1.0 § DealStatus — Exact snake_case serialization values per spec
+    #[test]
+    fn test_exact_snake_case_values() {
+        let expected = [
+            (DealStatus::Quoted, "\"quoted\""),
+            (DealStatus::Negotiating, "\"negotiating\""),
+            (DealStatus::Accepted, "\"accepted\""),
+            (DealStatus::Booking, "\"booking\""),
+            (DealStatus::Booked, "\"booked\""),
+            (DealStatus::Delivering, "\"delivering\""),
+            (DealStatus::Completed, "\"completed\""),
+            (DealStatus::Cancelled, "\"cancelled\""),
+            (DealStatus::Rejected, "\"rejected\""),
+            (DealStatus::Expired, "\"expired\""),
+            (DealStatus::Failed, "\"failed\""),
+            (DealStatus::MakegoodPending, "\"makegood_pending\""),
+            (DealStatus::PartiallyCanceled, "\"partially_canceled\""),
+        ];
+
+        for (variant, expected_json) in &expected {
+            let json = serde_json::to_string(variant).unwrap();
+            assert_eq!(
+                &json, expected_json,
+                "Mismatch for {:?}: got {}, expected {}",
+                variant, json, expected_json
+            );
+        }
+    }
 }

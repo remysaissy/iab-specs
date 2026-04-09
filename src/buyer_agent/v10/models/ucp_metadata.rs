@@ -280,4 +280,51 @@ mod tests {
         assert!(json.contains("\"granted\":false"));
         assert!(!json.contains("expires_at"));
     }
+
+    #[test]
+    fn test_ucp_model_descriptor_default_trait() {
+        let d: UCPModelDescriptor = UCPModelDescriptor::default();
+        assert_eq!(d.model_id, "");
+        assert_eq!(d.version, "");
+        assert_eq!(d.dimension, 0);
+        assert!(d.ext.is_none());
+    }
+
+    #[test]
+    fn test_ucp_consent_default_trait() {
+        let c: UCPConsent = UCPConsent::default();
+        assert_eq!(c.purpose, "");
+        assert!(!c.granted);
+        assert!(c.expires_at.is_none());
+        assert!(c.ext.is_none());
+    }
+
+    #[test]
+    fn test_ucp_model_descriptor_zero_dimension() {
+        let d = UCPModelDescriptor::builder()
+            .model_id("test")
+            .version("1.0")
+            .dimension(0)
+            .build()
+            .unwrap();
+        assert_eq!(d.dimension, 0);
+    }
+
+    #[test]
+    fn test_ucp_model_descriptor_with_json_extension() {
+        let d = UCPModelDescriptorBuilder::<serde_json::Value>::default()
+            .model_id("ext-model".to_string())
+            .version("2.0".to_string())
+            .dimension(768)
+            .ext(Some(Box::new(serde_json::json!({"trained_on": "wiki"}))))
+            .build()
+            .unwrap();
+
+        assert!(d.ext.is_some());
+        assert_eq!(d.ext.as_ref().unwrap()["trained_on"], "wiki");
+
+        let json = serde_json::to_string(&d).unwrap();
+        let parsed: UCPModelDescriptor<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.ext.as_ref().unwrap()["trained_on"], "wiki");
+    }
 }

@@ -227,4 +227,89 @@ mod tests {
         assert_eq!(parsed.from, CampaignStatus::AwaitingApproval);
         assert_eq!(parsed.to, CampaignStatus::Researching);
     }
+
+    /// Buyer Agent 1.0 § Campaign State Machine — exhaustive 9×9 transition matrix
+    #[test]
+    fn test_exhaustive_9x9_campaign_transition_matrix() {
+        let all_states = [
+            CampaignStatus::Initialized,
+            CampaignStatus::BriefReceived,
+            CampaignStatus::BudgetAllocated,
+            CampaignStatus::Researching,
+            CampaignStatus::AwaitingApproval,
+            CampaignStatus::ExecutingBookings,
+            CampaignStatus::Completed,
+            CampaignStatus::Failed,
+            CampaignStatus::Cancelled,
+        ];
+
+        for from in &all_states {
+            for to in &all_states {
+                let expected = VALID_CAMPAIGN_TRANSITIONS.contains(&(*from, *to));
+                assert_eq!(
+                    can_transition_campaign(from, to),
+                    expected,
+                    "Mismatch for {:?} -> {:?}: expected {}, got {}",
+                    from,
+                    to,
+                    expected,
+                    !expected
+                );
+            }
+        }
+    }
+
+    /// Buyer Agent 1.0 § Campaign State Machine — self-transitions are never valid
+    #[test]
+    fn test_self_transition_campaign_always_rejected() {
+        let all_states = [
+            CampaignStatus::Initialized,
+            CampaignStatus::BriefReceived,
+            CampaignStatus::BudgetAllocated,
+            CampaignStatus::Researching,
+            CampaignStatus::AwaitingApproval,
+            CampaignStatus::ExecutingBookings,
+            CampaignStatus::Completed,
+            CampaignStatus::Failed,
+            CampaignStatus::Cancelled,
+        ];
+
+        for state in &all_states {
+            assert!(
+                !can_transition_campaign(state, state),
+                "Self-transition for {:?} should be rejected",
+                state
+            );
+        }
+    }
+
+    /// Buyer Agent 1.0 § CampaignTransition — Default trait produces valid zero-state
+    #[test]
+    fn test_campaign_transition_record_default() {
+        let t: CampaignTransition = CampaignTransition::default();
+        assert_eq!(t.from, CampaignStatus::Initialized);
+        assert_eq!(t.to, CampaignStatus::Initialized);
+        assert!(t.timestamp.is_none());
+        assert!(t.reason.is_none());
+        assert!(t.actor.is_none());
+    }
+
+    /// Buyer Agent 1.0 § CampaignTransition — optional fields skipped when None
+    #[test]
+    fn test_campaign_transition_optional_fields_none() {
+        let t = CampaignTransition::builder()
+            .from(CampaignStatus::Researching)
+            .to(CampaignStatus::AwaitingApproval)
+            .build()
+            .unwrap();
+
+        assert!(t.timestamp.is_none());
+        assert!(t.reason.is_none());
+        assert!(t.actor.is_none());
+
+        let json = serde_json::to_string(&t).unwrap();
+        assert!(!json.contains("timestamp"));
+        assert!(!json.contains("reason"));
+        assert!(!json.contains("actor"));
+    }
 }

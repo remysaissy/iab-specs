@@ -180,4 +180,40 @@ mod tests {
         assert!(identity.advertiser_id.is_none());
         assert!(identity.ext.is_none());
     }
+
+    #[test]
+    fn test_buyer_identity_deserialization_ignores_unknown_fields() {
+        let json = r#"{"seat_id":"seat-1","unknown_field":"ignored","extra":123}"#;
+        let identity: BuyerIdentity = serde_json::from_str(json).unwrap();
+        assert_eq!(identity.seat_id, Some("seat-1".to_string()));
+    }
+
+    #[test]
+    fn test_buyer_identity_with_json_extension() {
+        let identity = BuyerIdentityBuilder::<serde_json::Value>::default()
+            .seat_id("seat-ext")
+            .ext(Some(Box::new(serde_json::json!({"tier": "premium"}))))
+            .build()
+            .unwrap();
+
+        assert!(identity.ext.is_some());
+        assert_eq!(identity.ext.as_ref().unwrap()["tier"], "premium");
+
+        let json = serde_json::to_string(&identity).unwrap();
+        let parsed: BuyerIdentity<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.ext.as_ref().unwrap()["tier"], "premium");
+    }
+
+    #[test]
+    fn test_buyer_identity_empty_string_ids() {
+        let identity = BuyerIdentity::builder()
+            .seat_id("")
+            .agency_id("")
+            .advertiser_id("")
+            .build()
+            .unwrap();
+        assert_eq!(identity.seat_id, Some("".to_string()));
+        assert_eq!(identity.agency_id, Some("".to_string()));
+        assert_eq!(identity.advertiser_id, Some("".to_string()));
+    }
 }
