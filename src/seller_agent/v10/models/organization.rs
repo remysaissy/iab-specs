@@ -284,4 +284,97 @@ mod tests {
         let parsed: SellerAccount = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed.credit_limit, Some(12345.6789));
     }
+
+    /// Seller Agent 1.0 § SellerOrganization — default builder yields empty org
+    #[test]
+    fn test_seller_organization_default() {
+        let org = SellerOrganization::builder().build().unwrap();
+        assert_eq!(org.name, "");
+        assert_eq!(org.role, OrganizationRole::Seller);
+        assert!(org.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § SellerOrganization — optional fields omitted from JSON when None
+    #[test]
+    fn test_seller_organization_optional_fields_skipped() {
+        let org = SellerOrganization::builder()
+            .name("Org".to_string())
+            .role(OrganizationRole::Seller)
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&org).unwrap();
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § SellerOrganization — clone produces identical value
+    #[test]
+    fn test_seller_organization_clone() {
+        let org = SellerOrganization::builder()
+            .name("Clone Org".to_string())
+            .role(OrganizationRole::Agent)
+            .build()
+            .unwrap();
+
+        let cloned = org.clone();
+        assert_eq!(org, cloned);
+    }
+
+    /// Seller Agent 1.0 § SellerOrganization — deserialization from minimal JSON
+    #[test]
+    fn test_seller_organization_deserialization_minimal() {
+        let json = r#"{"name":"Pub","role":"seller"}"#;
+        let org: SellerOrganization = serde_json::from_str(json).unwrap();
+        assert_eq!(org.name, "Pub");
+        assert_eq!(org.role, OrganizationRole::Seller);
+        assert!(org.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § SellerAccount — default builder yields empty account
+    #[test]
+    fn test_seller_account_default() {
+        let account = SellerAccount::builder().build().unwrap();
+        assert_eq!(account.name, "");
+        assert_eq!(account.tier, PricingTierType::Public);
+        assert!(account.credit_limit.is_none());
+        assert!(account.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § SellerAccount — optional fields omitted from JSON when None
+    #[test]
+    fn test_seller_account_optional_fields_skipped() {
+        let account = SellerAccount::builder()
+            .name("Acc".to_string())
+            .tier(PricingTierType::Public)
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&account).unwrap();
+        assert!(!json.contains("\"credit_limit\""));
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § SellerAccount — clone produces identical value
+    #[test]
+    fn test_seller_account_clone() {
+        let account = SellerAccount::builder()
+            .name("Clone Acc".to_string())
+            .tier(PricingTierType::Agency)
+            .credit_limit(Some(10000.0))
+            .build()
+            .unwrap();
+
+        let cloned = account.clone();
+        assert_eq!(account, cloned);
+    }
+
+    /// Seller Agent 1.0 § SellerAccount — deserialization from minimal JSON
+    #[test]
+    fn test_seller_account_deserialization_minimal() {
+        let json = r#"{"name":"Acc","tier":"agency"}"#;
+        let account: SellerAccount = serde_json::from_str(json).unwrap();
+        assert_eq!(account.name, "Acc");
+        assert_eq!(account.tier, PricingTierType::Agency);
+        assert!(account.credit_limit.is_none());
+    }
 }

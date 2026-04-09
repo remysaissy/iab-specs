@@ -289,4 +289,142 @@ mod tests {
             &SellerOrderStatus::InProgress,
         ));
     }
+
+    /// Seller Agent 1.0 § SellerOrder State Machine — exhaustive 13×13 transition matrix
+    #[test]
+    fn test_exhaustive_13x13_seller_order_transition_matrix() {
+        let all_states = [
+            SellerOrderStatus::Draft,
+            SellerOrderStatus::Submitted,
+            SellerOrderStatus::PendingApproval,
+            SellerOrderStatus::Approved,
+            SellerOrderStatus::Rejected,
+            SellerOrderStatus::InProgress,
+            SellerOrderStatus::Syncing,
+            SellerOrderStatus::Booked,
+            SellerOrderStatus::Paused,
+            SellerOrderStatus::Completed,
+            SellerOrderStatus::Failed,
+            SellerOrderStatus::Cancelled,
+            SellerOrderStatus::Expired,
+        ];
+
+        for from in &all_states {
+            for to in &all_states {
+                let expected = VALID_SELLER_ORDER_TRANSITIONS.contains(&(*from, *to));
+                assert_eq!(
+                    can_transition_seller_order(from, to),
+                    expected,
+                    "Mismatch for {:?} -> {:?}: expected {}, got {}",
+                    from,
+                    to,
+                    expected,
+                    !expected
+                );
+            }
+        }
+    }
+
+    /// Seller Agent 1.0 § SellerOrder State Machine — self-transitions are never valid
+    #[test]
+    fn test_self_transition_seller_order_always_rejected() {
+        let all_states = [
+            SellerOrderStatus::Draft,
+            SellerOrderStatus::Submitted,
+            SellerOrderStatus::PendingApproval,
+            SellerOrderStatus::Approved,
+            SellerOrderStatus::Rejected,
+            SellerOrderStatus::InProgress,
+            SellerOrderStatus::Syncing,
+            SellerOrderStatus::Booked,
+            SellerOrderStatus::Paused,
+            SellerOrderStatus::Completed,
+            SellerOrderStatus::Failed,
+            SellerOrderStatus::Cancelled,
+            SellerOrderStatus::Expired,
+        ];
+
+        for state in &all_states {
+            assert!(
+                !can_transition_seller_order(state, state),
+                "Self-transition for {:?} should be rejected",
+                state
+            );
+        }
+    }
+
+    /// Seller Agent 1.0 § SellerOrder State Machine — Default trait produces valid zero-state
+    #[test]
+    fn test_seller_order_transition_record_default() {
+        let t = SellerOrderTransition::default();
+        assert_eq!(t.from, SellerOrderStatus::Draft);
+        assert_eq!(t.to, SellerOrderStatus::Draft);
+        assert!(t.timestamp.is_none());
+        assert!(t.reason.is_none());
+        assert!(t.actor.is_none());
+        assert!(t.audit_note.is_none());
+    }
+
+    /// Seller Agent 1.0 § SellerOrder State Machine — optional fields skipped when None
+    #[test]
+    fn test_seller_order_transition_optional_fields_none() {
+        let t = SellerOrderTransition::builder()
+            .from(SellerOrderStatus::Submitted)
+            .to(SellerOrderStatus::PendingApproval)
+            .build()
+            .unwrap();
+
+        assert!(t.timestamp.is_none());
+        assert!(t.reason.is_none());
+        assert!(t.actor.is_none());
+        assert!(t.audit_note.is_none());
+
+        let json = serde_json::to_string(&t).unwrap();
+        assert!(!json.contains("timestamp"));
+        assert!(!json.contains("reason"));
+        assert!(!json.contains("actor"));
+        assert!(!json.contains("audit_note"));
+    }
+
+    /// Seller Agent 1.0 § SellerOrder State Machine — Booked pause/resume full cycle
+    #[test]
+    fn test_booked_pause_resume_cycle() {
+        assert!(can_transition_seller_order(
+            &SellerOrderStatus::Booked,
+            &SellerOrderStatus::Paused,
+        ));
+        assert!(can_transition_seller_order(
+            &SellerOrderStatus::Paused,
+            &SellerOrderStatus::InProgress,
+        ));
+        assert!(can_transition_seller_order(
+            &SellerOrderStatus::InProgress,
+            &SellerOrderStatus::Syncing,
+        ));
+        assert!(can_transition_seller_order(
+            &SellerOrderStatus::Syncing,
+            &SellerOrderStatus::Booked,
+        ));
+    }
+
+    /// Seller Agent 1.0 § SellerOrder State Machine — Failed retry full recovery cycle
+    #[test]
+    fn test_failed_retry_full_cycle() {
+        assert!(can_transition_seller_order(
+            &SellerOrderStatus::Failed,
+            &SellerOrderStatus::InProgress,
+        ));
+        assert!(can_transition_seller_order(
+            &SellerOrderStatus::InProgress,
+            &SellerOrderStatus::Syncing,
+        ));
+        assert!(can_transition_seller_order(
+            &SellerOrderStatus::Syncing,
+            &SellerOrderStatus::Booked,
+        ));
+        assert!(can_transition_seller_order(
+            &SellerOrderStatus::Booked,
+            &SellerOrderStatus::Completed,
+        ));
+    }
 }

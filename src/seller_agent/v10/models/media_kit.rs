@@ -223,4 +223,108 @@ mod tests {
         assert!(package.product_ids.is_empty());
         assert!(package.ext.is_none());
     }
+
+    /// Seller Agent 1.0 § MediaKit — default builder yields empty media kit
+    #[test]
+    fn test_media_kit_default() {
+        let kit = MediaKit::builder().build().unwrap();
+        assert_eq!(kit.publisher_id, "");
+        assert!(kit.packages.is_empty());
+        assert!(kit.updated_at.is_none());
+        assert!(kit.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § MediaKit — optional fields omitted from JSON when None
+    #[test]
+    fn test_media_kit_optional_fields_skipped() {
+        let kit = MediaKit::builder().publisher_id("pub-1").build().unwrap();
+
+        let json = serde_json::to_string(&kit).unwrap();
+        assert!(!json.contains("\"updated_at\""));
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § MediaKit — clone produces identical value
+    #[test]
+    fn test_media_kit_clone() {
+        let kit = MediaKit::builder()
+            .publisher_id("pub-clone")
+            .packages(vec![
+                Package::builder()
+                    .name("Pkg".to_string())
+                    .package_type(PackageType::Curated)
+                    .build()
+                    .unwrap(),
+            ])
+            .updated_at("2026-01-01T00:00:00Z")
+            .build()
+            .unwrap();
+
+        let cloned = kit.clone();
+        assert_eq!(kit, cloned);
+    }
+
+    /// Seller Agent 1.0 § MediaKit — deserialization from minimal JSON
+    #[test]
+    fn test_media_kit_deserialization_minimal() {
+        let json = r#"{"publisher_id":"pub-1","packages":[]}"#;
+        let kit: MediaKit = serde_json::from_str(json).unwrap();
+        assert_eq!(kit.publisher_id, "pub-1");
+        assert!(kit.packages.is_empty());
+        assert!(kit.updated_at.is_none());
+    }
+
+    /// Seller Agent 1.0 § Package — default builder yields empty package
+    #[test]
+    fn test_package_default_builder() {
+        let pkg = Package::builder().build().unwrap();
+        assert_eq!(pkg.name, "");
+        assert_eq!(pkg.package_type, PackageType::Curated);
+        assert!(pkg.id.is_none());
+        assert!(pkg.description.is_none());
+        assert!(pkg.bundle_price.is_none());
+        assert!(pkg.product_ids.is_empty());
+        assert!(pkg.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § Package — optional fields omitted from JSON when None
+    #[test]
+    fn test_package_optional_fields_skipped() {
+        let pkg = Package::builder().name("Pkg".to_string()).build().unwrap();
+
+        let json = serde_json::to_string(&pkg).unwrap();
+        assert!(!json.contains("\"id\""));
+        assert!(!json.contains("\"description\""));
+        assert!(!json.contains("\"bundle_price\""));
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § Package — clone produces identical value
+    #[test]
+    fn test_package_clone() {
+        let pkg = Package::builder()
+            .id("pkg-c".to_string())
+            .name("Clone Pkg".to_string())
+            .description("desc".to_string())
+            .product_ids(vec!["p1".to_string()])
+            .bundle_price(Some(1000.0))
+            .package_type(PackageType::Dynamic)
+            .build()
+            .unwrap();
+
+        let cloned = pkg.clone();
+        assert_eq!(pkg, cloned);
+    }
+
+    /// Seller Agent 1.0 § Package — deserialization from minimal JSON
+    #[test]
+    fn test_package_deserialization_minimal() {
+        let json = r#"{"name":"Pkg","product_ids":[],"package_type":"curated"}"#;
+        let pkg: Package = serde_json::from_str(json).unwrap();
+        assert_eq!(pkg.name, "Pkg");
+        assert_eq!(pkg.package_type, PackageType::Curated);
+        assert!(pkg.id.is_none());
+        assert!(pkg.description.is_none());
+        assert!(pkg.bundle_price.is_none());
+    }
 }

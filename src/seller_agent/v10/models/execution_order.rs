@@ -221,4 +221,64 @@ mod tests {
             Some("2026-04-01T12:00:00Z".to_string())
         );
     }
+
+    /// Seller Agent 1.0 § ExecutionOrder — default builder yields empty order
+    #[test]
+    fn test_execution_order_default() {
+        let order = ExecutionOrder::builder().build().unwrap();
+        assert_eq!(order.order_id, "");
+        assert_eq!(order.ad_server_type, AdServerType::GoogleAdManager);
+        assert_eq!(order.sync_status, SyncStatus::Pending);
+        assert!(order.id.is_none());
+        assert!(order.ad_server_order_id.is_none());
+        assert!(order.last_synced_at.is_none());
+        assert!(order.error_message.is_none());
+        assert!(order.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § ExecutionOrder — optional fields omitted from JSON when None
+    #[test]
+    fn test_execution_order_optional_fields_skipped() {
+        let order = ExecutionOrder::builder()
+            .order_id("order-skip")
+            .ad_server_type(AdServerType::FreeWheel)
+            .sync_status(SyncStatus::Pending)
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&order).unwrap();
+        assert!(!json.contains("\"id\""));
+        assert!(!json.contains("\"ad_server_order_id\""));
+        assert!(!json.contains("\"last_synced_at\""));
+        assert!(!json.contains("\"error_message\""));
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § ExecutionOrder — clone produces identical value
+    #[test]
+    fn test_execution_order_clone() {
+        let order = ExecutionOrder::builder()
+            .id("exec-c")
+            .order_id("order-c")
+            .ad_server_type(AdServerType::Csv)
+            .sync_status(SyncStatus::Synced)
+            .last_synced_at("2026-01-01T00:00:00Z")
+            .build()
+            .unwrap();
+
+        let cloned = order.clone();
+        assert_eq!(order, cloned);
+    }
+
+    /// Seller Agent 1.0 § ExecutionOrder — deserialization from minimal JSON
+    #[test]
+    fn test_execution_order_deserialization_minimal() {
+        let json = r#"{"order_id":"o1","ad_server_type":"free_wheel","sync_status":"pending"}"#;
+        let order: ExecutionOrder = serde_json::from_str(json).unwrap();
+        assert_eq!(order.order_id, "o1");
+        assert_eq!(order.ad_server_type, AdServerType::FreeWheel);
+        assert_eq!(order.sync_status, SyncStatus::Pending);
+        assert!(order.id.is_none());
+        assert!(order.ad_server_order_id.is_none());
+    }
 }

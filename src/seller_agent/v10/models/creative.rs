@@ -398,4 +398,108 @@ mod tests {
         assert_eq!(parsed.line_id, original.line_id);
         assert!(parsed.rotation_weight.is_none());
     }
+
+    /// Seller Agent 1.0 § SellerCreative — default builder yields empty creative
+    #[test]
+    fn test_seller_creative_default() {
+        let creative = SellerCreative::builder().build().unwrap();
+        assert_eq!(creative.id, "");
+        assert_eq!(creative.name, "");
+        assert_eq!(creative.format, "");
+        assert_eq!(creative.status, "");
+        assert!(creative.dimensions.is_none());
+        assert!(creative.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § SellerCreative — optional fields omitted from JSON when None
+    #[test]
+    fn test_seller_creative_optional_fields_skipped() {
+        let creative = SellerCreative::builder()
+            .id("c1".to_string())
+            .name("n".to_string())
+            .format("display".to_string())
+            .status("active".to_string())
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&creative).unwrap();
+        assert!(!json.contains("\"dimensions\""));
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § SellerCreative — clone produces identical value
+    #[test]
+    fn test_seller_creative_clone() {
+        let creative = SellerCreative::builder()
+            .id("c-clone".to_string())
+            .name("Clone Banner".to_string())
+            .format("display".to_string())
+            .dimensions(Some("300x250".to_string()))
+            .status("active".to_string())
+            .build()
+            .unwrap();
+
+        let cloned = creative.clone();
+        assert_eq!(creative, cloned);
+    }
+
+    /// Seller Agent 1.0 § SellerCreative — deserialization from minimal JSON
+    #[test]
+    fn test_seller_creative_deserialization_minimal() {
+        let json = r#"{"id":"c1","name":"n","format":"display","status":"active"}"#;
+        let creative: SellerCreative = serde_json::from_str(json).unwrap();
+        assert_eq!(creative.id, "c1");
+        assert_eq!(creative.name, "n");
+        assert_eq!(creative.format, "display");
+        assert_eq!(creative.status, "active");
+        assert!(creative.dimensions.is_none());
+    }
+
+    /// Seller Agent 1.0 § SellerAssignment — default builder yields empty assignment
+    #[test]
+    fn test_seller_assignment_default() {
+        let assignment = SellerAssignment::builder().build().unwrap();
+        assert_eq!(assignment.creative_id, "");
+        assert_eq!(assignment.line_id, "");
+        assert!(assignment.rotation_weight.is_none());
+        assert!(assignment.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § SellerAssignment — optional fields omitted from JSON when None
+    #[test]
+    fn test_seller_assignment_optional_fields_skipped() {
+        let assignment = SellerAssignment::builder()
+            .creative_id("c1".to_string())
+            .line_id("l1".to_string())
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&assignment).unwrap();
+        assert!(!json.contains("\"rotation_weight\""));
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § SellerAssignment — clone produces identical value
+    #[test]
+    fn test_seller_assignment_clone() {
+        let assignment = SellerAssignment::builder()
+            .creative_id("c-clone".to_string())
+            .line_id("l-clone".to_string())
+            .rotation_weight(Some(2.5))
+            .build()
+            .unwrap();
+
+        let cloned = assignment.clone();
+        assert_eq!(assignment, cloned);
+    }
+
+    /// Seller Agent 1.0 § SellerAssignment — deserialization from minimal JSON
+    #[test]
+    fn test_seller_assignment_deserialization_minimal() {
+        let json = r#"{"creative_id":"c1","line_id":"l1"}"#;
+        let assignment: SellerAssignment = serde_json::from_str(json).unwrap();
+        assert_eq!(assignment.creative_id, "c1");
+        assert_eq!(assignment.line_id, "l1");
+        assert!(assignment.rotation_weight.is_none());
+    }
 }

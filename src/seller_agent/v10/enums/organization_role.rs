@@ -88,4 +88,68 @@ mod tests {
             "Default should be Seller"
         );
     }
+
+    /// Seller Agent 1.0 § OrganizationRole — Clone and Copy traits enable value semantics
+    #[test]
+    fn test_clone_copy_traits() {
+        let a = OrganizationRole::Seller;
+        let b = a; // Copy semantics
+        assert_eq!(a, b);
+        assert_eq!(a, OrganizationRole::Seller);
+    }
+
+    /// Seller Agent 1.0 § OrganizationRole — Hash trait enables HashSet usage
+    #[test]
+    fn test_hash_trait_with_hashset() {
+        use std::collections::HashSet;
+
+        let mut set = HashSet::new();
+        set.insert(OrganizationRole::Buyer);
+        set.insert(OrganizationRole::Seller);
+        set.insert(OrganizationRole::Agent);
+        set.insert(OrganizationRole::Curator);
+
+        assert_eq!(set.len(), 4);
+        assert!(set.contains(&OrganizationRole::Buyer));
+        assert!(set.contains(&OrganizationRole::Curator));
+    }
+
+    /// Seller Agent 1.0 § OrganizationRole — PartialEq and Eq verify inequality of different variants
+    #[test]
+    fn test_eq_different_variants() {
+        assert_ne!(OrganizationRole::Buyer, OrganizationRole::Seller);
+        assert_ne!(OrganizationRole::Seller, OrganizationRole::Agent);
+        assert_ne!(OrganizationRole::Agent, OrganizationRole::Curator);
+    }
+
+    /// Seller Agent 1.0 § OrganizationRole — serde rename_all = "snake_case" rejects PascalCase
+    #[test]
+    fn test_case_sensitivity_rejected() {
+        let pascal_case_examples = ["\"Buyer\"", "\"Seller\""];
+
+        for example in &pascal_case_examples {
+            let result: Result<OrganizationRole, _> = serde_json::from_str(example);
+            assert!(result.is_err(), "PascalCase {} should be rejected", example);
+        }
+    }
+
+    /// Seller Agent 1.0 § OrganizationRole — Exact snake_case serialization values per spec
+    #[test]
+    fn test_exact_snake_case_values() {
+        let expected = [
+            (OrganizationRole::Buyer, "\"buyer\""),
+            (OrganizationRole::Seller, "\"seller\""),
+            (OrganizationRole::Agent, "\"agent\""),
+            (OrganizationRole::Curator, "\"curator\""),
+        ];
+
+        for (variant, expected_json) in &expected {
+            let json = serde_json::to_string(variant).unwrap();
+            assert_eq!(
+                &json, expected_json,
+                "Mismatch for {:?}: got {}, expected {}",
+                variant, json, expected_json
+            );
+        }
+    }
 }

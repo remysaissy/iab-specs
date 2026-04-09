@@ -337,4 +337,145 @@ mod tests {
         assert_eq!(parsed.floor_cpm, 1.009999);
         assert_eq!(parsed.ceiling_cpm, Some(5.999999));
     }
+
+    /// Seller Agent 1.0 § TieredPricing — default builder yields empty tiers
+    #[test]
+    fn test_tiered_pricing_default() {
+        let pricing = TieredPricing::builder().build().unwrap();
+        assert!(pricing.tiers.is_empty());
+        assert!(pricing.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § TieredPricing — optional fields omitted from JSON when None
+    #[test]
+    fn test_tiered_pricing_optional_fields_skipped() {
+        let pricing = TieredPricing::builder().build().unwrap();
+        let json = serde_json::to_string(&pricing).unwrap();
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § TieredPricing — clone produces identical value
+    #[test]
+    fn test_tiered_pricing_clone() {
+        let pricing = TieredPricing::builder()
+            .tiers(vec![
+                PricingTier::builder()
+                    .tier_type(PricingTierType::Agency)
+                    .discount_percent(10.0)
+                    .negotiation_enabled(true)
+                    .build()
+                    .unwrap(),
+            ])
+            .build()
+            .unwrap();
+
+        let cloned = pricing.clone();
+        assert_eq!(pricing, cloned);
+    }
+
+    /// Seller Agent 1.0 § TieredPricing — deserialization from minimal JSON
+    #[test]
+    fn test_tiered_pricing_deserialization_minimal() {
+        let json = r#"{"tiers":[]}"#;
+        let pricing: TieredPricing = serde_json::from_str(json).unwrap();
+        assert!(pricing.tiers.is_empty());
+        assert!(pricing.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § PricingTier — optional fields omitted from JSON when None
+    #[test]
+    fn test_pricing_tier_optional_fields_skipped() {
+        let tier = PricingTier::builder()
+            .tier_type(PricingTierType::Public)
+            .discount_percent(0.0)
+            .negotiation_enabled(false)
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&tier).unwrap();
+        assert!(!json.contains("\"min_spend\""));
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § PricingTier — clone produces identical value
+    #[test]
+    fn test_pricing_tier_clone() {
+        let tier = PricingTier::builder()
+            .tier_type(PricingTierType::Seat)
+            .discount_percent(5.0)
+            .negotiation_enabled(true)
+            .min_spend(Some(1000.0))
+            .build()
+            .unwrap();
+
+        let cloned = tier.clone();
+        assert_eq!(tier, cloned);
+    }
+
+    /// Seller Agent 1.0 § PricingTier — deserialization from minimal JSON
+    #[test]
+    fn test_pricing_tier_deserialization_minimal() {
+        let json = r#"{"tier_type":"public","discount_percent":0.0,"negotiation_enabled":false}"#;
+        let tier: PricingTier = serde_json::from_str(json).unwrap();
+        assert_eq!(tier.tier_type, PricingTierType::Public);
+        assert_eq!(tier.discount_percent, 0.0);
+        assert!(!tier.negotiation_enabled);
+        assert!(tier.min_spend.is_none());
+    }
+
+    /// Seller Agent 1.0 § RateCard — default builder yields empty rate card
+    #[test]
+    fn test_rate_card_default() {
+        let card = RateCard::builder().build().unwrap();
+        assert_eq!(card.product_id, "");
+        assert_eq!(card.base_cpm, 0.0);
+        assert_eq!(card.floor_cpm, 0.0);
+        assert!(card.ceiling_cpm.is_none());
+        assert_eq!(card.currency, "");
+        assert!(card.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § RateCard — optional fields omitted from JSON when None
+    #[test]
+    fn test_rate_card_optional_fields_skipped() {
+        let card = RateCard::builder()
+            .product_id("p")
+            .base_cpm(1.0)
+            .floor_cpm(0.5)
+            .currency("USD")
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&card).unwrap();
+        assert!(!json.contains("\"ceiling_cpm\""));
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § RateCard — clone produces identical value
+    #[test]
+    fn test_rate_card_clone() {
+        let card = RateCard::builder()
+            .product_id("prod-c")
+            .base_cpm(3.0)
+            .floor_cpm(1.5)
+            .ceiling_cpm(Some(6.0))
+            .currency("EUR")
+            .build()
+            .unwrap();
+
+        let cloned = card.clone();
+        assert_eq!(card, cloned);
+    }
+
+    /// Seller Agent 1.0 § RateCard — deserialization from minimal JSON
+    #[test]
+    fn test_rate_card_deserialization_minimal() {
+        let json = r#"{"product_id":"p","base_cpm":2.5,"floor_cpm":1.0,"currency":"USD"}"#;
+        let card: RateCard = serde_json::from_str(json).unwrap();
+        assert_eq!(card.product_id, "p");
+        assert_eq!(card.base_cpm, 2.5);
+        assert_eq!(card.floor_cpm, 1.0);
+        assert_eq!(card.currency, "USD");
+        assert!(card.ceiling_cpm.is_none());
+    }
 }

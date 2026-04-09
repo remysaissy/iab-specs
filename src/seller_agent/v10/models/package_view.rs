@@ -388,4 +388,115 @@ mod tests {
         assert!(json.contains("\"pricing\""));
         assert!(json.contains("\"name\":\"Serialization Test\""));
     }
+
+    /// Seller Agent 1.0 § PublicPackageView — default builder yields empty view
+    #[test]
+    fn test_public_package_view_default() {
+        let view = PublicPackageView::builder().build().unwrap();
+        assert_eq!(view.name, "");
+        assert!(view.description.is_none());
+        assert!(view.category.is_none());
+        assert!(view.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § PublicPackageView — optional fields omitted from JSON when None
+    #[test]
+    fn test_public_package_view_optional_fields_skipped() {
+        let view = PublicPackageView::builder()
+            .name("Pkg".to_string())
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&view).unwrap();
+        assert!(!json.contains("\"description\""));
+        assert!(!json.contains("\"category\""));
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § PublicPackageView — clone produces identical value
+    #[test]
+    fn test_public_package_view_clone() {
+        let view = PublicPackageView::builder()
+            .name("Clone View".to_string())
+            .description("desc".to_string())
+            .category("Video".to_string())
+            .build()
+            .unwrap();
+
+        let cloned = view.clone();
+        assert_eq!(view, cloned);
+    }
+
+    /// Seller Agent 1.0 § PublicPackageView — deserialization from minimal JSON
+    #[test]
+    fn test_public_package_view_deserialization_minimal() {
+        let json = r#"{"name":"Pkg"}"#;
+        let view: PublicPackageView = serde_json::from_str(json).unwrap();
+        assert_eq!(view.name, "Pkg");
+        assert!(view.description.is_none());
+        assert!(view.category.is_none());
+    }
+
+    /// Seller Agent 1.0 § AuthenticatedPackageView — default builder yields empty view
+    #[test]
+    fn test_authenticated_package_view_default() {
+        let view = AuthenticatedPackageView::builder().build().unwrap();
+        assert_eq!(view.package.name, "");
+        assert!(view.pricing.tiers.is_empty());
+        assert!(view.ext.is_none());
+    }
+
+    /// Seller Agent 1.0 § AuthenticatedPackageView — optional fields omitted from JSON when None
+    #[test]
+    fn test_authenticated_package_view_optional_fields_skipped() {
+        let view = AuthenticatedPackageView::builder().build().unwrap();
+
+        let json = serde_json::to_string(&view).unwrap();
+        assert!(!json.contains("\"ext\""));
+    }
+
+    /// Seller Agent 1.0 § AuthenticatedPackageView — clone produces identical value
+    #[test]
+    fn test_authenticated_package_view_clone() {
+        let package = Package::builder()
+            .name("Clone Pkg".to_string())
+            .package_type(PackageType::Dynamic)
+            .build()
+            .unwrap();
+
+        let pricing = TieredPricing::builder()
+            .tiers(vec![
+                PricingTier::builder()
+                    .tier_type(PricingTierType::Public)
+                    .discount_percent(0.0)
+                    .negotiation_enabled(false)
+                    .build()
+                    .unwrap(),
+            ])
+            .build()
+            .unwrap();
+
+        let view = AuthenticatedPackageView::builder()
+            .package(package)
+            .pricing(pricing)
+            .build()
+            .unwrap();
+
+        let cloned = view.clone();
+        assert_eq!(view, cloned);
+    }
+
+    /// Seller Agent 1.0 § AuthenticatedPackageView — deserialization from minimal JSON
+    #[test]
+    fn test_authenticated_package_view_deserialization_minimal() {
+        let json = r#"{
+            "package":{"name":"P","product_ids":[],"package_type":"curated"},
+            "pricing":{"tiers":[]}
+        }"#;
+        let view: AuthenticatedPackageView = serde_json::from_str(json).unwrap();
+        assert_eq!(view.package.name, "P");
+        assert_eq!(view.package.package_type, PackageType::Curated);
+        assert!(view.pricing.tiers.is_empty());
+        assert!(view.ext.is_none());
+    }
 }

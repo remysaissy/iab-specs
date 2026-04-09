@@ -267,4 +267,45 @@ mod tests {
         assert_eq!(request.status, ChangeRequestStatus::Pending);
         assert_eq!(request.requested_changes, serde_json::Value::Null);
     }
+
+    /// Seller Agent 1.0 § ChangeRequest — clone produces identical value
+    #[test]
+    fn test_change_request_clone() {
+        let request = ChangeRequest::builder()
+            .id("cr-clone")
+            .order_id("order-clone")
+            .change_type(ChangeType::PriceChange)
+            .severity(ChangeSeverity::Material)
+            .description("Clone test")
+            .requested_changes(serde_json::json!({"cpm": 5.0}))
+            .status(ChangeRequestStatus::Approved)
+            .reviewer("admin@test.com")
+            .reviewed_at("2026-04-01T00:00:00Z")
+            .build()
+            .unwrap();
+
+        let cloned = request.clone();
+        assert_eq!(request, cloned);
+    }
+
+    /// Seller Agent 1.0 § ChangeRequest — deserialization from minimal JSON
+    #[test]
+    fn test_change_request_deserialization_minimal() {
+        let json = r#"{
+            "order_id":"o1",
+            "change_type":"date_shift",
+            "severity":"minor",
+            "description":"shift",
+            "requested_changes":{"days":1},
+            "status":"pending"
+        }"#;
+        let request: ChangeRequest = serde_json::from_str(json).unwrap();
+        assert_eq!(request.order_id, "o1");
+        assert_eq!(request.change_type, ChangeType::DateShift);
+        assert_eq!(request.severity, ChangeSeverity::Minor);
+        assert_eq!(request.status, ChangeRequestStatus::Pending);
+        assert!(request.id.is_none());
+        assert!(request.reviewer.is_none());
+        assert!(request.reviewed_at.is_none());
+    }
 }
