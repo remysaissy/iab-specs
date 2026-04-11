@@ -10,7 +10,7 @@ description = "Agentic RTB Framework 1.0 support for the iab-specs ecosystem."
 keywords = ["iab", "artb", "agentic-rtb", "openrtb", "bidstream"]
 
 [dependencies]
-iab-specs-core = { path = "../iab-specs-core", version = "0.4.1" }
+iab-specs-core = { path = "../iab-specs-core", version = "0.5.0" }
 serde = { workspace = true }
 serde_with = { workspace = true }
 serde_repr = { workspace = true }

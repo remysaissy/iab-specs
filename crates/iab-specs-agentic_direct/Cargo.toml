@@ -10,7 +10,7 @@ description = "Rust implementation of IAB Agentic Direct v2.1. OpenDirect + A2A 
 keywords = ["iab", "agentic-direct", "opendirect", "a2a-protocol", "advertising"]
 
 [dependencies]
-iab-specs-core = { path = "../iab-specs-core", version = "0.4.1", features = ["serde_json"] }
+iab-specs-core = { path = "../iab-specs-core", version = "0.5.0", features = ["serde_json"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_with = { workspace = true }

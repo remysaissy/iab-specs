@@ -10,8 +10,8 @@ description = "Rust implementation of IAB OpenRTB 2.5, 2.6, and 3.0 specificatio
 keywords = ["iab", "openrtb", "rtb", "programmatic-advertising", "bidding"]
 
 [dependencies]
-iab-specs-core = { path = "../iab-specs-core", version = "0.4.1" }
-iab-specs-adcom = { path = "../iab-specs-adcom", version = "0.4.1" }
+iab-specs-core = { path = "../iab-specs-core", version = "0.5.0" }
+iab-specs-adcom = { path = "../iab-specs-adcom", version = "0.5.0" }
 serde = { workspace = true }
 serde_with = { workspace = true }
 serde_repr = { workspace = true }
