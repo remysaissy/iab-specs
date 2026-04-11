@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::artb::v10::{
+/// use iab_specs_artb::v10::{
 ///     RTBResponse, Mutation, Metadata, Intent, Operation, IDsPayload
 /// };
 ///

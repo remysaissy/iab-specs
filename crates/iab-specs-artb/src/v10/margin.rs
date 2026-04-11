@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::artb::v10::{Margin, CalculationType};
+/// use iab_specs_artb::v10::{Margin, CalculationType};
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let margin = Margin::builder()

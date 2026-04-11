@@ -31,7 +31,7 @@
 //! ```rust
 //! #[cfg(feature = "artb_10")]
 //! {
-//! use iab_specs::artb::v10::{
+//! use iab_specs_artb::v10::{
 //!     RTBRequest, RTBRequestBuilder, RTBResponse, RTBResponseBuilder,
 //!     Mutation, MutationBuilder, Metadata,
 //!     Lifecycle, Intent, Operation, IDsPayload, OriginatorType, Originator,

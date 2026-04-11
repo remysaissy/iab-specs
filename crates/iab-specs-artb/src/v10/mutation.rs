@@ -49,7 +49,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::artb::v10::{Mutation, Intent, Operation, IDsPayload};
+/// use iab_specs_artb::v10::{Mutation, Intent, Operation, IDsPayload};
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let mutation = Mutation::builder()

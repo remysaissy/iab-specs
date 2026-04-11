@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::artb::v10::IDsPayload;
+/// use iab_specs_artb::v10::IDsPayload;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let payload = IDsPayload::builder()

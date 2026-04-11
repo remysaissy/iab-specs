@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 /// ```
 /// #[cfg(feature = "artb_10")]
 /// {
-/// use iab_specs::artb::v10::{RTBRequestBuilder, Lifecycle, Intent, Originator, OriginatorType};
+/// use iab_specs_artb::v10::{RTBRequestBuilder, Lifecycle, Intent, Originator, OriginatorType};
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let request = RTBRequestBuilder::<serde_json::Value, Vec<u8>>::default()

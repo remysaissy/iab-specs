@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::artb::v10::AdjustBidPayload;
+/// use iab_specs_artb::v10::AdjustBidPayload;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let payload = AdjustBidPayload::builder()

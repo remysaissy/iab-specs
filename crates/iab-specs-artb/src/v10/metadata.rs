@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::artb::v10::Metadata;
+/// use iab_specs_artb::v10::Metadata;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let metadata = Metadata::builder()

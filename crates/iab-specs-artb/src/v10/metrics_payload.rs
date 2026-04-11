@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 /// ```
 /// #[cfg(feature = "artb_10")]
 /// {
-/// use iab_specs::artb::v10::MetricsPayloadBuilder;
+/// use iab_specs_artb::v10::MetricsPayloadBuilder;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let payload = MetricsPayloadBuilder::<serde_json::Value, Vec<u8>>::default()

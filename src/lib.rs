@@ -126,7 +126,7 @@ pub mod agentic_direct;
 #[cfg(feature = "app_ads_txt")]
 pub mod app_ads_txt;
 #[cfg(feature = "artb_10")]
-pub mod artb;
+pub use iab_specs_artb as artb;
 #[cfg(feature = "buyer_agent_10")]
 pub mod buyer_agent;
 mod errors;

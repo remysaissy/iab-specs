@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::artb::v10::{Originator, OriginatorType};
+/// use iab_specs_artb::v10::{Originator, OriginatorType};
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let originator = Originator::builder()
