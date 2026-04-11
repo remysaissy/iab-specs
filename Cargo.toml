@@ -67,17 +67,11 @@ iab-specs-seller_agent = { path = "crates/iab-specs-seller_agent", version = "0.
 iab-specs-registry_agent = { path = "crates/iab-specs-registry_agent", version = "0.4.1", optional = true }
 iab-specs-openrtb = { path = "crates/iab-specs-openrtb", version = "0.4.1", optional = true }
 iab-specs-openrtb_native = { path = "crates/iab-specs-openrtb_native", version = "0.4.1", optional = true }
-serde = { workspace = true }
-serde_json = { workspace = true, optional = true }
-serde_with = { workspace = true }
-serde_plain = { workspace = true }
-serde_repr = { workspace = true }
-derive_builder = { workspace = true }
-isosphere = { workspace = true, optional = true }
-thiserror = { workspace = true }
 
 [dev-dependencies]
+serde = { workspace = true }
 serde_json = { workspace = true }
+derive_builder = { workspace = true }
 
 [features]
 default = []

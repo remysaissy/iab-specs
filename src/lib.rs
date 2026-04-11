@@ -115,6 +115,9 @@
 //!
 //! For complete documentation and more examples, see the [`Extension`] trait documentation.
 
+// Always re-export core
+pub use iab_specs_core::*;
+
 #[cfg(feature = "adcom")]
 pub use iab_specs_adcom as adcom;
 #[cfg(feature = "ads_txt")]
@@ -129,7 +132,6 @@ pub use iab_specs_app_ads_txt as app_ads_txt;
 pub use iab_specs_artb as artb;
 #[cfg(feature = "buyer_agent_10")]
 pub use iab_specs_buyer_agent as buyer_agent;
-mod errors;
 #[cfg(any(feature = "openrtb_25", feature = "openrtb_26", feature = "openrtb_30"))]
 pub use iab_specs_openrtb as openrtb;
 #[cfg(feature = "openrtb_native_12")]
@@ -140,8 +142,3 @@ pub use iab_specs_registry_agent as registry_agent;
 pub use iab_specs_seller_agent as seller_agent;
 #[cfg(feature = "sellers_json")]
 pub use iab_specs_sellers_json as sellers_json;
-pub(crate) mod utils;
-
-pub use errors::*;
-pub use iab_specs_core::slice_up_to;
-pub use utils::*;
