@@ -325,7 +325,7 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "iab-specs"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "derive_builder",
  "iab-specs-adcom",
@@ -347,7 +347,7 @@ dependencies = [
 
 [[package]]
 name = "iab-specs-adcom"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "derive_builder",
  "iab-specs-core",
@@ -358,7 +358,7 @@ dependencies = [
 
 [[package]]
 name = "iab-specs-ads_txt"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "derive_builder",
  "iab-specs-core",
@@ -371,7 +371,7 @@ dependencies = [
 
 [[package]]
 name = "iab-specs-agentic_audience"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "derive_builder",
  "iab-specs-core",
@@ -383,7 +383,7 @@ dependencies = [
 
 [[package]]
 name = "iab-specs-agentic_direct"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "derive_builder",
  "iab-specs-core",
@@ -395,7 +395,7 @@ dependencies = [
 
 [[package]]
 name = "iab-specs-app_ads_txt"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "derive_builder",
  "iab-specs-ads_txt",
@@ -408,7 +408,7 @@ dependencies = [
 
 [[package]]
 name = "iab-specs-artb"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "derive_builder",
  "iab-specs-core",
@@ -420,7 +420,7 @@ dependencies = [
 
 [[package]]
 name = "iab-specs-buyer_agent"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "derive_builder",
  "iab-specs-agentic_direct",
@@ -433,7 +433,7 @@ dependencies = [
 
 [[package]]
 name = "iab-specs-core"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "derive_builder",
  "serde",
@@ -444,7 +444,7 @@ dependencies = [
 
 [[package]]
 name = "iab-specs-openrtb"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "derive_builder",
  "iab-specs-adcom",
@@ -457,7 +457,7 @@ dependencies = [
 
 [[package]]
 name = "iab-specs-openrtb_native"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "derive_builder",
  "iab-specs-core",
@@ -469,7 +469,7 @@ dependencies = [
 
 [[package]]
 name = "iab-specs-registry_agent"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "derive_builder",
  "iab-specs-agentic_direct",
@@ -482,7 +482,7 @@ dependencies = [
 
 [[package]]
 name = "iab-specs-seller_agent"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "derive_builder",
  "iab-specs-agentic_direct",
@@ -495,7 +495,7 @@ dependencies = [
 
 [[package]]
 name = "iab-specs-sellers_json"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "derive_builder",
  "iab-specs-core",
