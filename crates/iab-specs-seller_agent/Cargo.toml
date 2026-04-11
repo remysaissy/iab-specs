@@ -7,7 +7,7 @@ homepage.workspace = true
 repository.workspace = true
 authors.workspace = true
 description = "Rust implementation of IAB Seller Agent 1.0 specification. Inventory management, proposals, tiered pricing, negotiation, and order execution for supply-side agents. Part of the iab-specs ecosystem."
-keywords = ["iab", "seller-agent", "ssp", "inventory-management", "programmatic"]
+keywords = ["iab", "seller-agent", "ssp", "inventory", "programmatic"]
 
 [dependencies]
 iab-specs-core = { path = "../iab-specs-core", version = "0.5.0", features = ["serde_json"] }

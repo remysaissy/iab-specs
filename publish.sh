@@ -12,6 +12,10 @@ NC='\033[0m' # No Color
 # Flags
 DRY_RUN=false
 
+# Rate limit: crates.io allows burst of 5 new crates, then 1 per 10 minutes
+CRATE_PUBLISH_COUNT=0
+RATE_LIMIT_SECONDS=600
+
 # Function to display help
 show_help() {
     cat << EOF
@@ -33,8 +37,8 @@ Publish Order (topological dependency groups):
            iab-specs-seller_agent, iab-specs-registry_agent
   Group 4: iab-specs (umbrella crate, published last)
 
-  A 30-second wait is inserted between groups to allow crates.io to index
-  newly published crates before dependents are published.
+  A 10-minute wait is inserted between each crate publish to conform to
+  the crates.io rate limit policy (1 new crate per 10 minutes after burst).
 
 Prerequisites:
   - Working directory must be clean (no uncommitted changes)
@@ -104,16 +108,25 @@ check_prerequisites() {
     print_info "  Tag: ${tag}"
 }
 
-# Publish a single crate
 publish_crate() {
     local crate_dir=$1
     local crate_name=$2
     local dry_run=$3
 
+    if [ "$CRATE_PUBLISH_COUNT" -gt 0 ]; then
+        if [ "$dry_run" = true ]; then
+            print_dry_run "Would wait ${RATE_LIMIT_SECONDS}s between publishes for crates.io rate limit"
+        else
+            print_info "Waiting ${RATE_LIMIT_SECONDS}s for crates.io rate limit before publishing ${crate_name}..."
+            sleep "$RATE_LIMIT_SECONDS"
+        fi
+    fi
+
     if [ "$dry_run" = true ]; then
         print_dry_run "Publishing ${crate_name} (from ${crate_dir})..."
         if cargo publish --dry-run -p "${crate_name}" 2>&1; then
             print_dry_run "${crate_name} ✓ dry-run passed"
+            CRATE_PUBLISH_COUNT=$((CRATE_PUBLISH_COUNT + 1))
             return 0
         else
             print_error "${crate_name} ✗ dry-run failed"
@@ -123,6 +136,7 @@ publish_crate() {
         print_info "Publishing ${crate_name} (from ${crate_dir})..."
         if cargo publish -p "${crate_name}" 2>&1; then
             print_info "${crate_name} ✓ published successfully"
+            CRATE_PUBLISH_COUNT=$((CRATE_PUBLISH_COUNT + 1))
             return 0
         else
             print_error "${crate_name} ✗ publish failed"
@@ -156,20 +170,6 @@ publish_group() {
     fi
 
     print_group "$group_num" "All crates published successfully ✓"
-}
-
-# Wait between groups for crates.io indexing
-wait_between_groups() {
-    local group_from=$1
-    local group_to=$2
-    local dry_run=$3
-
-    if [ "$dry_run" = true ]; then
-        print_dry_run "Would wait 30s between group ${group_from} and group ${group_to} for crates.io indexing"
-    else
-        print_info "Waiting 30s for crates.io to index group ${group_from} before publishing group ${group_to}..."
-        sleep 30
-    fi
 }
 
 # Main script
@@ -239,20 +239,14 @@ main() {
         ".:iab-specs"
     )
 
-    # Publish groups in order
+    # Publish groups in topological order
     publish_group 1 "$DRY_RUN" "${group1[@]}"
-    echo ""
-    wait_between_groups 1 2 "$DRY_RUN"
     echo ""
 
     publish_group 2 "$DRY_RUN" "${group2[@]}"
     echo ""
-    wait_between_groups 2 3 "$DRY_RUN"
-    echo ""
 
     publish_group 3 "$DRY_RUN" "${group3[@]}"
-    echo ""
-    wait_between_groups 3 4 "$DRY_RUN"
     echo ""
 
     publish_group 4 "$DRY_RUN" "${group4[@]}"

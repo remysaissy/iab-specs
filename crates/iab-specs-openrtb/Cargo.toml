@@ -7,7 +7,7 @@ homepage.workspace = true
 repository.workspace = true
 authors.workspace = true
 description = "Rust implementation of IAB OpenRTB 2.5, 2.6, and 3.0 specifications. Real-time bidding protocol with support for CTV, DOOH, and layered architecture. Part of the iab-specs ecosystem."
-keywords = ["iab", "openrtb", "rtb", "programmatic-advertising", "bidding"]
+keywords = ["iab", "openrtb", "rtb", "programmatic", "bidding"]
 
 [dependencies]
 iab-specs-core = { path = "../iab-specs-core", version = "0.5.0" }
