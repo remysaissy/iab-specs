@@ -1,4 +1,4 @@
-use crate::seller_agent::v10::enums::PackageType;
+use crate::v10::enums::PackageType;
 use crate::Extension;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::MediaKit;
+/// use iab_specs_seller_agent::v10::models::MediaKit;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let media_kit = MediaKit::builder()
 ///     .publisher_id("pub-123".to_string())
@@ -67,8 +67,8 @@ impl MediaKit {
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::Package;
-/// use iab_specs::seller_agent::v10::enums::PackageType;
+/// use iab_specs_seller_agent::v10::models::Package;
+/// use iab_specs_seller_agent::v10::enums::PackageType;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let package = Package::builder()
 ///     .name("Premium Display".to_string())

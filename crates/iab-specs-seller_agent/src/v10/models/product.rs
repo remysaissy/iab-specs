@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::{SellerProduct, InventorySegment};
+/// use iab_specs_seller_agent::v10::models::{SellerProduct, InventorySegment};
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let segment = InventorySegment::builder()
 ///     .id("seg-001".to_string())
@@ -83,7 +83,7 @@ impl SellerProduct {
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::InventorySegment;
+/// use iab_specs_seller_agent::v10::models::InventorySegment;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let segment = InventorySegment::builder()
 ///     .id("seg-001".to_string())

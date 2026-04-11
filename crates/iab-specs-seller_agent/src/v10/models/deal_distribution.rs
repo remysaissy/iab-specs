@@ -14,8 +14,8 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::DspIntegration;
-/// use iab_specs::seller_agent::v10::enums::DistributionStatus;
+/// use iab_specs_seller_agent::v10::models::DspIntegration;
+/// use iab_specs_seller_agent::v10::enums::DistributionStatus;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let dsp = DspIntegration::builder()
 ///     .dsp_name("PubMatic")
@@ -48,7 +48,7 @@ pub struct DspIntegration<Ext: Extension = crate::DefaultExt> {
     /// The current distribution status (REQUIRED).
     /// Tracks whether the deal has been sent, confirmed, or rejected.
     #[builder(default)]
-    pub status: crate::seller_agent::v10::enums::DistributionStatus,
+    pub status: crate::v10::enums::DistributionStatus,
 
     /// Extension object for DSP-specific extensions.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -75,8 +75,8 @@ impl DspIntegration {
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::{DealDistribution, DspIntegration};
-/// use iab_specs::seller_agent::v10::enums::DistributionStatus;
+/// use iab_specs_seller_agent::v10::models::{DealDistribution, DspIntegration};
+/// use iab_specs_seller_agent::v10::enums::DistributionStatus;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let distribution = DealDistribution::builder()
 ///     .deal_id("deal-456")
@@ -134,7 +134,7 @@ impl DealDistribution {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::seller_agent::v10::enums::DistributionStatus;
+    use crate::v10::enums::DistributionStatus;
 
     // ========== DspIntegration Tests ==========
 

@@ -1,4 +1,4 @@
-use crate::seller_agent::v10::enums::{ChangeRequestStatus, ChangeSeverity, ChangeType};
+use crate::v10::enums::{ChangeRequestStatus, ChangeSeverity, ChangeType};
 use crate::Extension;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
@@ -16,8 +16,8 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::ChangeRequest;
-/// use iab_specs::seller_agent::v10::enums::{ChangeType, ChangeSeverity, ChangeRequestStatus};
+/// use iab_specs_seller_agent::v10::models::ChangeRequest;
+/// use iab_specs_seller_agent::v10::enums::{ChangeType, ChangeSeverity, ChangeRequestStatus};
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let request = ChangeRequest::builder()
 ///     .order_id("order-123".to_string())

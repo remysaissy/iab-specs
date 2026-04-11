@@ -1,4 +1,4 @@
-use crate::seller_agent::v10::enums::SellerOrderStatus;
+use crate::v10::enums::SellerOrderStatus;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

@@ -15,8 +15,8 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::ExecutionOrder;
-/// use iab_specs::seller_agent::v10::enums::{AdServerType, SyncStatus};
+/// use iab_specs_seller_agent::v10::models::ExecutionOrder;
+/// use iab_specs_seller_agent::v10::enums::{AdServerType, SyncStatus};
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let order = ExecutionOrder::builder()
 ///     .order_id("order-123")
@@ -44,7 +44,7 @@ pub struct ExecutionOrder<Ext: Extension = crate::DefaultExt> {
     /// The type of ad server platform this order is synced to (REQUIRED).
     /// Specifies which ad server (Google Ad Manager, FreeWheel, etc.) is being used.
     #[builder(default)]
-    pub ad_server_type: crate::seller_agent::v10::enums::AdServerType,
+    pub ad_server_type: crate::v10::enums::AdServerType,
 
     /// The ad server's unique identifier for this order.
     /// Optional field that stores the order ID assigned by the external ad server.
@@ -55,7 +55,7 @@ pub struct ExecutionOrder<Ext: Extension = crate::DefaultExt> {
     /// The current synchronization status of this order (REQUIRED).
     /// Tracks whether the sync is pending, in progress, completed, failed, or stale.
     #[builder(default)]
-    pub sync_status: crate::seller_agent::v10::enums::SyncStatus,
+    pub sync_status: crate::v10::enums::SyncStatus,
 
     /// The timestamp when this order was last synchronized to the ad server.
     /// Optional field storing the ISO 8601 datetime of the most recent sync.
@@ -85,7 +85,7 @@ impl ExecutionOrder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::seller_agent::v10::enums::{AdServerType, SyncStatus};
+    use crate::v10::enums::{AdServerType, SyncStatus};
 
     #[test]
     fn test_execution_order_minimal() {

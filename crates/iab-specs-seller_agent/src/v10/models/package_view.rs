@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::PublicPackageView;
+/// use iab_specs_seller_agent::v10::models::PublicPackageView;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let view = PublicPackageView::builder()
 ///     .name("Premium Display".to_string())
@@ -79,8 +79,8 @@ impl PublicPackageView {
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::{AuthenticatedPackageView, Package, TieredPricing};
-/// use iab_specs::seller_agent::v10::enums::PackageType;
+/// use iab_specs_seller_agent::v10::models::{AuthenticatedPackageView, Package, TieredPricing};
+/// use iab_specs_seller_agent::v10::enums::PackageType;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let package = Package::builder()
 ///     .name("Premium Display".to_string())
@@ -128,8 +128,8 @@ impl AuthenticatedPackageView {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::seller_agent::v10::enums::{PackageType, PricingTierType};
-    use crate::seller_agent::v10::models::{Package, PricingTier, TieredPricing};
+    use crate::v10::enums::{PackageType, PricingTierType};
+    use crate::v10::models::{Package, PricingTier, TieredPricing};
 
     // ========== PublicPackageView Tests ==========
 

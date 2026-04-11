@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::SellerCreative;
+/// use iab_specs_seller_agent::v10::models::SellerCreative;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let creative = SellerCreative::builder()
 ///     .id("creative-001".to_string())
@@ -78,7 +78,7 @@ impl SellerCreative {
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::SellerAssignment;
+/// use iab_specs_seller_agent::v10::models::SellerAssignment;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let assignment = SellerAssignment::builder()
 ///     .creative_id("creative-001".to_string())

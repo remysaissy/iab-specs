@@ -1,4 +1,4 @@
-use crate::seller_agent::v10::enums::{OrganizationRole, PricingTierType};
+use crate::v10::enums::{OrganizationRole, PricingTierType};
 use crate::Extension;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
@@ -15,8 +15,8 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::SellerOrganization;
-/// use iab_specs::seller_agent::v10::enums::OrganizationRole;
+/// use iab_specs_seller_agent::v10::models::SellerOrganization;
+/// use iab_specs_seller_agent::v10::enums::OrganizationRole;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let org = SellerOrganization::builder()
 ///     .name("Example Publisher".to_string())
@@ -64,8 +64,8 @@ impl SellerOrganization {
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::SellerAccount;
-/// use iab_specs::seller_agent::v10::enums::PricingTierType;
+/// use iab_specs_seller_agent::v10::models::SellerAccount;
+/// use iab_specs_seller_agent::v10::enums::PricingTierType;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let account = SellerAccount::builder()
 ///     .name("Agency Partner Account".to_string())

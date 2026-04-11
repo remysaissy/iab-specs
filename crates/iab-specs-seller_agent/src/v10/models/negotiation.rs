@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::NegotiationConfig;
+/// use iab_specs_seller_agent::v10::models::NegotiationConfig;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let config = NegotiationConfig::builder()
 ///     .max_rounds(5)
@@ -47,7 +47,7 @@ pub struct NegotiationConfig<Ext: Extension = crate::DefaultExt> {
     /// Negotiation strategy type (REQUIRED).
     /// Defines the approach taken during negotiations with buyers.
     #[builder(default)]
-    pub strategy: crate::seller_agent::v10::enums::NegotiationStrategyType,
+    pub strategy: crate::v10::enums::NegotiationStrategyType,
 
     /// Extension object for config-specific extensions.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -74,7 +74,7 @@ impl NegotiationConfig {
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::NegotiationRound;
+/// use iab_specs_seller_agent::v10::models::NegotiationRound;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let round = NegotiationRound::builder()
 ///     .round_number(2)
@@ -147,7 +147,7 @@ mod tests {
         assert_eq!(config.total_concession_cap, 2.00);
         assert_eq!(
             config.strategy,
-            crate::seller_agent::v10::enums::NegotiationStrategyType::Standard
+            crate::v10::enums::NegotiationStrategyType::Standard
         );
         assert!(config.ext.is_none());
     }
@@ -176,13 +176,13 @@ mod tests {
             .max_rounds(8)
             .per_round_concession_cap(0.25)
             .total_concession_cap(1.50)
-            .strategy(crate::seller_agent::v10::enums::NegotiationStrategyType::Aggressive)
+            .strategy(crate::v10::enums::NegotiationStrategyType::Aggressive)
             .build()
             .unwrap();
 
         assert_eq!(
             config.strategy,
-            crate::seller_agent::v10::enums::NegotiationStrategyType::Aggressive
+            crate::v10::enums::NegotiationStrategyType::Aggressive
         );
     }
 
@@ -309,7 +309,7 @@ mod tests {
         assert_eq!(config.total_concession_cap, 0.0);
         assert_eq!(
             config.strategy,
-            crate::seller_agent::v10::enums::NegotiationStrategyType::Standard
+            crate::v10::enums::NegotiationStrategyType::Standard
         );
         assert!(config.ext.is_none());
     }
@@ -330,7 +330,7 @@ mod tests {
             .max_rounds(5)
             .per_round_concession_cap(0.50)
             .total_concession_cap(2.00)
-            .strategy(crate::seller_agent::v10::enums::NegotiationStrategyType::Aggressive)
+            .strategy(crate::v10::enums::NegotiationStrategyType::Aggressive)
             .build()
             .unwrap();
 
@@ -348,7 +348,7 @@ mod tests {
         assert_eq!(config.total_concession_cap, 1.0);
         assert_eq!(
             config.strategy,
-            crate::seller_agent::v10::enums::NegotiationStrategyType::Standard
+            crate::v10::enums::NegotiationStrategyType::Standard
         );
         assert!(config.ext.is_none());
     }

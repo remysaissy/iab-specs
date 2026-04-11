@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::Proposal;
+/// use iab_specs_seller_agent::v10::models::Proposal;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let proposal = Proposal::builder()
 ///     .buyer_id("buyer-001")
@@ -43,7 +43,7 @@ pub struct Proposal<Ext: Extension = crate::DefaultExt> {
 
     /// Current status of the proposal.
     #[builder(default)]
-    pub status: crate::seller_agent::v10::enums::ProposalStatus,
+    pub status: crate::v10::enums::ProposalStatus,
 
     /// Identifier of the current active revision.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -85,7 +85,7 @@ impl Proposal {
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::{ProposalRevision, ProposalItem};
+/// use iab_specs_seller_agent::v10::models::{ProposalRevision, ProposalItem};
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let revision = ProposalRevision::builder()
 ///     .proposal_id("prop-001")
@@ -153,8 +153,8 @@ impl ProposalRevision {
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::ProposalItem;
-/// use iab_specs::agentic_direct::v21::enums::RateType;
+/// use iab_specs_seller_agent::v10::models::ProposalItem;
+/// use iab_specs_agentic_direct::v21::enums::RateType;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let item = ProposalItem::builder()
 ///     .product_id("prod-001")
@@ -185,7 +185,7 @@ pub struct ProposalItem<Ext: Extension = crate::DefaultExt> {
 
     /// Pricing model type (REQUIRED).
     #[builder(default)]
-    pub rate_type: crate::agentic_direct::v21::enums::RateType,
+    pub rate_type: iab_specs_agentic_direct::v21::enums::RateType,
 
     /// Campaign start date in ISO 8601 format (REQUIRED).
     #[builder(default, setter(into))]
@@ -211,8 +211,8 @@ impl ProposalItem {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::agentic_direct::v21::enums::RateType;
-    use crate::seller_agent::v10::enums::ProposalStatus;
+    use iab_specs_agentic_direct::v21::enums::RateType;
+    use crate::v10::enums::ProposalStatus;
 
     #[test]
     fn test_proposal_creation() {

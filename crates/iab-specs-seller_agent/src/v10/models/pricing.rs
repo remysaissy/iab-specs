@@ -1,4 +1,4 @@
-use crate::seller_agent::v10::enums::PricingTierType;
+use crate::v10::enums::PricingTierType;
 use crate::Extension;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::TieredPricing;
+/// use iab_specs_seller_agent::v10::models::TieredPricing;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let pricing = TieredPricing::builder()
 ///     .tiers(vec![])
@@ -57,8 +57,8 @@ impl TieredPricing {
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::PricingTier;
-/// use iab_specs::seller_agent::v10::enums::PricingTierType;
+/// use iab_specs_seller_agent::v10::models::PricingTier;
+/// use iab_specs_seller_agent::v10::enums::PricingTierType;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let tier = PricingTier::builder()
 ///     .tier_type(PricingTierType::Public)
@@ -118,7 +118,7 @@ impl PricingTier {
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::RateCard;
+/// use iab_specs_seller_agent::v10::models::RateCard;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let card = RateCard::builder()
 ///     .product_id("prod-123")

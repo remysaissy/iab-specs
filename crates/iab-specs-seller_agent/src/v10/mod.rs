@@ -26,9 +26,9 @@
 //! ```rust
 //! #[cfg(feature = "seller_agent_10")]
 //! {
-//! use iab_specs::seller_agent::v10::models::{Proposal, ProposalRevision, ProposalItem};
-//! use iab_specs::seller_agent::v10::enums::ProposalStatus;
-//! use iab_specs::agentic_direct::v21::enums::RateType;
+//! use iab_specs_seller_agent::v10::models::{Proposal, ProposalRevision, ProposalItem};
+//! use iab_specs_seller_agent::v10::enums::ProposalStatus;
+//! use iab_specs_agentic_direct::v21::enums::RateType;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create a proposal from seller to buyer
@@ -73,8 +73,8 @@
 //! ```rust
 //! #[cfg(feature = "seller_agent_10")]
 //! {
-//! use iab_specs::seller_agent::v10::enums::SellerOrderStatus;
-//! use iab_specs::seller_agent::v10::state_machines::{
+//! use iab_specs_seller_agent::v10::enums::SellerOrderStatus;
+//! use iab_specs_seller_agent::v10::state_machines::{
 //!     can_transition_seller_order, valid_seller_order_transitions_from,
 //! };
 //!
@@ -111,8 +111,8 @@
 //! ```rust
 //! #[cfg(feature = "seller_agent_10")]
 //! {
-//! use iab_specs::seller_agent::v10::enums::SellerOrderStatus;
-//! use iab_specs::seller_agent::v10::state_machines::can_transition_seller_order;
+//! use iab_specs_seller_agent::v10::enums::SellerOrderStatus;
+//! use iab_specs_seller_agent::v10::state_machines::can_transition_seller_order;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Validate a transition before applying it
@@ -146,29 +146,27 @@ pub mod state_machines;
 
 // Re-export shared types from agentic_direct for convenience
 #[allow(unused_imports)]
-pub use crate::agentic_direct::v21::a2a::*;
+pub use iab_specs_agentic_direct::v21::a2a::*;
 #[allow(unused_imports)]
-pub use crate::agentic_direct::v21::entities::*;
+pub use iab_specs_agentic_direct::v21::entities::*;
 #[allow(unused_imports)]
-pub use crate::agentic_direct::v21::enums::*;
+pub use iab_specs_agentic_direct::v21::enums::*;
 #[allow(unused_imports)]
-pub use crate::agentic_direct::v21::jsonrpc::*;
+pub use iab_specs_agentic_direct::v21::jsonrpc::*;
 
 #[cfg(test)]
 mod integration_tests {
-    use crate::agentic_direct::v21::enums::RateType;
-    use crate::seller_agent::v10::enums::{
+    use crate::v10::enums::{
         AdServerType, ChangeRequestStatus, ChangeSeverity, ChangeType, DistributionStatus,
         NegotiationStrategyType, PackageType, PricingTierType, ProposalStatus, SellerOrderStatus,
         SyncStatus,
     };
-    use crate::seller_agent::v10::models::{
+    use crate::v10::models::{
         NegotiationConfig, NegotiationRound, PricingTier, Proposal, ProposalItem, ProposalRevision,
         TieredPricing,
     };
-    use crate::seller_agent::v10::state_machines::{
-        can_transition_seller_order, SellerOrderTransition,
-    };
+    use crate::v10::state_machines::{can_transition_seller_order, SellerOrderTransition};
+    use iab_specs_agentic_direct::v21::enums::RateType;
 
     #[test]
     fn test_complete_proposal_workflow() {

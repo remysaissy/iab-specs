@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::PricingRule;
+/// use iab_specs_seller_agent::v10::models::PricingRule;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let rule = PricingRule::builder()
 ///     .condition(serde_json::json!({"buyer_type": "agency"}))
@@ -70,7 +70,7 @@ impl PricingRule {
 /// # Example
 ///
 /// ```
-/// use iab_specs::seller_agent::v10::models::VolumeDiscount;
+/// use iab_specs_seller_agent::v10::models::VolumeDiscount;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let discount = VolumeDiscount::builder()
 ///     .threshold(100000)
