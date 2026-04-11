@@ -124,7 +124,7 @@ pub use iab_specs_agentic_audience as agentic_audience;
 #[cfg(feature = "agentic_direct_21")]
 pub use iab_specs_agentic_direct as agentic_direct;
 #[cfg(feature = "app_ads_txt")]
-pub mod app_ads_txt;
+pub use iab_specs_app_ads_txt as app_ads_txt;
 #[cfg(feature = "artb_10")]
 pub use iab_specs_artb as artb;
 #[cfg(feature = "buyer_agent_10")]

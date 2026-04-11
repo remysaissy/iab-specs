@@ -1,6 +1,6 @@
-use crate::ads_txt::AdsTxtSystem;
-use crate::slice_up_to;
 use derive_builder::Builder;
+use iab_specs_ads_txt::AdsTxtSystem;
+use iab_specs_core::slice_up_to;
 use serde::de::Error;
 use serde_with::{serde_as, DeserializeFromStr, SerializeDisplay};
 use std::fmt;
@@ -175,10 +175,10 @@ impl FromStr for AppAdsTxt {
 }
 
 // Conversion from AdsTxt (drops 1.1 fields with validation)
-impl TryFrom<crate::ads_txt::AdsTxt> for AppAdsTxt {
+impl TryFrom<iab_specs_ads_txt::AdsTxt> for AppAdsTxt {
     type Error = crate::Error;
 
-    fn try_from(ads_txt: crate::ads_txt::AdsTxt) -> Result<Self, Self::Error> {
+    fn try_from(ads_txt: iab_specs_ads_txt::AdsTxt) -> Result<Self, Self::Error> {
         // Validate that no 1.1-only fields are present
         if ads_txt.owner_domain.is_some() {
             return Err(serde_plain::Error::custom(
@@ -202,14 +202,17 @@ impl TryFrom<crate::ads_txt::AdsTxt> for AppAdsTxt {
     }
 }
 
-// Conversion to AdsTxt (1.1 fields are None/empty)
-impl From<AppAdsTxt> for crate::ads_txt::AdsTxt {
-    fn from(app_ads: AppAdsTxt) -> Self {
-        crate::ads_txt::AdsTxt::builder()
-            .contact(app_ads.contact)
-            .subdomain(app_ads.subdomain)
-            .inventory_partner_domain(app_ads.inventory_partner_domain)
-            .systems(app_ads.systems)
+impl AppAdsTxt {
+    /// Convert this AppAdsTxt into an AdsTxt.
+    ///
+    /// The ads.txt 1.1 fields (`owner_domain`, `manager_domains`) are set to `None`/empty
+    /// since app-ads.txt v1.0 does not support them.
+    pub fn into_ads_txt(self) -> iab_specs_ads_txt::AdsTxt {
+        iab_specs_ads_txt::AdsTxt::builder()
+            .contact(self.contact)
+            .subdomain(self.subdomain)
+            .inventory_partner_domain(self.inventory_partner_domain)
+            .systems(self.systems)
             .owner_domain(None)
             .manager_domains(vec![])
             .build()
@@ -220,7 +223,7 @@ impl From<AppAdsTxt> for crate::ads_txt::AdsTxt {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ads_txt::SellerRelationType;
+    use iab_specs_ads_txt::SellerRelationType;
 
     // Test cases from app-ads.txt v1.0 specification examples
 
@@ -474,7 +477,7 @@ silverssp.com, 9876, RESELLER
             .build()
             .unwrap();
 
-        let ads_txt: crate::ads_txt::AdsTxt = app_ads.into();
+        let ads_txt = app_ads.into_ads_txt();
         assert_eq!(ads_txt.contact, Some("adops@example.com".to_string()));
         assert_eq!(ads_txt.subdomain, Some("mobile.example.com".to_string()));
         assert_eq!(ads_txt.owner_domain, None);
@@ -483,7 +486,7 @@ silverssp.com, 9876, RESELLER
 
     #[test]
     fn try_convert_from_ads_txt_compatible() {
-        let ads_txt = crate::ads_txt::AdsTxt::builder()
+        let ads_txt = iab_specs_ads_txt::AdsTxt::builder()
             .contact(Some("adops@example.com".to_string()))
             .subdomain(Some("mobile.example.com".to_string()))
             .build()
@@ -498,7 +501,7 @@ silverssp.com, 9876, RESELLER
 
     #[test]
     fn try_convert_from_ads_txt_with_owner_domain_fails() {
-        let ads_txt = crate::ads_txt::AdsTxt::builder()
+        let ads_txt = iab_specs_ads_txt::AdsTxt::builder()
             .owner_domain(Some("example.com".to_string()))
             .build()
             .unwrap();
@@ -511,9 +514,9 @@ silverssp.com, 9876, RESELLER
 
     #[test]
     fn try_convert_from_ads_txt_with_manager_domain_fails() {
-        use crate::ads_txt::ManagerDomain;
+        use iab_specs_ads_txt::ManagerDomain;
 
-        let ads_txt = crate::ads_txt::AdsTxt::builder()
+        let ads_txt = iab_specs_ads_txt::AdsTxt::builder()
             .manager_domains(vec![ManagerDomain::builder()
                 .domain("manager.example.com")
                 .build()
@@ -1003,7 +1006,7 @@ greenadexchange.com, 12345, DIRECT
             .unwrap();
 
         // AppAdsTxt → AdsTxt
-        let ads_txt: crate::ads_txt::AdsTxt = app_ads.clone().into();
+        let ads_txt = app_ads.clone().into_ads_txt();
         assert_eq!(ads_txt.systems.len(), 2);
         assert_eq!(ads_txt.systems[0].domain, "greenadexchange.com");
         assert_eq!(ads_txt.systems[1].domain, "silverssp.com");
@@ -1026,7 +1029,7 @@ greenadexchange.com, 12345, DIRECT
             .unwrap();
 
         // AppAdsTxt → AdsTxt
-        let ads_txt: crate::ads_txt::AdsTxt = app_ads.clone().into();
+        let ads_txt = app_ads.clone().into_ads_txt();
         assert_eq!(
             ads_txt.inventory_partner_domain,
             Some("partner.example.com".to_string())
@@ -1056,7 +1059,7 @@ greenadexchange.com, 12345, DIRECT
             .build()
             .unwrap();
 
-        let ads_txt: crate::ads_txt::AdsTxt = original.clone().into();
+        let ads_txt = original.clone().into_ads_txt();
         let roundtripped = AppAdsTxt::try_from(ads_txt).unwrap();
 
         assert_eq!(original.contact, roundtripped.contact);

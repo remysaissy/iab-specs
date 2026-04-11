@@ -57,6 +57,7 @@ keywords = [
 iab-specs-core = { path = "crates/iab-specs-core", version = "0.4.1" }
 iab-specs-adcom = { path = "crates/iab-specs-adcom", version = "0.4.1", optional = true }
 iab-specs-ads_txt = { path = "crates/iab-specs-ads_txt", version = "0.4.1", optional = true }
+iab-specs-app_ads_txt = { path = "crates/iab-specs-app_ads_txt", version = "0.4.1", optional = true }
 iab-specs-sellers_json = { path = "crates/iab-specs-sellers_json", version = "0.4.1", optional = true }
 iab-specs-artb = { path = "crates/iab-specs-artb", version = "0.4.1", optional = true }
 iab-specs-agentic_direct = { path = "crates/iab-specs-agentic_direct", version = "0.4.1", optional = true }
@@ -79,7 +80,7 @@ serde_json = { workspace = true }
 default = []
 adcom = ["dep:iab-specs-adcom"]
 ads_txt = ["dep:iab-specs-ads_txt"]
-app_ads_txt = ["ads_txt"]
+app_ads_txt = ["ads_txt", "dep:iab-specs-app_ads_txt"]
 sellers_json = ["dep:iab-specs-sellers_json"]
 openrtb_25 = ["adcom", "dep:iab-specs-openrtb", "iab-specs-openrtb/openrtb_25"]
 openrtb_26 = ["openrtb_25", "iab-specs-openrtb/openrtb_26"]

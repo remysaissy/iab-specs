@@ -6,6 +6,16 @@ license.workspace = true
 homepage.workspace = true
 repository.workspace = true
 authors.workspace = true
-description = "App-ads.txt 1.0 support for the iab-specs ecosystem."
+description = "Rust implementation of IAB App-ads.txt 1.0 specification. Parse and generate Authorized Digital Sellers declarations for mobile and CTV apps. Part of the iab-specs ecosystem."
+keywords = ["iab", "app-ads-txt", "appadstxt", "mobile-advertising", "ctv"]
 
 [dependencies]
+iab-specs-core = { path = "../iab-specs-core", version = "0.4.1" }
+iab-specs-ads_txt = { path = "../iab-specs-ads_txt", version = "0.4.1" }
+serde = { workspace = true }
+serde_plain = { workspace = true }
+serde_with = { workspace = true }
+derive_builder = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
