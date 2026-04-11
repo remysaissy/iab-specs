@@ -32,14 +32,19 @@ Examples:
     $0 --revision --dry-run    # Show version plan without modifying files
 
 Note: This script will:
-  1. Update the version in Cargo.toml ([workspace.package])
-  2. Update inter-crate dependency versions in all workspace Cargo.toml files
-  3. Run cargo generate-lockfile to update Cargo.lock
-  4. Generate/update CHANGELOG.md using git-cliff
-  5. Optionally commit, tag, and push
+  1. Create a release branch from origin/main
+  2. Update the version in Cargo.toml ([workspace.package])
+  3. Update inter-crate dependency versions in all workspace Cargo.toml files
+  4. Run cargo generate-lockfile to update Cargo.lock
+  5. Generate/update CHANGELOG.md using git-cliff
+  6. Commit (signed), push the release branch, and create a PR
+  After the PR is merged, create the release with:
+    gh release create vX.Y.Z --target main --generate-notes
 
 Requirements:
   - git-cliff must be installed (cargo install git-cliff)
+  - gh CLI must be installed and authenticated (https://cli.github.com/)
+  - Working directory must be clean (no uncommitted changes)
 
 EOF
 }
@@ -66,6 +71,11 @@ check_dependencies() {
     if ! command -v git-cliff &> /dev/null; then
         print_error "git-cliff is not installed."
         echo "Please install it with: cargo install git-cliff"
+        exit 1
+    fi
+    if ! command -v gh &> /dev/null; then
+        print_error "GitHub CLI (gh) is not installed."
+        echo "Please install it: https://cli.github.com/"
         exit 1
     fi
 }
@@ -229,6 +239,15 @@ main() {
     # Check dependencies
     check_dependencies
 
+    if ! git diff --quiet || ! git diff --cached --quiet; then
+        print_error "Working directory is not clean. Please commit or stash your changes."
+        exit 1
+    fi
+    if [ -n "$(git ls-files --others --exclude-standard)" ]; then
+        print_error "There are untracked files. Please commit or remove them."
+        exit 1
+    fi
+
     # Get current version
     current_version=$(get_current_version)
     print_info "Current version: $current_version"
@@ -246,13 +265,13 @@ main() {
         print_dry_run "  New:          $new_version"
         print_dry_run ""
         print_dry_run "Actions that would be performed:"
-        print_dry_run "  1. Update Cargo.toml [workspace.package] version to $new_version"
-        print_dry_run "  2. Update inter-crate dependency versions in all Cargo.toml files"
-        print_dry_run "  3. Run cargo generate-lockfile to update Cargo.lock"
-        print_dry_run "  4. Generate CHANGELOG.md using git-cliff with tag v$new_version"
-        print_dry_run "  5. Prompt to commit changes"
-        print_dry_run "  6. Prompt to create tag v$new_version"
-        print_dry_run "  7. Prompt to push changes and tags"
+        print_dry_run "  1. Create release branch release/v$new_version from origin/main"
+        print_dry_run "  2. Update Cargo.toml [workspace.package] version to $new_version"
+        print_dry_run "  3. Update inter-crate dependency versions in all Cargo.toml files"
+        print_dry_run "  4. Run cargo generate-lockfile to update Cargo.lock"
+        print_dry_run "  5. Generate CHANGELOG.md using git-cliff with tag v$new_version"
+        print_dry_run "  6. Commit (signed) and push release branch"
+        print_dry_run "  7. Create PR to main"
         echo ""
         print_dry_run "No files were modified."
         exit 0
@@ -265,6 +284,19 @@ main() {
         print_warning "Version bump cancelled"
         exit 0
     fi
+
+    local release_branch="release/v${new_version}"
+
+    print_info "Fetching latest main from origin..."
+    git fetch origin main
+
+    if git show-ref --verify --quiet "refs/heads/${release_branch}"; then
+        print_error "Branch ${release_branch} already exists. Delete it first or choose a different version."
+        exit 1
+    fi
+
+    git checkout -b "$release_branch" origin/main
+    print_info "Created branch ${release_branch}"
 
     # Update Cargo.toml
     update_cargo_version "$new_version"
@@ -285,45 +317,36 @@ main() {
     find . -name "Cargo.toml" -not -path "${target_dir}/*" -exec git add {} +
     git add -f Cargo.lock CHANGELOG.md
 
+    git commit -S -m "chore(release): prepare for v$new_version"
+    print_info "Changes committed (signed)"
+
+    print_info "Pushing ${release_branch}..."
+    git push -u origin "$release_branch"
+    print_info "Branch pushed"
+
+    print_info "Creating pull request..."
+    local pr_url
+    pr_url=$(gh pr create \
+        --base main \
+        --head "$release_branch" \
+        --title "chore(release): prepare for v$new_version" \
+        --body "Bump version from ${current_version} to ${new_version}.
+
+Changes:
+- Updated workspace version in Cargo.toml
+- Updated inter-crate dependency versions
+- Updated Cargo.lock
+- Generated CHANGELOG.md with git-cliff")
+
     echo ""
-    print_info "Version bump complete!"
+    print_info "Pull request created: ${pr_url}"
     echo ""
-
-    # Prompt to commit
-    read -p "Do you want to commit? (y/N) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        git commit -m "chore(release): prepare for v$new_version"
-        print_info "Changes committed"
-
-        # Prompt to create tag
-        read -p "Do you want to create tag v$new_version? (y/N) " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            git tag -a "v$new_version" -m "Release v$new_version"
-            print_info "Tag v$new_version created"
-
-            # Prompt to push
-            read -p "Do you want to push changes and tags? (y/N) " -n 1 -r
-            echo
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                git push && git push --tags
-                print_info "Changes and tags pushed"
-            else
-                print_warning "Push skipped. Run manually:"
-                print_info "  git push && git push --tags"
-            fi
-        else
-            print_warning "Tag creation skipped. Run manually:"
-            print_info "  git tag -a v$new_version -m 'Release v$new_version'"
-        fi
-    else
-        print_warning "Commit skipped. Run manually:"
-        print_info "  1. Review the changes: git diff --cached"
-        print_info "  2. Commit the changes: git commit -m 'chore(release): prepare for v$new_version'"
-        print_info "  3. Create a git tag: git tag -a v$new_version -m 'Release v$new_version'"
-        print_info "  4. Push changes: git push && git push --tags"
-    fi
+    print_info "After the PR is merged:"
+    print_info "  1. Create the release (this also creates a signed tag on GitHub):"
+    print_info "     gh release create v$new_version --target main --title 'Release v$new_version' --generate-notes"
+    print_info "  2. Fetch the tag locally and publish:"
+    print_info "     git checkout main && git pull --tags"
+    print_info "     ./publish.sh"
 }
 
 main "$@"
