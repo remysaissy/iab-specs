@@ -1,0 +1,637 @@
+/// OpenRTB 2.5/2.6 Device Object
+///
+/// This module implements the Device object for device information.
+/// OpenRTB 2.6 adds the sua (structured user-agent) field.
+use derive_builder::Builder;
+use serde::{Deserialize, Serialize};
+
+use super::geo::Geo;
+
+// Import UserAgent from AdCOM when openrtb_26 feature is enabled
+#[cfg(feature = "openrtb_26")]
+use iab_specs_adcom::context::UserAgent;
+use crate::Extension;
+
+/// Device object representing user's device (OpenRTB 2.5 Section 3.2.18)
+///
+/// A `Device` object provides information pertaining to the device through which the
+/// user is interacting. Device information includes its hardware, platform, location,
+/// and carrier data. The device can refer to a mobile handset, a desktop computer,
+/// set-top box, or other digital device.
+///
+/// # Generic Parameters
+///
+/// * `Ext` - Extension object type (must implement [`Extension`]). Defaults to [`DefaultExt`](crate::DefaultExt).
+#[derive(Builder, Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
+#[builder(build_fn(error = "crate::Error"), default)]
+#[serde(bound(serialize = "Ext: Extension", deserialize = "Ext: Extension"))]
+pub struct Device<Ext: Extension = crate::DefaultExt> {
+    /// Browser user agent string.
+    /// Recommended by the OpenRTB specification.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub ua: Option<String>,
+
+    /// Structured user agent information (OpenRTB 2.6+).
+    /// Provides parsed browser, OS, and device details from User-Agent Client Hints.
+    /// Complements or replaces the ua string field.
+    #[cfg(feature = "openrtb_26")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub sua: Option<UserAgent>,
+
+    /// Location of the device assumed to be the user's current location.
+    /// Recommended if IP address is not supplied.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub geo: Option<Geo>,
+
+    /// Standard "Do Not Track" flag as set in the header by the browser:
+    /// - 0 = tracking is unrestricted
+    /// - 1 = do not track
+    ///
+    /// Recommended by the OpenRTB specification.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub dnt: Option<i32>,
+
+    /// "Limit Ad Tracking" signal commercially endorsed (e.g., iOS, Android):
+    /// - 0 = tracking is unrestricted
+    /// - 1 = tracking must be limited per commercial guidelines
+    ///
+    /// Recommended by the OpenRTB specification.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub lmt: Option<i32>,
+
+    /// IPv4 address closest to device.
+    /// Recommended if geo is not supplied.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub ip: Option<String>,
+
+    /// IP address closest to device as IPv6.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub ipv6: Option<String>,
+
+    /// The general type of device.
+    /// Refer to AdCOM `DeviceType` enumeration.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub devicetype: Option<i32>,
+
+    /// Device make (e.g., "Apple").
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub make: Option<String>,
+
+    /// Device model (e.g., "iPhone").
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub model: Option<String>,
+
+    /// Device operating system (e.g., "iOS").
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub os: Option<String>,
+
+    /// Device operating system version (e.g., "3.1.2").
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub osv: Option<String>,
+
+    /// Hardware version of the device (e.g., "5S" for iPhone 5S).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub hwv: Option<String>,
+
+    /// Physical height of the screen in pixels.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub h: Option<i32>,
+
+    /// Physical width of the screen in pixels.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub w: Option<i32>,
+
+    /// Screen size as pixels per linear inch.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub ppi: Option<i32>,
+
+    /// The ratio of physical pixels to device independent pixels.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub pxratio: Option<f64>,
+
+    /// Support for JavaScript:
+    /// - 0 = no
+    /// - 1 = yes
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub js: Option<i32>,
+
+    /// Indicates if the geolocation API will be available to JavaScript code:
+    /// - 0 = no
+    /// - 1 = yes
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub geofetch: Option<i32>,
+
+    /// Version of Flash supported by the browser.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub flashver: Option<String>,
+
+    /// Browser language using ISO-639-1-alpha-2.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub language: Option<String>,
+
+    /// Browser language using IETF BCP 47.
+    /// OpenRTB 2.6+ field for more detailed language specification.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub langb: Option<String>,
+
+    /// Carrier or ISP (e.g., "VERIZON") using Mobile Country Code (MCC) and
+    /// Mobile Network Code (MNC), using the format: `<MCC>-<MNC>`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub carrier: Option<String>,
+
+    /// Mobile carrier as the concatenated MCC-MNC code (e.g., "310-005").
+    /// Identifies wireless carrier and device using the format: `<MCC>-<MNC>-<MNO>`.
+    /// Prefer over carrier.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub mccmnc: Option<String>,
+
+    /// Network connection type.
+    /// Refer to AdCOM `ConnectionType` enumeration.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub connectiontype: Option<i32>,
+
+    /// ID sanctioned for advertiser use in the clear (i.e., not hashed).
+    /// - iOS: IDFA (Identifier for Advertising)
+    /// - Android: Google Advertising ID
+    /// - Windows: Microsoft Advertising ID
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub ifa: Option<String>,
+
+    /// Hardware device ID (e.g., IMEI); hashed via SHA1.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub didsha1: Option<String>,
+
+    /// Hardware device ID (e.g., IMEI); hashed via MD5.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub didmd5: Option<String>,
+
+    /// Platform device ID (e.g., Android ID); hashed via SHA1.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub dpidsha1: Option<String>,
+
+    /// Platform device ID (e.g., Android ID); hashed via MD5.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub dpidmd5: Option<String>,
+
+    /// MAC address of the device; hashed via SHA1.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub macsha1: Option<String>,
+
+    /// MAC address of the device; hashed via MD5.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub macmd5: Option<String>,
+
+    /// Extension object for exchange-specific extensions.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
+    pub ext: Option<Box<Ext>>,
+}
+
+impl Device {
+    /// Convenience method to create a new instance using the builder pattern.
+    pub fn builder() -> DeviceBuilder {
+        DeviceBuilder::create_empty()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_device_creation() {
+        let device = Device::builder()
+            .ua(Some("Mozilla/5.0".to_string()))
+            .ip(Some("192.168.1.1".to_string()))
+            .devicetype(Some(4))
+            .make(Some("Apple".to_string()))
+            .model(Some("iPhone".to_string()))
+            .os(Some("iOS".to_string()))
+            .osv(Some("14.0".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(device.ua, Some("Mozilla/5.0".to_string()));
+        assert_eq!(device.ip, Some("192.168.1.1".to_string()));
+        assert_eq!(device.devicetype, Some(4));
+        assert_eq!(device.make, Some("Apple".to_string()));
+        assert_eq!(device.os, Some("iOS".to_string()));
+    }
+
+    #[test]
+    fn test_device_with_geo() {
+        let geo = Geo::builder()
+            .country(Some("USA".to_string()))
+            .region(Some("CA".to_string()))
+            .build()
+            .unwrap();
+
+        let device = Device::builder()
+            .ip(Some("192.168.1.1".to_string()))
+            .geo(Some(geo))
+            .build()
+            .unwrap();
+
+        assert!(device.geo.is_some());
+        assert_eq!(
+            device.geo.as_ref().unwrap().country,
+            Some("USA".to_string())
+        );
+    }
+
+    #[test]
+    fn test_device_tracking_flags() {
+        let device = Device::builder().dnt(Some(1)).lmt(Some(1)).build().unwrap();
+
+        assert_eq!(device.dnt, Some(1));
+        assert_eq!(device.lmt, Some(1));
+    }
+
+    #[test]
+    fn test_device_serialization() {
+        let device = Device::builder()
+            .ua(Some("Mozilla/5.0".to_string()))
+            .ip(Some("192.168.1.1".to_string()))
+            .devicetype(Some(4))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&device).unwrap();
+        assert!(json.contains("\"ua\":\"Mozilla/5.0\""));
+        assert!(json.contains("\"ip\":\"192.168.1.1\""));
+        assert!(json.contains("\"devicetype\":4"));
+    }
+
+    #[test]
+    fn test_device_deserialization() {
+        let json = r#"{"ua":"Mozilla/5.0","ip":"192.168.1.1","devicetype":4}"#;
+        let device: Device = serde_json::from_str(json).unwrap();
+
+        assert_eq!(device.ua, Some("Mozilla/5.0".to_string()));
+        assert_eq!(device.ip, Some("192.168.1.1".to_string()));
+        assert_eq!(device.devicetype, Some(4));
+    }
+
+    #[test]
+    fn test_device_with_ifa() {
+        let device = Device::builder()
+            .ifa(Some("AEBE52E7-03EE-455A-B3C4-E57283966239".to_string()))
+            .lmt(Some(0))
+            .build()
+            .unwrap();
+
+        assert_eq!(
+            device.ifa,
+            Some("AEBE52E7-03EE-455A-B3C4-E57283966239".to_string())
+        );
+        assert_eq!(device.lmt, Some(0));
+    }
+
+    // === Phase 2.1: Integer-as-Enum Field Validation Tests ===
+
+    #[test]
+    fn test_devicetype_with_valid_values() {
+        // DeviceType enum valid values are 1-8
+        // 1=Mobile, 2=PC, 3=TV, 4=Phone, 5=Tablet, 6=Connected, 7=SetTopBox, 8=OOH
+        for device_type in 1..=8 {
+            let device = Device::builder()
+                .devicetype(Some(device_type))
+                .build()
+                .unwrap();
+
+            assert_eq!(device.devicetype, Some(device_type));
+
+            // Verify serialization roundtrip
+            let json = serde_json::to_string(&device).unwrap();
+            let deserialized: Device = serde_json::from_str(&json).unwrap();
+            assert_eq!(device.devicetype, deserialized.devicetype);
+        }
+    }
+
+    #[test]
+    fn test_devicetype_with_invalid_value() {
+        // Test invalid DeviceType value
+        let json = r#"{"devicetype":99}"#;
+        let result: Result<Device, _> = serde_json::from_str(json);
+
+        assert!(
+            result.is_ok(),
+            "Invalid devicetype value 99 currently passes"
+        );
+        assert_eq!(result.unwrap().devicetype, Some(99));
+        // TODO: DeviceType should be validated (valid range: 1-8)
+    }
+
+    #[test]
+    fn test_devicetype_with_zero() {
+        // Test devicetype with zero (invalid)
+        let json = r#"{"devicetype":0}"#;
+        let result: Result<Device, _> = serde_json::from_str(json);
+
+        assert!(result.is_ok(), "Zero devicetype currently passes");
+        assert_eq!(result.unwrap().devicetype, Some(0));
+        // Document: Zero is not a valid DeviceType value
+    }
+
+    #[test]
+    fn test_connectiontype_with_valid_values() {
+        // ConnectionType enum valid values are 0-8
+        // 0=Unknown, 1=Ethernet, 2=WiFi, 3=CellularUnknown, 4=Cellular2G,
+        // 5=Cellular3G, 6=Cellular4G, 7=Cellular5G, 8=Cellular6G
+        for conn_type in 0..=8 {
+            let device = Device::builder()
+                .connectiontype(Some(conn_type))
+                .build()
+                .unwrap();
+
+            assert_eq!(device.connectiontype, Some(conn_type));
+
+            // Verify serialization roundtrip
+            let json = serde_json::to_string(&device).unwrap();
+            let deserialized: Device = serde_json::from_str(&json).unwrap();
+            assert_eq!(device.connectiontype, deserialized.connectiontype);
+        }
+    }
+
+    #[test]
+    fn test_connectiontype_with_invalid_value() {
+        // Test invalid ConnectionType value
+        let json = r#"{"connectiontype":99}"#;
+        let result: Result<Device, _> = serde_json::from_str(json);
+
+        assert!(
+            result.is_ok(),
+            "Invalid connectiontype value 99 currently passes"
+        );
+        assert_eq!(result.unwrap().connectiontype, Some(99));
+        // TODO: ConnectionType should be validated (valid range: 0-8)
+    }
+
+    #[test]
+    fn test_negative_device_enum_values() {
+        // Test negative values in enum fields
+        let json = r#"{"devicetype":-1,"connectiontype":-1}"#;
+        let result: Result<Device, _> = serde_json::from_str(json);
+
+        assert!(result.is_ok(), "Negative enum values currently pass");
+        let device = result.unwrap();
+        assert_eq!(device.devicetype, Some(-1));
+        assert_eq!(device.connectiontype, Some(-1));
+        // Document: Negative values are invalid for DeviceType and ConnectionType
+    }
+
+    // === Phase 2.3: Feature Flag Tests (openrtb_26) ===
+
+    #[cfg(feature = "openrtb_26")]
+    #[test]
+    fn test_device_with_sua_field() {
+        use iab_specs_adcom::context::UserAgent;
+
+        // Test that OpenRTB 2.6 sua (structured user-agent) field is available
+        let sua = UserAgent::builder().build().unwrap();
+
+        let device = Device::builder()
+            .ua(Some("Mozilla/5.0".to_string()))
+            .sua(Some(sua))
+            .build()
+            .unwrap();
+
+        assert!(device.sua.is_some());
+        assert_eq!(device.ua, Some("Mozilla/5.0".to_string()));
+    }
+
+    #[cfg(feature = "openrtb_26")]
+    #[test]
+    fn test_device_sua_serialization() {
+        use iab_specs_adcom::context::UserAgent;
+
+        // Test serialization of OpenRTB 2.6 sua field
+        let sua = UserAgent::builder().build().unwrap();
+
+        let device = Device::builder().sua(Some(sua)).build().unwrap();
+
+        let json = serde_json::to_string(&device).unwrap();
+        assert!(json.contains("\"sua\""));
+    }
+
+    #[cfg(feature = "openrtb_26")]
+    #[test]
+    fn test_device_sua_deserialization() {
+        // Test deserialization of OpenRTB 2.6 sua field
+        let json = r#"{"sua":{}}"#;
+        let result: Result<Device, _> = serde_json::from_str(json);
+
+        assert!(result.is_ok(), "Device with sua field should deserialize");
+        let device = result.unwrap();
+        assert!(device.sua.is_some());
+    }
+
+    #[cfg(not(feature = "openrtb_26"))]
+    #[test]
+    fn test_device_sua_not_available_without_feature() {
+        // This test verifies that sua field is not available without openrtb_26 feature
+        // If this test compiles, it means the feature gating is working correctly
+
+        let device = Device::builder()
+            .ua(Some("Mozilla/5.0".to_string()))
+            .build()
+            .unwrap();
+
+        // The sua field should not exist in Device when openrtb_26 is disabled
+        // This is verified at compile time - if we try to access device.sua,
+        // the code won't compile without the feature flag
+        assert_eq!(device.ua, Some("Mozilla/5.0".to_string()));
+    }
+
+    #[test]
+    fn test_device_lmt_flag() {
+        // Spec: Section 3.2.18
+        let device_unrestricted = Device::builder().lmt(Some(0)).build().unwrap();
+        assert_eq!(device_unrestricted.lmt, Some(0));
+
+        let device_limited = Device::builder().lmt(Some(1)).build().unwrap();
+        assert_eq!(device_limited.lmt, Some(1));
+
+        let device_default = Device::builder().build().unwrap();
+        assert_eq!(device_default.lmt, None);
+    }
+
+    #[test]
+    fn test_device_hardware_fields() {
+        // Spec: Section 3.2.18
+        let device = Device::builder()
+            .hwv(Some("5S".to_string()))
+            .make(Some("Apple".to_string()))
+            .model(Some("iPhone".to_string()))
+            .os(Some("iOS".to_string()))
+            .osv(Some("14.7.1".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(device.hwv, Some("5S".to_string()));
+        assert_eq!(device.make, Some("Apple".to_string()));
+        assert_eq!(device.model, Some("iPhone".to_string()));
+        assert_eq!(device.os, Some("iOS".to_string()));
+        assert_eq!(device.osv, Some("14.7.1".to_string()));
+    }
+
+    #[test]
+    fn test_device_language_fields() {
+        // Spec: Section 3.2.18
+        let device = Device::builder()
+            .language(Some("en".to_string()))
+            .langb(Some("en-US".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(device.language, Some("en".to_string()));
+        assert_eq!(device.langb, Some("en-US".to_string()));
+    }
+
+    #[test]
+    fn test_device_carrier_field() {
+        // Spec: Section 3.2.18
+        let device = Device::builder()
+            .carrier(Some("VERIZON".to_string()))
+            .mccmnc(Some("310-005".to_string()))
+            .build()
+            .unwrap();
+
+        assert_eq!(device.carrier, Some("VERIZON".to_string()));
+        assert_eq!(device.mccmnc, Some("310-005".to_string()));
+    }
+
+    #[test]
+    fn test_device_pxratio_field() {
+        // Spec: Section 3.2.18
+        let device = Device::builder().pxratio(Some(3.0)).build().unwrap();
+
+        assert_eq!(device.pxratio, Some(3.0));
+    }
+
+    #[test]
+    fn test_device_ext_field() {
+        // Spec: Section 3.2.18
+        let device = DeviceBuilder::<serde_json::Value>::default()
+            .ua(Some("Mozilla/5.0".to_string()))
+            .ext(Some(Box::new(serde_json::json!({
+                "atts": 3
+            }))))
+            .build()
+            .unwrap();
+
+        assert!(device.ext.is_some());
+        assert_eq!(device.ext.as_ref().unwrap()["atts"], 3);
+    }
+
+    #[test]
+    fn test_device_roundtrip_all_fields() {
+        // Spec: Section 3.2.18
+        let geo = Geo::builder()
+            .country(Some("USA".to_string()))
+            .build()
+            .unwrap();
+
+        let device = Device::builder()
+            .ua(Some("Mozilla/5.0".to_string()))
+            .geo(Some(geo))
+            .dnt(Some(0))
+            .lmt(Some(0))
+            .ip(Some("192.168.1.1".to_string()))
+            .ipv6(Some("2001:0db8::1".to_string()))
+            .devicetype(Some(4))
+            .make(Some("Apple".to_string()))
+            .model(Some("iPhone".to_string()))
+            .os(Some("iOS".to_string()))
+            .osv(Some("15.0".to_string()))
+            .hwv(Some("13 Pro".to_string()))
+            .h(Some(2532))
+            .w(Some(1170))
+            .ppi(Some(460))
+            .pxratio(Some(3.0))
+            .js(Some(1))
+            .geofetch(Some(1))
+            .flashver(Some("0".to_string()))
+            .language(Some("en".to_string()))
+            .langb(Some("en-US".to_string()))
+            .carrier(Some("AT&T".to_string()))
+            .mccmnc(Some("310-410".to_string()))
+            .connectiontype(Some(2))
+            .ifa(Some("AEBE52E7-03EE-455A-B3C4-E57283966239".to_string()))
+            .didsha1(Some("abc123sha1".to_string()))
+            .didmd5(Some("abc123md5".to_string()))
+            .dpidsha1(Some("dpid123sha1".to_string()))
+            .dpidmd5(Some("dpid123md5".to_string()))
+            .macsha1(Some("mac123sha1".to_string()))
+            .macmd5(Some("mac123md5".to_string()))
+            .build()
+            .unwrap();
+
+        let json = serde_json::to_string(&device).unwrap();
+        let deserialized: Device = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(device.ua, deserialized.ua);
+        assert_eq!(device.dnt, deserialized.dnt);
+        assert_eq!(device.lmt, deserialized.lmt);
+        assert_eq!(device.ip, deserialized.ip);
+        assert_eq!(device.ipv6, deserialized.ipv6);
+        assert_eq!(device.devicetype, deserialized.devicetype);
+        assert_eq!(device.make, deserialized.make);
+        assert_eq!(device.model, deserialized.model);
+        assert_eq!(device.os, deserialized.os);
+        assert_eq!(device.osv, deserialized.osv);
+        assert_eq!(device.hwv, deserialized.hwv);
+        assert_eq!(device.h, deserialized.h);
+        assert_eq!(device.w, deserialized.w);
+        assert_eq!(device.ppi, deserialized.ppi);
+        assert_eq!(device.pxratio, deserialized.pxratio);
+        assert_eq!(device.js, deserialized.js);
+        assert_eq!(device.geofetch, deserialized.geofetch);
+        assert_eq!(device.flashver, deserialized.flashver);
+        assert_eq!(device.language, deserialized.language);
+        assert_eq!(device.langb, deserialized.langb);
+        assert_eq!(device.carrier, deserialized.carrier);
+        assert_eq!(device.mccmnc, deserialized.mccmnc);
+        assert_eq!(device.connectiontype, deserialized.connectiontype);
+        assert_eq!(device.ifa, deserialized.ifa);
+        assert_eq!(device.didsha1, deserialized.didsha1);
+        assert_eq!(device.didmd5, deserialized.didmd5);
+        assert_eq!(device.dpidsha1, deserialized.dpidsha1);
+        assert_eq!(device.dpidmd5, deserialized.dpidmd5);
+        assert_eq!(device.macsha1, deserialized.macsha1);
+        assert_eq!(device.macmd5, deserialized.macmd5);
+        assert_eq!(device.geo, deserialized.geo);
+    }
+}

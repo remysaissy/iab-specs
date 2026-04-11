@@ -131,7 +131,7 @@ pub use iab_specs_artb as artb;
 pub mod buyer_agent;
 mod errors;
 #[cfg(any(feature = "openrtb_25", feature = "openrtb_26", feature = "openrtb_30"))]
-pub mod openrtb;
+pub use iab_specs_openrtb as openrtb;
 #[cfg(feature = "openrtb_native_12")]
 pub use iab_specs_openrtb_native as openrtb_native;
 #[cfg(feature = "registry_agent_10")]
