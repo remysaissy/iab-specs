@@ -33,9 +33,10 @@ Examples:
 
 Note: This script will:
   1. Update the version in Cargo.toml ([workspace.package])
-  2. Run cargo generate-lockfile to update Cargo.lock
-  3. Generate/update CHANGELOG.md using git-cliff
-  4. Optionally commit, tag, and push
+  2. Update inter-crate dependency versions in all workspace Cargo.toml files
+  3. Run cargo generate-lockfile to update Cargo.lock
+  4. Generate/update CHANGELOG.md using git-cliff
+  5. Optionally commit, tag, and push
 
 Requirements:
   - git-cliff must be installed (cargo install git-cliff)
@@ -123,6 +124,27 @@ update_cargo_version() {
     fi
 
     print_info "Updated $cargo_file [workspace.package] to version $new_version"
+}
+
+# Update inter-crate dependency versions in all workspace Cargo.toml files
+update_inter_crate_versions() {
+    local old_version=$1
+    local new_version=$2
+
+    print_info "Updating inter-crate dependency versions..."
+
+    # Find all Cargo.toml files in the workspace (excluding target directory)
+    while IFS= read -r cargo_file; do
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS
+            sed -i '' '/iab-specs-/ s/version = "'"$old_version"'"/version = "'"$new_version"'"/' "$cargo_file"
+        else
+            # Linux
+            sed -i '/iab-specs-/ s/version = "'"$old_version"'"/version = "'"$new_version"'"/' "$cargo_file"
+        fi
+    done < <(find . -name "Cargo.toml" -not -path "*/target/*")
+
+    print_info "Updated inter-crate dependency versions to $new_version"
 }
 
 # Update Cargo.lock by running cargo generate-lockfile
@@ -218,11 +240,12 @@ main() {
         print_dry_run ""
         print_dry_run "Actions that would be performed:"
         print_dry_run "  1. Update Cargo.toml [workspace.package] version to $new_version"
-        print_dry_run "  2. Run cargo generate-lockfile to update Cargo.lock"
-        print_dry_run "  3. Generate CHANGELOG.md using git-cliff with tag v$new_version"
-        print_dry_run "  4. Prompt to commit changes"
-        print_dry_run "  5. Prompt to create tag v$new_version"
-        print_dry_run "  6. Prompt to push changes and tags"
+        print_dry_run "  2. Update inter-crate dependency versions in all Cargo.toml files"
+        print_dry_run "  3. Run cargo generate-lockfile to update Cargo.lock"
+        print_dry_run "  4. Generate CHANGELOG.md using git-cliff with tag v$new_version"
+        print_dry_run "  5. Prompt to commit changes"
+        print_dry_run "  6. Prompt to create tag v$new_version"
+        print_dry_run "  7. Prompt to push changes and tags"
         echo ""
         print_dry_run "No files were modified."
         exit 0
@@ -239,6 +262,9 @@ main() {
     # Update Cargo.toml
     update_cargo_version "$new_version"
 
+    # Update inter-crate dependency versions
+    update_inter_crate_versions "$current_version" "$new_version"
+
     # Update Cargo.lock
     update_lockfile
 
@@ -247,7 +273,8 @@ main() {
 
     # Stage files
     print_info "Staging updated files..."
-    git add Cargo.toml Cargo.lock CHANGELOG.md
+    find . -name "Cargo.toml" -not -path "*/target/*" -exec git add {} +
+    git add Cargo.lock CHANGELOG.md
 
     echo ""
     print_info "Version bump complete!"
