@@ -1,4 +1,4 @@
-use crate::buyer_agent::v10::enums::DealStatus;
+use crate::v10::enums::DealStatus;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

@@ -26,7 +26,7 @@
 //! ```rust
 //! #[cfg(feature = "buyer_agent_10")]
 //! {
-//! use iab_specs::buyer_agent::v10::models::{CampaignBrief, CampaignAllocation};
+//! use iab_specs_buyer_agent::v10::models::{CampaignBrief, CampaignAllocation};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Define a campaign brief with objectives and budget
@@ -71,9 +71,9 @@
 //! ```rust
 //! #[cfg(feature = "buyer_agent_10")]
 //! {
-//! use iab_specs::buyer_agent::v10::models::{NegotiationStrategy, NegotiationOffer};
-//! use iab_specs::buyer_agent::v10::enums::DealStatus;
-//! use iab_specs::buyer_agent::v10::state_machines::can_transition_deal;
+//! use iab_specs_buyer_agent::v10::models::{NegotiationStrategy, NegotiationOffer};
+//! use iab_specs_buyer_agent::v10::enums::DealStatus;
+//! use iab_specs_buyer_agent::v10::state_machines::can_transition_deal;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Define a negotiation strategy
@@ -115,8 +115,8 @@
 //! ```rust
 //! #[cfg(feature = "buyer_agent_10")]
 //! {
-//! use iab_specs::buyer_agent::v10::enums::{CampaignStatus, DealStatus};
-//! use iab_specs::buyer_agent::v10::state_machines::{
+//! use iab_specs_buyer_agent::v10::enums::{CampaignStatus, DealStatus};
+//! use iab_specs_buyer_agent::v10::state_machines::{
 //!     can_transition_campaign, can_transition_deal,
 //! };
 //!
@@ -164,22 +164,22 @@ pub mod state_machines;
 
 // Re-export shared types from agentic_direct for convenience
 #[allow(unused_imports)]
-pub use crate::agentic_direct::v21::a2a::*;
+pub use iab_specs_agentic_direct::v21::a2a::*;
 #[allow(unused_imports)]
-pub use crate::agentic_direct::v21::entities::*;
+pub use iab_specs_agentic_direct::v21::entities::*;
 #[allow(unused_imports)]
-pub use crate::agentic_direct::v21::enums::*;
+pub use iab_specs_agentic_direct::v21::enums::*;
 #[allow(unused_imports)]
-pub use crate::agentic_direct::v21::jsonrpc::*;
+pub use iab_specs_agentic_direct::v21::jsonrpc::*;
 
 #[cfg(test)]
 mod integration_tests {
-    use crate::buyer_agent::v10::enums::{ApprovalStatus, CampaignStatus, ChannelType, DealStatus};
-    use crate::buyer_agent::v10::models::{
+    use crate::v10::enums::{ApprovalStatus, CampaignStatus, ChannelType, DealStatus};
+    use crate::v10::models::{
         AudiencePlan, BookingJob, BookingRecommendation, BuyerIdentity, CampaignAllocation,
         CampaignBrief, NegotiationOffer, NegotiationStrategy, UCPEmbedding,
     };
-    use crate::buyer_agent::v10::state_machines::{
+    use crate::v10::state_machines::{
         can_transition_campaign, can_transition_deal, CampaignTransition, DealTransition,
     };
 
@@ -668,7 +668,7 @@ mod integration_tests {
 
     #[test]
     fn test_v2_type_aliases_are_usable() {
-        use crate::buyer_agent::v10::models::{
+        use crate::v10::models::{
             BookingState, ChannelAllocation, NegotiationRound, ProductRecommendation,
         };
 
@@ -740,7 +740,7 @@ mod integration_tests {
 
     #[test]
     fn test_v2_channel_brief_workflow() {
-        use crate::buyer_agent::v10::models::ChannelBrief;
+        use crate::v10::models::ChannelBrief;
 
         let brief = ChannelBrief::builder()
             .channel("video")
@@ -770,7 +770,7 @@ mod integration_tests {
 
     #[test]
     fn test_v2_booked_line_workflow() {
-        use crate::buyer_agent::v10::models::BookedLine;
+        use crate::v10::models::BookedLine;
 
         let line = BookedLine::builder()
             .line_id("line-v2-001")
@@ -846,7 +846,7 @@ mod integration_tests {
 
     #[test]
     fn test_v2_ucp_model_descriptor_and_consent() {
-        use crate::buyer_agent::v10::models::{UCPConsent, UCPModelDescriptor};
+        use crate::v10::models::{UCPConsent, UCPModelDescriptor};
 
         let descriptor = UCPModelDescriptor::builder()
             .model_id("sentence-transformers/all-MiniLM-L6-v2")
@@ -896,7 +896,7 @@ mod integration_tests {
 
     #[test]
     fn test_v2_linear_tv_params_workflow() {
-        use crate::buyer_agent::v10::models::LinearTVParams;
+        use crate::v10::models::LinearTVParams;
 
         let flighting = serde_json::json!({
             "daypart_schedule": {

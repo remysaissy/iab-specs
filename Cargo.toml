@@ -62,6 +62,7 @@ iab-specs-sellers_json = { path = "crates/iab-specs-sellers_json", version = "0.
 iab-specs-artb = { path = "crates/iab-specs-artb", version = "0.4.1", optional = true }
 iab-specs-agentic_direct = { path = "crates/iab-specs-agentic_direct", version = "0.4.1", optional = true }
 iab-specs-agentic_audience = { path = "crates/iab-specs-agentic_audience", version = "0.4.1", optional = true }
+iab-specs-buyer_agent = { path = "crates/iab-specs-buyer_agent", version = "0.4.1", optional = true }
 iab-specs-openrtb = { path = "crates/iab-specs-openrtb", version = "0.4.1", optional = true }
 iab-specs-openrtb_native = { path = "crates/iab-specs-openrtb_native", version = "0.4.1", optional = true }
 serde = { workspace = true }
@@ -89,6 +90,6 @@ openrtb_native_12 = ["dep:iab-specs-openrtb_native"]
 artb_10 = ["dep:iab-specs-artb"]
 agentic_direct_21 = ["dep:iab-specs-agentic_direct"]
 agentic_audience_10 = ["dep:iab-specs-agentic_audience"]
-buyer_agent_10 = ["agentic_direct_21", "dep:serde_json"]
+buyer_agent_10 = ["agentic_direct_21", "dep:iab-specs-buyer_agent"]
 registry_agent_10 = ["agentic_direct_21", "dep:serde_json"]
 seller_agent_10 = ["agentic_direct_21", "dep:serde_json"]

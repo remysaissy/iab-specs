@@ -128,7 +128,7 @@ pub use iab_specs_app_ads_txt as app_ads_txt;
 #[cfg(feature = "artb_10")]
 pub use iab_specs_artb as artb;
 #[cfg(feature = "buyer_agent_10")]
-pub mod buyer_agent;
+pub use iab_specs_buyer_agent as buyer_agent;
 mod errors;
 #[cfg(any(feature = "openrtb_25", feature = "openrtb_26", feature = "openrtb_30"))]
 pub use iab_specs_openrtb as openrtb;

@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::buyer_agent::v10::models::CampaignBrief;
+/// use iab_specs_buyer_agent::v10::models::CampaignBrief;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let campaign = CampaignBrief::builder()
 ///     .name("Q2 Display Campaign")
@@ -95,7 +95,7 @@ impl CampaignBrief {
 /// # Example
 ///
 /// ```
-/// use iab_specs::buyer_agent::v10::models::CampaignAllocation;
+/// use iab_specs_buyer_agent::v10::models::CampaignAllocation;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let allocation = CampaignAllocation::builder()
 ///     .channel("display")

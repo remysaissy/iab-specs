@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::buyer_agent::v10::models::BookedLine;
+/// use iab_specs_buyer_agent::v10::models::BookedLine;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let line = BookedLine::builder()
 ///     .line_id("line-001")

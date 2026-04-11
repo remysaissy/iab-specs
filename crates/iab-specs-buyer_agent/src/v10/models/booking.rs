@@ -1,5 +1,5 @@
-use crate::buyer_agent::v10::enums::CampaignStatus;
-use crate::buyer_agent::v10::models::campaign::CampaignAllocation;
+use crate::v10::enums::CampaignStatus;
+use crate::v10::models::campaign::CampaignAllocation;
 use crate::Extension;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
@@ -17,8 +17,8 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::buyer_agent::v10::models::BookingJob;
-/// use iab_specs::buyer_agent::v10::enums::CampaignStatus;
+/// use iab_specs_buyer_agent::v10::models::BookingJob;
+/// use iab_specs_buyer_agent::v10::enums::CampaignStatus;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let booking = BookingJob::builder()
 ///     .campaign_brief_id("brief-123")
@@ -95,7 +95,7 @@ impl BookingJob {
 /// # Example
 ///
 /// ```
-/// use iab_specs::buyer_agent::v10::models::BookingRecommendation;
+/// use iab_specs_buyer_agent::v10::models::BookingRecommendation;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let recommendation = BookingRecommendation::builder()
 ///     .seller_name("Premium Exchange")

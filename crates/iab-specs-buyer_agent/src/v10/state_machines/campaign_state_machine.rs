@@ -1,4 +1,4 @@
-use crate::buyer_agent::v10::enums::CampaignStatus;
+use crate::v10::enums::CampaignStatus;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

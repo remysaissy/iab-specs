@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::buyer_agent::v10::models::ChannelBrief;
+/// use iab_specs_buyer_agent::v10::models::ChannelBrief;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let channel = ChannelBrief::builder()
 ///     .channel("display")

@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::buyer_agent::v10::models::BuyerIdentity;
+/// use iab_specs_buyer_agent::v10::models::BuyerIdentity;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let identity = BuyerIdentity::builder()
 ///     .seat_id("seat-123")

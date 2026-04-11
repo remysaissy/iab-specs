@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::buyer_agent::v10::models::NegotiationStrategy;
+/// use iab_specs_buyer_agent::v10::models::NegotiationStrategy;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let strategy = NegotiationStrategy::builder()
 ///     .target_cpm(2.50)
@@ -75,7 +75,7 @@ impl NegotiationStrategy {
 /// # Example
 ///
 /// ```
-/// use iab_specs::buyer_agent::v10::models::NegotiationOffer;
+/// use iab_specs_buyer_agent::v10::models::NegotiationOffer;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let offer = NegotiationOffer::builder()
 ///     .price(3.75)

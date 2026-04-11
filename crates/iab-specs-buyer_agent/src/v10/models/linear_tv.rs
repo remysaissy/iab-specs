@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::buyer_agent::v10::models::LinearTVParams;
+/// use iab_specs_buyer_agent::v10::models::LinearTVParams;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let params = LinearTVParams::builder()
 ///     .flighting(Some(serde_json::json!({

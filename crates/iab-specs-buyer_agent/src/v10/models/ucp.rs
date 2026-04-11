@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::buyer_agent::v10::models::UCPEmbedding;
+/// use iab_specs_buyer_agent::v10::models::UCPEmbedding;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let embedding = UCPEmbedding::builder()
 ///     .vector(vec![0.1, 0.2, 0.3])
@@ -76,7 +76,7 @@ impl UCPEmbedding {
 /// # Example
 ///
 /// ```
-/// use iab_specs::buyer_agent::v10::models::AudiencePlan;
+/// use iab_specs_buyer_agent::v10::models::AudiencePlan;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let plan = AudiencePlan::builder()
 ///     .query_embedding(vec![0.1, 0.2, 0.3])

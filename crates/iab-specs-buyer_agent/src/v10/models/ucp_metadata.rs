@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::buyer_agent::v10::models::UCPModelDescriptor;
+/// use iab_specs_buyer_agent::v10::models::UCPModelDescriptor;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let descriptor = UCPModelDescriptor::builder()
 ///     .model_id("sentence-transformers/all-mpnet-base-v2")
@@ -65,7 +65,7 @@ impl UCPModelDescriptor {
 /// # Example
 ///
 /// ```
-/// use iab_specs::buyer_agent::v10::models::UCPConsent;
+/// use iab_specs_buyer_agent::v10::models::UCPConsent;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let consent = UCPConsent::builder()
 ///     .purpose("audience-targeting")
