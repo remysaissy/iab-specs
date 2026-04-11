@@ -8,10 +8,13 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Flags
+DRY_RUN=false
+
 # Function to display help
 show_help() {
     cat << EOF
-Usage: $0 [OPTION]
+Usage: $0 [OPTION]...
 
 Bump the project version and update the CHANGELOG using git-cliff.
 
@@ -19,17 +22,20 @@ Options:
     --revision    Bump the revision/patch version (0.0.X)
     --minor       Bump the minor version (0.X.0)
     --major       Bump the major version (X.0.0)
+    --dry-run     Show what would happen without modifying any files
     --help        Display this help message
 
 Examples:
-    $0 --revision    # 0.0.9 -> 0.0.10
-    $0 --minor       # 0.0.9 -> 0.1.0
-    $0 --major       # 0.0.9 -> 1.0.0
+    $0 --revision              # 0.0.9 -> 0.0.10
+    $0 --minor                 # 0.0.9 -> 0.1.0
+    $0 --major                 # 0.0.9 -> 1.0.0
+    $0 --revision --dry-run    # Show version plan without modifying files
 
 Note: This script will:
-  1. Update the version in Cargo.toml (workspace)
-  2. Generate/update CHANGELOG.md using git-cliff
-  3. Stage both files for commit (you need to commit manually)
+  1. Update the version in Cargo.toml ([workspace.package])
+  2. Run cargo generate-lockfile to update Cargo.lock
+  3. Generate/update CHANGELOG.md using git-cliff
+  4. Optionally commit, tag, and push
 
 Requirements:
   - git-cliff must be installed (cargo install git-cliff)
@@ -50,6 +56,10 @@ print_warning() {
     echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
+print_dry_run() {
+    echo -e "${YELLOW}[DRY-RUN]${NC} $1"
+}
+
 # Check if git-cliff is installed
 check_dependencies() {
     if ! command -v git-cliff &> /dev/null; then
@@ -59,9 +69,9 @@ check_dependencies() {
     fi
 }
 
-# Get current version from Cargo.toml
+# Get current version from [workspace.package] section in Cargo.toml
 get_current_version() {
-    grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/'
+    grep -A5 '^\[workspace\.package\]' Cargo.toml | grep 'version' | head -1 | sed 's/.*"\(.*\)".*/\1/'
 }
 
 # Parse version components
@@ -99,20 +109,32 @@ bump_version() {
     echo "$major.$minor.$patch"
 }
 
-# Update version in Cargo.toml
+# Update version in [workspace.package] section of Cargo.toml
 update_cargo_version() {
     local new_version=$1
     local cargo_file="Cargo.toml"
 
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS
-        sed -i '' "s/^version = \".*\"/version = \"$new_version\"/" "$cargo_file"
+        sed -i '' '/^\[workspace\.package\]/,/^\[/ s/^version = ".*"/version = "'"$new_version"'"/' "$cargo_file"
     else
         # Linux
-        sed -i "s/^version = \".*\"/version = \"$new_version\"/" "$cargo_file"
+        sed -i '/^\[workspace\.package\]/,/^\[/ s/^version = ".*"/version = "'"$new_version"'"/' "$cargo_file"
     fi
 
-    print_info "Updated $cargo_file to version $new_version"
+    print_info "Updated $cargo_file [workspace.package] to version $new_version"
+}
+
+# Update Cargo.lock by running cargo generate-lockfile
+update_lockfile() {
+    print_info "Updating Cargo.lock..."
+
+    if cargo generate-lockfile; then
+        print_info "Cargo.lock updated successfully"
+    else
+        print_error "Failed to update Cargo.lock"
+        exit 1
+    fi
 }
 
 # Generate changelog using git-cliff
@@ -140,27 +162,40 @@ main() {
     # Parse arguments
     bump_type=""
 
-    case "$1" in
-        --revision)
-            bump_type="revision"
-            ;;
-        --minor)
-            bump_type="minor"
-            ;;
-        --major)
-            bump_type="major"
-            ;;
-        --help|-h)
-            show_help
-            exit 0
-            ;;
-        *)
-            print_error "Unknown option: $1"
-            echo ""
-            show_help
-            exit 1
-            ;;
-    esac
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --revision)
+                bump_type="revision"
+                ;;
+            --minor)
+                bump_type="minor"
+                ;;
+            --major)
+                bump_type="major"
+                ;;
+            --dry-run)
+                DRY_RUN=true
+                ;;
+            --help|-h)
+                show_help
+                exit 0
+                ;;
+            *)
+                print_error "Unknown option: $1"
+                echo ""
+                show_help
+                exit 1
+                ;;
+        esac
+        shift
+    done
+
+    if [ -z "$bump_type" ]; then
+        print_error "No bump type specified. Use --revision, --minor, or --major."
+        echo ""
+        show_help
+        exit 1
+    fi
 
     # Check dependencies
     check_dependencies
@@ -173,6 +208,26 @@ main() {
     new_version=$(bump_version "$current_version" "$bump_type")
     print_info "New version: $new_version"
 
+    # Dry run mode: show plan and exit
+    if [ "$DRY_RUN" = true ]; then
+        echo ""
+        print_dry_run "Version bump plan:"
+        print_dry_run "  Bump type:    $bump_type"
+        print_dry_run "  Current:      $current_version"
+        print_dry_run "  New:          $new_version"
+        print_dry_run ""
+        print_dry_run "Actions that would be performed:"
+        print_dry_run "  1. Update Cargo.toml [workspace.package] version to $new_version"
+        print_dry_run "  2. Run cargo generate-lockfile to update Cargo.lock"
+        print_dry_run "  3. Generate CHANGELOG.md using git-cliff with tag v$new_version"
+        print_dry_run "  4. Prompt to commit changes"
+        print_dry_run "  5. Prompt to create tag v$new_version"
+        print_dry_run "  6. Prompt to push changes and tags"
+        echo ""
+        print_dry_run "No files were modified."
+        exit 0
+    fi
+
     # Confirm with user
     read -p "Do you want to proceed with version bump from $current_version to $new_version? (y/N) " -n 1 -r
     echo
@@ -184,21 +239,55 @@ main() {
     # Update Cargo.toml
     update_cargo_version "$new_version"
 
+    # Update Cargo.lock
+    update_lockfile
+
     # Update CHANGELOG.md
     update_changelog "$new_version"
 
     # Stage files
     print_info "Staging updated files..."
-    git add Cargo.toml CHANGELOG.md
+    git add Cargo.toml Cargo.lock CHANGELOG.md
 
-    print_info ""
+    echo ""
     print_info "Version bump complete!"
-    print_info ""
-    print_info "Next steps:"
-    print_info "  1. Review the changes: git diff --cached"
-    print_info "  2. Commit the changes: git commit -m 'chore(release): prepare for v$new_version'"
-    print_info "  3. Create a git tag: git tag -a v$new_version -m 'Release v$new_version'"
-    print_info "  4. Push changes: git push && git push --tags"
+    echo ""
+
+    # Prompt to commit
+    read -p "Do you want to commit? (y/N) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        git commit -m "chore(release): prepare for v$new_version"
+        print_info "Changes committed"
+
+        # Prompt to create tag
+        read -p "Do you want to create tag v$new_version? (y/N) " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            git tag -a "v$new_version" -m "Release v$new_version"
+            print_info "Tag v$new_version created"
+
+            # Prompt to push
+            read -p "Do you want to push changes and tags? (y/N) " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                git push && git push --tags
+                print_info "Changes and tags pushed"
+            else
+                print_warning "Push skipped. Run manually:"
+                print_info "  git push && git push --tags"
+            fi
+        else
+            print_warning "Tag creation skipped. Run manually:"
+            print_info "  git tag -a v$new_version -m 'Release v$new_version'"
+        fi
+    else
+        print_warning "Commit skipped. Run manually:"
+        print_info "  1. Review the changes: git diff --cached"
+        print_info "  2. Commit the changes: git commit -m 'chore(release): prepare for v$new_version'"
+        print_info "  3. Create a git tag: git tag -a v$new_version -m 'Release v$new_version'"
+        print_info "  4. Push changes: git push && git push --tags"
+    fi
 }
 
 main "$@"
