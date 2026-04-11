@@ -50,6 +50,47 @@ cargo add iab-specs --features adcom,openrtb_25,openrtb_26,openrtb_30,openrtb_na
 cargo add iab-specs --features openrtb_30
 ```
 
+## Crate Structure
+
+This project is organized as a **Cargo workspace** with 14 crates. You can depend on the umbrella `iab-specs` crate (unchanged behavior) or depend directly on individual sub-crates for a smaller compile footprint.
+
+### Sub-crates
+
+| Crate | Description |
+|-------|-------------|
+| `iab-specs` | Umbrella crate — re-exports all enabled sub-crates |
+| `iab-specs-core` | Shared traits and types (`Extension` trait, common utilities) |
+| `iab-specs-adcom` | AdCOM 1.0 — Advertising Common Object Model enumerations |
+| `iab-specs-openrtb` | OpenRTB 2.5, 2.6, and 3.0 — Real-Time Bidding protocol |
+| `iab-specs-openrtb_native` | OpenRTB Native Ads 1.2 — Native advertising specification |
+| `iab-specs-ads_txt` | Ads.txt 1.1 — Authorized Digital Sellers for websites |
+| `iab-specs-app_ads_txt` | App-ads.txt 1.0 — Authorized Digital Sellers for mobile/CTV |
+| `iab-specs-sellers_json` | Sellers.json 1.0 — Supply chain transparency |
+| `iab-specs-artb` | Agentic RTB Framework 1.0 — Autonomous agent bidstream processing |
+| `iab-specs-agentic_direct` | Agentic Direct 2.1 — OpenDirect v2.1 + A2A Protocol |
+| `iab-specs-buyer_agent` | Buyer Agent 1.0 — Demand-side campaign planning and negotiation |
+| `iab-specs-seller_agent` | Seller Agent 1.0 — Supply-side inventory and order management |
+| `iab-specs-agentic_audience` | Agentic Audience v1.0 (Draft) — Embedding exchange protocol |
+| `iab-specs-registry_agent` | Registry Agent 1.0 — Agent discovery and trust lifecycle |
+
+### Umbrella crate (default, unchanged)
+
+```toml
+[dependencies]
+iab-specs = { version = "0.4", features = ["openrtb_30"] }
+```
+
+### Direct sub-crate dependency (smaller compile footprint)
+
+```toml
+[dependencies]
+# Use only what you need, without the umbrella
+iab-specs-openrtb = { version = "0.4", features = ["openrtb_30"] }
+```
+
+> **Note:** When using `iab-specs-openrtb_native` directly, native types are accessed via
+> `iab_specs_openrtb_native::v12::...` instead of `iab_specs::openrtb_native::...`.
+
 ## Features
 
 ⚠️ **Important**: By default, **no features are enabled**. You must explicitly enable the specifications you need.
@@ -1249,6 +1290,13 @@ Run tests with configurable features:
 ./test.sh --all-features                            # Test all features
 ./test.sh --no-default-features --features openrtb_30   # Test specific feature
 ./test.sh --features openrtb_25,ads_txt             # Test multiple features
+```
+
+You can also use Cargo workspace commands directly to test across all crates:
+
+```bash
+cargo test --workspace --all-features               # Test all crates in the workspace
+cargo test -p iab-specs-openrtb --all-features      # Test a specific sub-crate
 ```
 
 ### Generate Coverage
