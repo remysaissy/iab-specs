@@ -1,0 +1,11 @@
+[package]
+name = "iab-specs-app_ads_txt"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "App-ads.txt 1.0 support for the iab-specs ecosystem."
+
+[dependencies]

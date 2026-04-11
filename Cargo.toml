@@ -1,12 +1,49 @@
-[package]
-name = "iab-specs"
+[workspace]
+resolver = "3"
+members = [
+    "crates/iab-specs-core",
+    "crates/iab-specs-adcom",
+    "crates/iab-specs-ads_txt",
+    "crates/iab-specs-app_ads_txt",
+    "crates/iab-specs-sellers_json",
+    "crates/iab-specs-openrtb",
+    "crates/iab-specs-openrtb_native",
+    "crates/iab-specs-artb",
+    "crates/iab-specs-agentic_direct",
+    "crates/iab-specs-agentic_audience",
+    "crates/iab-specs-buyer_agent",
+    "crates/iab-specs-seller_agent",
+    "crates/iab-specs-registry_agent",
+    ".",
+]
+
+[workspace.package]
 version = "0.4.1"
 edition = "2024"
-description = "Unofficial Rust implementaton of various IAB specifications."
 license = "Apache-2.0"
 homepage = "https://github.com/remysaissy/iab-specs"
 repository = "https://github.com/remysaissy/iab-specs"
 authors = ["Rémy Saissy <remy.saissy@gmail.com>"]
+
+[workspace.dependencies]
+serde = { version = "1", features = ["serde_derive", "std"] }
+serde_json = { version = "1", features = ["std"] }
+serde_with = { version = "3", features = ["std"] }
+serde_plain = { version = "1" }
+serde_repr = { version = "0.1" }
+derive_builder = { version = "0.20", features = ["std"] }
+isosphere = { version = "0.2" }
+thiserror = { version = "2", features = ["std"] }
+
+[package]
+name = "iab-specs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Unofficial Rust implementaton of various IAB specifications."
 readme = "README.md"
 keywords = [
     "iab",
@@ -17,17 +54,17 @@ keywords = [
 ]
 
 [dependencies]
-serde = { version = "1", features = ["serde_derive", "std"] }
-serde_json = { version = "1", features = ["std"], optional = true }
-serde_with = { version = "3", features = ["std"] }
-serde_plain = { version = "1" }
-serde_repr = { version = "0.1" }
-derive_builder = { version = "0.20", features = ["std"] }
-isosphere = { version = "0.2", optional = true }
-thiserror = { version = "2", features = ["std"] }
+serde = { workspace = true }
+serde_json = { workspace = true, optional = true }
+serde_with = { workspace = true }
+serde_plain = { workspace = true }
+serde_repr = { workspace = true }
+derive_builder = { workspace = true }
+isosphere = { workspace = true, optional = true }
+thiserror = { workspace = true }
 
 [dev-dependencies]
-serde_json = { version = "1", features = ["std"] }
+serde_json = { workspace = true }
 
 [features]
 default = []

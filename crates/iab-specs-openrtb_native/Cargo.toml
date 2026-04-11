@@ -1,0 +1,11 @@
+[package]
+name = "iab-specs-openrtb_native"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "OpenRTB Native Ads 1.2 support for the iab-specs ecosystem."
+
+[dependencies]

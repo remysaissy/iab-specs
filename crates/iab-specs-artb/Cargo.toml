@@ -1,0 +1,11 @@
+[package]
+name = "iab-specs-artb"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Agentic RTB Framework 1.0 support for the iab-specs ecosystem."
+
+[dependencies]
