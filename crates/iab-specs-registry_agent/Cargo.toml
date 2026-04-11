@@ -10,8 +10,8 @@ description = "Rust implementation of IAB Registry Agent 1.0 specification. Agen
 keywords = ["iab", "registry-agent", "agent-discovery", "trust-management", "advertising"]
 
 [dependencies]
-iab-specs-core = { path = "../iab-specs-core", version = "0.5.0", features = ["serde_json"] }
-iab-specs-agentic_direct = { path = "../iab-specs-agentic_direct", version = "0.5.0" }
+iab-specs-core = { path = "../iab-specs-core", version = "0.5.1", features = ["serde_json"] }
+iab-specs-agentic_direct = { path = "../iab-specs-agentic_direct", version = "0.5.1" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_with = { workspace = true }

@@ -18,7 +18,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.5.0"
+version = "0.5.1"
 edition = "2024"
 license = "Apache-2.0"
 homepage = "https://github.com/remysaissy/iab-specs"
@@ -54,19 +54,19 @@ keywords = [
 ]
 
 [dependencies]
-iab-specs-core = { path = "crates/iab-specs-core", version = "0.5.0" }
-iab-specs-adcom = { path = "crates/iab-specs-adcom", version = "0.5.0", optional = true }
-iab-specs-ads_txt = { path = "crates/iab-specs-ads_txt", version = "0.5.0", optional = true }
-iab-specs-app_ads_txt = { path = "crates/iab-specs-app_ads_txt", version = "0.5.0", optional = true }
-iab-specs-sellers_json = { path = "crates/iab-specs-sellers_json", version = "0.5.0", optional = true }
-iab-specs-artb = { path = "crates/iab-specs-artb", version = "0.5.0", optional = true }
-iab-specs-agentic_direct = { path = "crates/iab-specs-agentic_direct", version = "0.5.0", optional = true }
-iab-specs-agentic_audience = { path = "crates/iab-specs-agentic_audience", version = "0.5.0", optional = true }
-iab-specs-buyer_agent = { path = "crates/iab-specs-buyer_agent", version = "0.5.0", optional = true }
-iab-specs-seller_agent = { path = "crates/iab-specs-seller_agent", version = "0.5.0", optional = true }
-iab-specs-registry_agent = { path = "crates/iab-specs-registry_agent", version = "0.5.0", optional = true }
-iab-specs-openrtb = { path = "crates/iab-specs-openrtb", version = "0.5.0", optional = true }
-iab-specs-openrtb_native = { path = "crates/iab-specs-openrtb_native", version = "0.5.0", optional = true }
+iab-specs-core = { path = "crates/iab-specs-core", version = "0.5.1" }
+iab-specs-adcom = { path = "crates/iab-specs-adcom", version = "0.5.1", optional = true }
+iab-specs-ads_txt = { path = "crates/iab-specs-ads_txt", version = "0.5.1", optional = true }
+iab-specs-app_ads_txt = { path = "crates/iab-specs-app_ads_txt", version = "0.5.1", optional = true }
+iab-specs-sellers_json = { path = "crates/iab-specs-sellers_json", version = "0.5.1", optional = true }
+iab-specs-artb = { path = "crates/iab-specs-artb", version = "0.5.1", optional = true }
+iab-specs-agentic_direct = { path = "crates/iab-specs-agentic_direct", version = "0.5.1", optional = true }
+iab-specs-agentic_audience = { path = "crates/iab-specs-agentic_audience", version = "0.5.1", optional = true }
+iab-specs-buyer_agent = { path = "crates/iab-specs-buyer_agent", version = "0.5.1", optional = true }
+iab-specs-seller_agent = { path = "crates/iab-specs-seller_agent", version = "0.5.1", optional = true }
+iab-specs-registry_agent = { path = "crates/iab-specs-registry_agent", version = "0.5.1", optional = true }
+iab-specs-openrtb = { path = "crates/iab-specs-openrtb", version = "0.5.1", optional = true }
+iab-specs-openrtb_native = { path = "crates/iab-specs-openrtb_native", version = "0.5.1", optional = true }
 
 [dev-dependencies]
 serde = { workspace = true }

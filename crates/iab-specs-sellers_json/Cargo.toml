@@ -10,7 +10,7 @@ description = "Sellers.json 1.0 support for the iab-specs ecosystem."
 keywords = ["iab", "sellers-json", "sellersjson", "advertising", "supply-chain"]
 
 [dependencies]
-iab-specs-core = { path = "../iab-specs-core", version = "0.5.0", features = ["serde_json"] }
+iab-specs-core = { path = "../iab-specs-core", version = "0.5.1", features = ["serde_json"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_plain = { workspace = true }
