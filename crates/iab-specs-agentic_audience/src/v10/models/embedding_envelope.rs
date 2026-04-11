@@ -48,7 +48,7 @@ impl EmbeddingEnvelope {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::agentic_audience::v10::enums::{DistanceMetric, EmbeddingType, ModelType};
+    use crate::v10::enums::{DistanceMetric, EmbeddingType, ModelType};
 
     #[test]
     fn test_envelope_creation() {

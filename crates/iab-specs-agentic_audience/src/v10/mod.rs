@@ -21,9 +21,7 @@
 //! ## Creating an Embedding Envelope
 //!
 //! ```rust
-//! #[cfg(feature = "agentic_audience_10")]
-//! {
-//! use iab_specs::agentic_audience::v10::{
+//! use iab_specs_agentic_audience::v10::{
 //!     EmbeddingEnvelope, EmbeddingModel, EmbeddingContext, Embedding,
 //!     ModelType, DistanceMetric, EmbeddingType,
 //! };
@@ -60,15 +58,12 @@
 //! assert!(json.contains("\"minilm-l6-v2\""));
 //! # Ok(())
 //! # }
-//! }
 //! ```
 //!
 //! ## Scoring Embeddings Against Campaigns
 //!
 //! ```rust
-//! #[cfg(feature = "agentic_audience_10")]
-//! {
-//! use iab_specs::agentic_audience::v10::{
+//! use iab_specs_agentic_audience::v10::{
 //!     CampaignHead, ScoringRequest, ScoringResponse, CampaignScore,
 //!     Embedding, EmbeddingType,
 //! };
@@ -109,15 +104,12 @@
 //! assert_eq!(response.scores[0].score, 0.87);
 //! # Ok(())
 //! # }
-//! }
 //! ```
 //!
 //! ## OpenRTB Bid Stream Extension
 //!
 //! ```rust
-//! #[cfg(feature = "agentic_audience_10")]
-//! {
-//! use iab_specs::agentic_audience::v10::{
+//! use iab_specs_agentic_audience::v10::{
 //!     EmbeddingSegmentExt, EmbeddingType, DistanceMetric,
 //! };
 //!
@@ -135,10 +127,9 @@
 //!
 //! // Serialize — this goes into user.data.segment.ext in OpenRTB
 //! let json = serde_json::to_string_pretty(&segment_ext)?;
-//! assert!(json.contains("\"ver\":\"1.0\""));
+//! assert!(json.contains("\"ver\": \"1.0\""));
 //! # Ok(())
 //! # }
-//! }
 //! ```
 //!
 //! # Specification Reference

@@ -120,7 +120,7 @@ pub use iab_specs_adcom as adcom;
 #[cfg(feature = "ads_txt")]
 pub use iab_specs_ads_txt as ads_txt;
 #[cfg(feature = "agentic_audience_10")]
-pub mod agentic_audience;
+pub use iab_specs_agentic_audience as agentic_audience;
 #[cfg(feature = "agentic_direct_21")]
 pub use iab_specs_agentic_direct as agentic_direct;
 #[cfg(feature = "app_ads_txt")]
