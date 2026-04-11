@@ -1,5 +1,5 @@
-use crate::v10::enums::{AgentType, TrustLevel};
 use crate::Extension;
+use crate::v10::enums::{AgentType, TrustLevel};
 use derive_builder::Builder;
 use iab_specs_agentic_direct::v21::enums::ProtocolType;
 use serde::{Deserialize, Serialize};

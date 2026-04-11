@@ -1,6 +1,6 @@
+use crate::Extension;
 use crate::v10::enums::CampaignStatus;
 use crate::v10::models::campaign::CampaignAllocation;
-use crate::Extension;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
@@ -253,12 +253,14 @@ mod tests {
             .id("job-full-001")
             .campaign_brief_id("brief-full")
             .status(CampaignStatus::ExecutingBookings)
-            .allocations(vec![CampaignAllocation::builder()
-                .channel("display")
-                .budget_share(0.5)
-                .rationale("High volume channel")
-                .build()
-                .unwrap()])
+            .allocations(vec![
+                CampaignAllocation::builder()
+                    .channel("display")
+                    .budget_share(0.5)
+                    .rationale("High volume channel")
+                    .build()
+                    .unwrap(),
+            ])
             .recommendations(vec![
                 serde_json::json!({"seller": "exchange1", "price": 2.50}),
             ])
@@ -311,11 +313,13 @@ mod tests {
             .id("job-rt-001")
             .campaign_brief_id("brief-rt")
             .status(CampaignStatus::AwaitingApproval)
-            .allocations(vec![CampaignAllocation::builder()
-                .channel("email")
-                .budget_share(0.7)
-                .build()
-                .unwrap()])
+            .allocations(vec![
+                CampaignAllocation::builder()
+                    .channel("email")
+                    .budget_share(0.7)
+                    .build()
+                    .unwrap(),
+            ])
             .recommendations(vec![serde_json::json!({"cost_per_impression": 0.005})])
             .approved(Some(false))
             .build()

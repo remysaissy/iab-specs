@@ -1,5 +1,5 @@
-use crate::v10::enums::PackageType;
 use crate::Extension;
+use crate::v10::enums::PackageType;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
@@ -159,10 +159,12 @@ mod tests {
     fn test_media_kit_roundtrip() {
         let media_kit = MediaKit::builder()
             .publisher_id("pub-456".to_string())
-            .packages(vec![Package::builder()
-                .name("Test Package".to_string())
-                .build()
-                .unwrap()])
+            .packages(vec![
+                Package::builder()
+                    .name("Test Package".to_string())
+                    .build()
+                    .unwrap(),
+            ])
             .updated_at("2026-04-02T10:30:00Z".to_string())
             .build()
             .unwrap();
@@ -247,11 +249,13 @@ mod tests {
     fn test_media_kit_clone() {
         let kit = MediaKit::builder()
             .publisher_id("pub-clone")
-            .packages(vec![Package::builder()
-                .name("Pkg".to_string())
-                .package_type(PackageType::Curated)
-                .build()
-                .unwrap()])
+            .packages(vec![
+                Package::builder()
+                    .name("Pkg".to_string())
+                    .package_type(PackageType::Curated)
+                    .build()
+                    .unwrap(),
+            ])
             .updated_at("2026-01-01T00:00:00Z")
             .build()
             .unwrap();

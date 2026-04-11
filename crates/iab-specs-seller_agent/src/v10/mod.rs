@@ -165,7 +165,7 @@ mod integration_tests {
         NegotiationConfig, NegotiationRound, PricingTier, Proposal, ProposalItem, ProposalRevision,
         TieredPricing,
     };
-    use crate::v10::state_machines::{can_transition_seller_order, SellerOrderTransition};
+    use crate::v10::state_machines::{SellerOrderTransition, can_transition_seller_order};
     use iab_specs_agentic_direct::v21::enums::RateType;
 
     #[test]

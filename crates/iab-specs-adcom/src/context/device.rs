@@ -1,5 +1,5 @@
-use crate::context::{Geo, UserAgent};
 use crate::Extension;
+use crate::context::{Geo, UserAgent};
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

@@ -86,11 +86,13 @@ mod tests {
     fn test_refresh_serialization() {
         // Spec: Section 3.2.33
         let refresh = Refresh::builder()
-            .refsettings(Some(vec![RefSettings::builder()
-                .reftype(Some(2))
-                .minint(Some(45))
-                .build()
-                .unwrap()]))
+            .refsettings(Some(vec![
+                RefSettings::builder()
+                    .reftype(Some(2))
+                    .minint(Some(45))
+                    .build()
+                    .unwrap(),
+            ]))
             .build()
             .unwrap();
 

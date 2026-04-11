@@ -235,10 +235,9 @@ mod tests {
             .tmax(Some(200))
             .at(Some(1))
             .cur(Some(vec!["USD".to_string()]))
-            .item(vec![Item::builder()
-                .id("item1".to_string())
-                .build()
-                .unwrap()])
+            .item(vec![
+                Item::builder().id("item1".to_string()).build().unwrap(),
+            ])
             .build()
             .unwrap();
 
@@ -323,10 +322,9 @@ mod tests {
             .wseat(Some(vec!["seat1".to_string()]))
             .bseat(Some(vec!["seat2".to_string()]))
             .wlang(Some(vec!["en".to_string(), "fr".to_string()]))
-            .item(vec![Item::builder()
-                .id("item1".to_string())
-                .build()
-                .unwrap()])
+            .item(vec![
+                Item::builder().id("item1".to_string()).build().unwrap(),
+            ])
             .source(Some(source))
             .build()
             .unwrap();

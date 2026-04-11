@@ -18,13 +18,13 @@ pub use change_request::{ChangeRequest, ChangeRequestBuilder};
 pub use creative::{Creative, CreativeBuilder};
 pub use line::{FrequencyCap, FrequencyCapBuilder, Line, LineBuilder};
 pub use line_state_machine::{
-    can_transition_line, valid_line_transitions_from, LineTransition, LineTransitionBuilder,
-    VALID_LINE_TRANSITIONS,
+    LineTransition, LineTransitionBuilder, VALID_LINE_TRANSITIONS, can_transition_line,
+    valid_line_transitions_from,
 };
 pub use order::{Order, OrderBuilder};
 pub use order_state_machine::{
-    can_transition_order, valid_order_transitions_from, OrderTransition, OrderTransitionBuilder,
-    VALID_ORDER_TRANSITIONS,
+    OrderTransition, OrderTransitionBuilder, VALID_ORDER_TRANSITIONS, can_transition_order,
+    valid_order_transitions_from,
 };
 pub use organization::{
     Address, AddressBuilder, Contact, ContactBuilder, Organization, OrganizationBuilder,

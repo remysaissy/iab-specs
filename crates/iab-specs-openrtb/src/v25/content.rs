@@ -1,5 +1,5 @@
-use super::producer::Producer;
 use super::Data;
+use super::producer::Producer;
 use crate::Extension;
 /// OpenRTB 2.5 Content Object
 ///

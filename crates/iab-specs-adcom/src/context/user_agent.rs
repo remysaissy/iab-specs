@@ -1,5 +1,5 @@
-use crate::context::BrandVersion;
 use crate::Extension;
+use crate::context::BrandVersion;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

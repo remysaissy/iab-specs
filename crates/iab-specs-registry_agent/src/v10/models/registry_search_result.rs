@@ -1,5 +1,5 @@
-use crate::v10::models::registered_agent::RegisteredAgent;
 use crate::Extension;
+use crate::v10::models::registered_agent::RegisteredAgent;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

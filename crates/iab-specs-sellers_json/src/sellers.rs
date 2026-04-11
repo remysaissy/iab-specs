@@ -98,18 +98,22 @@ mod tests {
                 "Advertising System Inc., 101 Main Street, New York, NY 10101".to_string(),
             ))
             .version(SellersVersion::OneZero)
-            .identifiers(vec![SellersIdentifier::builder()
-                .name(SellersIdentifierName::TagId)
-                .value("28cb65e5bbc0bd5f")
-                .build()
-                .unwrap()])
-            .sellers(vec![Seller::builder()
-                .seller_id("1942009976")
-                .name(Some("Publisher1".to_string()))
-                .domain(Some("publisher1.com".to_string()))
-                .seller_type(SellerType::Publisher)
-                .build()
-                .unwrap()])
+            .identifiers(vec![
+                SellersIdentifier::builder()
+                    .name(SellersIdentifierName::TagId)
+                    .value("28cb65e5bbc0bd5f")
+                    .build()
+                    .unwrap(),
+            ])
+            .sellers(vec![
+                Seller::builder()
+                    .seller_id("1942009976")
+                    .name(Some("Publisher1".to_string()))
+                    .domain(Some("publisher1.com".to_string()))
+                    .seller_type(SellerType::Publisher)
+                    .build()
+                    .unwrap(),
+            ])
             .build()
             .unwrap();
 
@@ -141,17 +145,21 @@ mod tests {
             .contact_address(Some("123 Main St".to_string()))
             .version(SellersVersion::OneZero)
             .ext(Some("ext-data".to_string()))
-            .identifiers(vec![SellersIdentifier::builder()
-                .name(SellersIdentifierName::TagId)
-                .value("abc123")
-                .build()
-                .unwrap()])
-            .sellers(vec![Seller::builder()
-                .seller_id("s1")
-                .seller_type(SellerType::Publisher)
-                .name(Some("Pub1".to_string()))
-                .build()
-                .unwrap()])
+            .identifiers(vec![
+                SellersIdentifier::builder()
+                    .name(SellersIdentifierName::TagId)
+                    .value("abc123")
+                    .build()
+                    .unwrap(),
+            ])
+            .sellers(vec![
+                Seller::builder()
+                    .seller_id("s1")
+                    .seller_type(SellerType::Publisher)
+                    .name(Some("Pub1".to_string()))
+                    .build()
+                    .unwrap(),
+            ])
             .build()
             .unwrap();
         let json_str = serde_json::to_string(&original).unwrap();

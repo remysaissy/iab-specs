@@ -195,11 +195,13 @@ mod tests {
         let artifact = A2AArtifact::builder()
             .name("output.txt")
             .description("Generated output")
-            .parts(vec![A2AArtifactPart::builder()
-                .type_("text/plain")
-                .content("Hello, world!")
-                .build()
-                .unwrap()])
+            .parts(vec![
+                A2AArtifactPart::builder()
+                    .type_("text/plain")
+                    .content("Hello, world!")
+                    .build()
+                    .unwrap(),
+            ])
             .build()
             .unwrap();
 
@@ -263,11 +265,13 @@ mod tests {
                     .unwrap(),
                 A2AArtifact::builder()
                     .name("summary.txt")
-                    .parts(vec![A2AArtifactPart::builder()
-                        .type_("text/plain")
-                        .content("Task completed successfully")
-                        .build()
-                        .unwrap()])
+                    .parts(vec![
+                        A2AArtifactPart::builder()
+                            .type_("text/plain")
+                            .content("Task completed successfully")
+                            .build()
+                            .unwrap(),
+                    ])
                     .build()
                     .unwrap(),
             ])

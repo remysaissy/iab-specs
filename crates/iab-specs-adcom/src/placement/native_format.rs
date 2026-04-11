@@ -1,5 +1,5 @@
-use crate::placement::AssetFormat;
 use crate::Extension;
+use crate::placement::AssetFormat;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
@@ -90,10 +90,9 @@ mod tests {
     #[test]
     fn test_native_format_serialization_roundtrip() {
         let original = NativeFormat::builder()
-            .asset(Some(vec![AssetFormat::builder()
-                .id(Some(1))
-                .build()
-                .unwrap()]))
+            .asset(Some(vec![
+                AssetFormat::builder().id(Some(1)).build().unwrap(),
+            ]))
             .build()
             .unwrap();
         let json = serde_json::to_string(&original).unwrap();
@@ -105,10 +104,9 @@ mod tests {
     #[test]
     fn test_native_format_ext() {
         let obj = NativeFormatBuilder::<serde_json::Value>::default()
-            .asset(Some(vec![AssetFormat::builder()
-                .id(Some(1))
-                .build()
-                .unwrap()]))
+            .asset(Some(vec![
+                AssetFormat::builder().id(Some(1)).build().unwrap(),
+            ]))
             .ext(Some(Box::new(
                 serde_json::json!({"custom_field": "custom_value"}),
             )))

@@ -2,7 +2,7 @@ use crate::{AdsTxtSystem, ManagerDomain};
 use derive_builder::Builder;
 use iab_specs_core::slice_up_to;
 use serde::de::Error;
-use serde_with::{serde_as, DeserializeFromStr, SerializeDisplay};
+use serde_with::{DeserializeFromStr, SerializeDisplay, serde_as};
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
@@ -347,10 +347,12 @@ mod tests {
             .subdomain(Some("sub.domain.com".to_string()))
             .inventory_partner_domain(Some("inv.domain.com".to_string()))
             .owner_domain(Some("owner.domain.com".to_string()))
-            .manager_domains(vec![ManagerDomain::builder()
-                .domain("manager.domain.com")
-                .build()
-                .unwrap()])
+            .manager_domains(vec![
+                ManagerDomain::builder()
+                    .domain("manager.domain.com")
+                    .build()
+                    .unwrap(),
+            ])
             .systems(systems)
             .build()
             .unwrap();

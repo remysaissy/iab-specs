@@ -1,5 +1,5 @@
-use crate::context::{Content, Publisher};
 use crate::Extension;
+use crate::context::{Content, Publisher};
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
@@ -174,11 +174,12 @@ mod tests {
             .unwrap();
 
         assert!(app.storeurl.is_some());
-        assert!(app
-            .storeurl
-            .as_ref()
-            .unwrap()
-            .starts_with("https://play.google.com"));
+        assert!(
+            app.storeurl
+                .as_ref()
+                .unwrap()
+                .starts_with("https://play.google.com")
+        );
     }
 
     /// AdCOM 1.0 Section 7.2 - App serialization roundtrip

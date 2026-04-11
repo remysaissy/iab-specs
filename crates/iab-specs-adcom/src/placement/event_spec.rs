@@ -92,7 +92,7 @@ mod tests {
         let event = EventSpec::builder()
             .type_(Some(2))
             .jstrk(Some(vec![
-                "https://tracker.example.com/tracker.js".to_string()
+                "https://tracker.example.com/tracker.js".to_string(),
             ]))
             .build()
             .unwrap();

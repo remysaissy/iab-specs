@@ -1,5 +1,5 @@
-use crate::media::{Audio, Audit, Display, Video};
 use crate::Extension;
+use crate::media::{Audio, Audit, Display, Video};
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

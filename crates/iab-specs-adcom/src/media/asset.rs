@@ -1,5 +1,5 @@
-use crate::media::{DataAsset, ImageAsset, LinkAsset, TitleAsset, VideoAsset};
 use crate::Extension;
+use crate::media::{DataAsset, ImageAsset, LinkAsset, TitleAsset, VideoAsset};
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

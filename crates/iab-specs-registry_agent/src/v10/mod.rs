@@ -140,7 +140,7 @@ mod integration_tests {
         AgentTrustInfo, RegisteredAgent, RegistrySearchFilter, RegistrySearchResult, RegistrySource,
     };
     use crate::v10::state_machines::{
-        can_transition_trust, valid_trust_transitions_from, TrustTransition,
+        TrustTransition, can_transition_trust, valid_trust_transitions_from,
     };
 
     use iab_specs_agentic_direct::v21::a2a::AgentCard;

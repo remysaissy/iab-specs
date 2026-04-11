@@ -2,7 +2,7 @@ use crate::SellerRelationType;
 use derive_builder::Builder;
 use iab_specs_core::slice_up_to;
 use serde::de::{Error, Unexpected};
-use serde_with::{serde_as, DeserializeFromStr, SerializeDisplay};
+use serde_with::{DeserializeFromStr, SerializeDisplay, serde_as};
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;

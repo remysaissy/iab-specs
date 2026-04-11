@@ -1,5 +1,5 @@
-use crate::placement::{DataAssetFormat, ImageAssetFormat, TitleAssetFormat};
 use crate::Extension;
+use crate::placement::{DataAssetFormat, ImageAssetFormat, TitleAssetFormat};
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

@@ -211,8 +211,8 @@ impl ProposalItem {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use iab_specs_agentic_direct::v21::enums::RateType;
     use crate::v10::enums::ProposalStatus;
+    use iab_specs_agentic_direct::v21::enums::RateType;
 
     #[test]
     fn test_proposal_creation() {

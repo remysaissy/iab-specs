@@ -1,5 +1,5 @@
-use crate::context::{Data, Geo};
 use crate::Extension;
+use crate::context::{Data, Geo};
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

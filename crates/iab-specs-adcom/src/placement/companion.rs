@@ -1,5 +1,5 @@
-use crate::placement::DisplayPlacement;
 use crate::Extension;
+use crate::placement::DisplayPlacement;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

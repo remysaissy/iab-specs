@@ -8,7 +8,7 @@ pub mod request;
 pub mod response;
 
 pub use error::{
-    JsonRpcError, JsonRpcErrorBuilder, INTERNAL_ERROR, INVALID_PARAMS, INVALID_REQUEST,
+    INTERNAL_ERROR, INVALID_PARAMS, INVALID_REQUEST, JsonRpcError, JsonRpcErrorBuilder,
     METHOD_NOT_FOUND, PARSE_ERROR,
 };
 pub use id::JsonRpcId;

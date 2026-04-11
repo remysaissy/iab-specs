@@ -127,10 +127,10 @@ pub use native::Native;
 pub use video::Video;
 
 // Re-export context types
-pub use iab_specs_adcom::context::Data;
-pub use iab_specs_adcom::context::Segment;
 pub use app::App;
 pub use content::Content;
+pub use iab_specs_adcom::context::Data;
+pub use iab_specs_adcom::context::Segment;
 pub use producer::Producer;
 pub use publisher::Publisher;
 pub use site::Site;

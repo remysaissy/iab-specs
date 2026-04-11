@@ -1,5 +1,5 @@
-use crate::placement::{DisplayFormat, EventSpec, NativeFormat};
 use crate::Extension;
+use crate::placement::{DisplayFormat, EventSpec, NativeFormat};
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

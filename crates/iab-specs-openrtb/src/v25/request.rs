@@ -14,9 +14,9 @@ use super::source::Source;
 use super::user::User;
 
 // Import Dooh from AdCOM when openrtb_26 feature is enabled
+use crate::Extension;
 #[cfg(feature = "openrtb_26")]
 use iab_specs_adcom::context::Dooh;
-use crate::Extension;
 
 /// Default auction type for bid requests (Second Price Plus per OpenRTB 2.5 spec)
 fn default_auction_type() -> i32 {

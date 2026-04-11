@@ -1,5 +1,5 @@
-use crate::context::Segment;
 use crate::Extension;
+use crate::context::Segment;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

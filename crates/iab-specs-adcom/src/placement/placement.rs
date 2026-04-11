@@ -1,5 +1,5 @@
-use crate::placement::{AudioPlacement, DisplayPlacement, VideoPlacement};
 use crate::Extension;
+use crate::placement::{AudioPlacement, DisplayPlacement, VideoPlacement};
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

@@ -1,5 +1,5 @@
-use crate::media::{Banner, Event, Native};
 use crate::Extension;
+use crate::media::{Banner, Event, Native};
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

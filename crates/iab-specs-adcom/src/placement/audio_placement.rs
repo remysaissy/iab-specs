@@ -1,5 +1,5 @@
-use crate::placement::Companion;
 use crate::Extension;
+use crate::placement::Companion;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

@@ -92,8 +92,11 @@ mod tests {
         assert!(json.contains("\"change_type\":\"cancellation\""));
         assert!(json.contains("\"description\":\"Cancel due to revised media plan\""));
         assert!(json.contains("\"status\":\"approved\""));
-        assert!(json
-            .contains("\"requested_changes\":{\"cancel\":true,\"effective_date\":\"2025-03-15\"}"));
+        assert!(
+            json.contains(
+                "\"requested_changes\":{\"cancel\":true,\"effective_date\":\"2025-03-15\"}"
+            )
+        );
     }
 
     #[test]

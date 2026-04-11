@@ -154,11 +154,13 @@ mod tests {
             .unwrap();
 
         assert_eq!(audio.mime.as_ref().unwrap().len(), 3);
-        assert!(audio
-            .mime
-            .as_ref()
-            .unwrap()
-            .contains(&"audio/mp4".to_string()));
+        assert!(
+            audio
+                .mime
+                .as_ref()
+                .unwrap()
+                .contains(&"audio/mp4".to_string())
+        );
     }
 
     // Spec: Object: AudioPlacement — verifies feed=3 (podcast) with duration constraints

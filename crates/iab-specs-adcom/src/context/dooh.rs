@@ -1,5 +1,5 @@
-use crate::context::{Content, Publisher};
 use crate::Extension;
+use crate::context::{Content, Publisher};
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
