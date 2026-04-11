@@ -248,13 +248,11 @@ mod tests {
             .unwrap();
 
         assert_eq!(video.mime.as_ref().unwrap().len(), 2);
-        assert!(
-            video
-                .mime
-                .as_ref()
-                .unwrap()
-                .contains(&"video/mp4".to_string())
-        );
+        assert!(video
+            .mime
+            .as_ref()
+            .unwrap()
+            .contains(&"video/mp4".to_string()));
     }
 
     // Spec: Object: VideoPlacement — verifies playmethod and playend fields for playback control

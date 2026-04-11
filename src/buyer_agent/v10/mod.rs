@@ -180,7 +180,7 @@ mod integration_tests {
         CampaignBrief, NegotiationOffer, NegotiationStrategy, UCPEmbedding,
     };
     use crate::buyer_agent::v10::state_machines::{
-        CampaignTransition, DealTransition, can_transition_campaign, can_transition_deal,
+        can_transition_campaign, can_transition_deal, CampaignTransition, DealTransition,
     };
 
     #[test]

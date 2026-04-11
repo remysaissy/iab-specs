@@ -309,13 +309,11 @@ mod integration_tests {
                     .build()
                     .unwrap(),
             ])
-            .eventtrackers(Some(vec![
-                EventTracker::builder()
-                    .event(1) // Impression
-                    .methods(vec![1, 2]) // Image pixel and JavaScript
-                    .build()
-                    .unwrap(),
-            ]))
+            .eventtrackers(Some(vec![EventTracker::builder()
+                .event(1) // Impression
+                .methods(vec![1, 2]) // Image pixel and JavaScript
+                .build()
+                .unwrap()]))
             .privacy(Some(1))
             .build()
             .unwrap();
@@ -370,14 +368,12 @@ mod integration_tests {
                     .build()
                     .unwrap(),
             )
-            .eventtrackers(Some(vec![
-                EventTrackerResponse::builder()
-                    .event(1)
-                    .method(1)
-                    .url("https://tracker.com/imp".to_string())
-                    .build()
-                    .unwrap(),
-            ]))
+            .eventtrackers(Some(vec![EventTrackerResponse::builder()
+                .event(1)
+                .method(1)
+                .url("https://tracker.com/imp".to_string())
+                .build()
+                .unwrap()]))
             .privacy(Some("https://example.com/privacy".to_string()))
             .build()
             .unwrap();
@@ -402,13 +398,11 @@ mod integration_tests {
             .plcmttype(Some(1))
             .plcmtcnt(Some(3)) // Multiple placements
             .seq(Some(0))
-            .assets(vec![
-                Asset::builder()
-                    .id(1)
-                    .title(Some(Title::builder().len(90).build().unwrap()))
-                    .build()
-                    .unwrap(),
-            ])
+            .assets(vec![Asset::builder()
+                .id(1)
+                .title(Some(Title::builder().len(90).build().unwrap()))
+                .build()
+                .unwrap()])
             .build()
             .unwrap();
 
@@ -484,21 +478,19 @@ mod integration_tests {
     fn test_video_asset_request_response() {
         let request = NativeRequest::builder()
             .ver("1.2")
-            .assets(vec![
-                Asset::builder()
-                    .id(1)
-                    .video(Some(
-                        Video::builder()
-                            .mimes(vec!["video/mp4".to_string(), "video/webm".to_string()])
-                            .minduration(Some(5))
-                            .maxduration(Some(30))
-                            .protocols(Some(vec![2, 3, 5, 6]))
-                            .build()
-                            .unwrap(),
-                    ))
-                    .build()
-                    .unwrap(),
-            ])
+            .assets(vec![Asset::builder()
+                .id(1)
+                .video(Some(
+                    Video::builder()
+                        .mimes(vec!["video/mp4".to_string(), "video/webm".to_string()])
+                        .minduration(Some(5))
+                        .maxduration(Some(30))
+                        .protocols(Some(vec![2, 3, 5, 6]))
+                        .build()
+                        .unwrap(),
+                ))
+                .build()
+                .unwrap()])
             .build()
             .unwrap();
 
@@ -508,18 +500,16 @@ mod integration_tests {
         assert_eq!(video.maxduration, Some(30));
 
         let response = NativeResponse::builder()
-            .assets(vec![
-                AssetResponse::builder()
-                    .id(1)
-                    .video(Some(
-                        VideoResponse::builder()
-                            .vasttag("<VAST version=\"3.0\">...</VAST>".to_string())
-                            .build()
-                            .unwrap(),
-                    ))
-                    .build()
-                    .unwrap(),
-            ])
+            .assets(vec![AssetResponse::builder()
+                .id(1)
+                .video(Some(
+                    VideoResponse::builder()
+                        .vasttag("<VAST version=\"3.0\">...</VAST>".to_string())
+                        .build()
+                        .unwrap(),
+                ))
+                .build()
+                .unwrap()])
             .link(
                 Link::builder()
                     .url("https://example.com".to_string())
@@ -592,24 +582,22 @@ mod integration_tests {
     #[test]
     fn test_asset_specific_link() {
         let response = NativeResponse::builder()
-            .assets(vec![
-                AssetResponse::builder()
-                    .id(1)
-                    .title(Some(
-                        TitleResponse::builder()
-                            .text("Title".to_string())
-                            .build()
-                            .unwrap(),
-                    ))
-                    .link(Some(
-                        Link::builder()
-                            .url("https://specific-asset-link.com".to_string())
-                            .build()
-                            .unwrap(),
-                    ))
-                    .build()
-                    .unwrap(),
-            ])
+            .assets(vec![AssetResponse::builder()
+                .id(1)
+                .title(Some(
+                    TitleResponse::builder()
+                        .text("Title".to_string())
+                        .build()
+                        .unwrap(),
+                ))
+                .link(Some(
+                    Link::builder()
+                        .url("https://specific-asset-link.com".to_string())
+                        .build()
+                        .unwrap(),
+                ))
+                .build()
+                .unwrap()])
             .link(
                 Link::builder()
                     .url("https://default-link.com".to_string())

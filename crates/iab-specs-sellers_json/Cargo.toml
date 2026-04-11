@@ -7,5 +7,15 @@ homepage.workspace = true
 repository.workspace = true
 authors.workspace = true
 description = "Sellers.json 1.0 support for the iab-specs ecosystem."
+keywords = ["iab", "sellers-json", "sellersjson", "advertising", "supply-chain"]
 
 [dependencies]
+iab-specs-core = { path = "../iab-specs-core", version = "0.4.1", features = ["serde_json"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_plain = { workspace = true }
+serde_with = { workspace = true }
+derive_builder = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

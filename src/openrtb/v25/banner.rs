@@ -197,13 +197,11 @@ mod tests {
             .unwrap();
 
         assert_eq!(banner.mimes.as_ref().unwrap().len(), 2);
-        assert!(
-            banner
-                .mimes
-                .as_ref()
-                .unwrap()
-                .contains(&"image/jpeg".to_string())
-        );
+        assert!(banner
+            .mimes
+            .as_ref()
+            .unwrap()
+            .contains(&"image/jpeg".to_string()));
     }
 
     // === Phase 2.1: Integer-as-Enum Field Validation Tests ===
@@ -429,9 +427,11 @@ mod tests {
         // Spec: Section 3.2.6
         // Both format array and w/h can coexist; w/h serve as fallback.
         let banner = Banner::builder()
-            .format(Some(vec![
-                Format::builder().w(Some(300)).h(Some(250)).build().unwrap(),
-            ]))
+            .format(Some(vec![Format::builder()
+                .w(Some(300))
+                .h(Some(250))
+                .build()
+                .unwrap()]))
             .w(Some(300))
             .h(Some(250))
             .build()
@@ -501,9 +501,11 @@ mod tests {
         // Spec: Section 3.2.6
         // Serde round-trip with ALL optional fields populated
         let banner = Banner::builder()
-            .format(Some(vec![
-                Format::builder().w(Some(300)).h(Some(250)).build().unwrap(),
-            ]))
+            .format(Some(vec![Format::builder()
+                .w(Some(300))
+                .h(Some(250))
+                .build()
+                .unwrap()]))
             .w(Some(300))
             .h(Some(250))
             .btype(Some(vec![1, 4]))

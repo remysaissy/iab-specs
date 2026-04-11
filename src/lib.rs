@@ -116,9 +116,9 @@
 //! For complete documentation and more examples, see the [`Extension`] trait documentation.
 
 #[cfg(feature = "adcom")]
-pub mod adcom;
+pub use iab_specs_adcom as adcom;
 #[cfg(feature = "ads_txt")]
-pub mod ads_txt;
+pub use iab_specs_ads_txt as ads_txt;
 #[cfg(feature = "agentic_audience_10")]
 pub mod agentic_audience;
 #[cfg(feature = "agentic_direct_21")]
@@ -137,7 +137,7 @@ pub mod registry_agent;
 #[cfg(feature = "seller_agent_10")]
 pub mod seller_agent;
 #[cfg(feature = "sellers_json")]
-pub mod sellers_json;
+pub use iab_specs_sellers_json as sellers_json;
 pub(crate) mod utils;
 
 pub use errors::*;

@@ -55,6 +55,9 @@ keywords = [
 
 [dependencies]
 iab-specs-core = { path = "crates/iab-specs-core", version = "0.4.1" }
+iab-specs-adcom = { path = "crates/iab-specs-adcom", version = "0.4.1", optional = true }
+iab-specs-ads_txt = { path = "crates/iab-specs-ads_txt", version = "0.4.1", optional = true }
+iab-specs-sellers_json = { path = "crates/iab-specs-sellers_json", version = "0.4.1", optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true, optional = true }
 serde_with = { workspace = true }
@@ -69,10 +72,10 @@ serde_json = { workspace = true }
 
 [features]
 default = []
-ads_txt = ["dep:isosphere"]
+adcom = ["dep:iab-specs-adcom"]
+ads_txt = ["dep:iab-specs-ads_txt"]
 app_ads_txt = ["ads_txt"]
-sellers_json = ["dep:serde_json", "iab-specs-core/serde_json"]
-adcom = []
+sellers_json = ["dep:iab-specs-sellers_json"]
 openrtb_25 = ["adcom"]
 openrtb_26 = ["openrtb_25"]
 openrtb_30 = ["adcom"]

@@ -5,8 +5,8 @@
 //!
 //! Reference: <https://github.com/InteractiveAdvertisingBureau/openrtb/blob/master/supplychainobject.md>
 
-use crate::Extension;
 use crate::openrtb::SupplyChainNode;
+use crate::Extension;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
@@ -146,14 +146,12 @@ mod tests {
     fn test_supply_chain_serialization() {
         let schain = SupplyChain::builder()
             .complete(Some(1))
-            .nodes(vec![
-                SupplyChainNode::builder()
-                    .asi("example.com".to_string())
-                    .sid("pub-001".to_string())
-                    .hp(1)
-                    .build()
-                    .unwrap(),
-            ])
+            .nodes(vec![SupplyChainNode::builder()
+                .asi("example.com".to_string())
+                .sid("pub-001".to_string())
+                .hp(1)
+                .build()
+                .unwrap()])
             .ver(Some("1.0".to_string()))
             .build()
             .unwrap();
@@ -238,13 +236,11 @@ mod tests {
     fn test_supply_chain_ver_field() {
         // Spec: SupplyChain - Test version field with format "major.minor"
         let schain1 = SupplyChain::builder()
-            .nodes(vec![
-                SupplyChainNode::builder()
-                    .asi("test.com".to_string())
-                    .sid("123".to_string())
-                    .build()
-                    .unwrap(),
-            ])
+            .nodes(vec![SupplyChainNode::builder()
+                .asi("test.com".to_string())
+                .sid("123".to_string())
+                .build()
+                .unwrap()])
             .ver(Some("1.0".to_string()))
             .build()
             .unwrap();
@@ -253,13 +249,11 @@ mod tests {
 
         // Test with different version
         let schain2 = SupplyChain::builder()
-            .nodes(vec![
-                SupplyChainNode::builder()
-                    .asi("test.com".to_string())
-                    .sid("123".to_string())
-                    .build()
-                    .unwrap(),
-            ])
+            .nodes(vec![SupplyChainNode::builder()
+                .asi("test.com".to_string())
+                .sid("123".to_string())
+                .build()
+                .unwrap()])
             .ver(Some("2.0".to_string()))
             .build()
             .unwrap();
@@ -286,26 +280,22 @@ mod tests {
         // Test builder with explicit complete values
         let sc0 = SupplyChain::builder()
             .complete(Some(0))
-            .nodes(vec![
-                SupplyChainNode::builder()
-                    .asi("test.com".to_string())
-                    .sid("123".to_string())
-                    .build()
-                    .unwrap(),
-            ])
+            .nodes(vec![SupplyChainNode::builder()
+                .asi("test.com".to_string())
+                .sid("123".to_string())
+                .build()
+                .unwrap()])
             .build()
             .unwrap();
         assert_eq!(sc0.complete, Some(0));
 
         let sc1 = SupplyChain::builder()
             .complete(Some(1))
-            .nodes(vec![
-                SupplyChainNode::builder()
-                    .asi("test.com".to_string())
-                    .sid("123".to_string())
-                    .build()
-                    .unwrap(),
-            ])
+            .nodes(vec![SupplyChainNode::builder()
+                .asi("test.com".to_string())
+                .sid("123".to_string())
+                .build()
+                .unwrap()])
             .build()
             .unwrap();
         assert_eq!(sc1.complete, Some(1));
@@ -402,13 +392,11 @@ mod tests {
     fn test_supply_chain_ver_default() {
         // Spec: SupplyChain - Default ver value
         let schain = SupplyChain::builder()
-            .nodes(vec![
-                SupplyChainNode::builder()
-                    .asi("test.com".to_string())
-                    .sid("123".to_string())
-                    .build()
-                    .unwrap(),
-            ])
+            .nodes(vec![SupplyChainNode::builder()
+                .asi("test.com".to_string())
+                .sid("123".to_string())
+                .build()
+                .unwrap()])
             .build()
             .unwrap();
 

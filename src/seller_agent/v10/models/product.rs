@@ -323,15 +323,13 @@ mod tests {
             .id("prod-c".to_string())
             .name("Clone Test".to_string())
             .base_cpm(4.0)
-            .segments(vec![
-                InventorySegment::builder()
-                    .id("s1".to_string())
-                    .name("seg".to_string())
-                    .ad_format("300x250".to_string())
-                    .estimated_impressions(1000)
-                    .build()
-                    .unwrap(),
-            ])
+            .segments(vec![InventorySegment::builder()
+                .id("s1".to_string())
+                .name("seg".to_string())
+                .ad_format("300x250".to_string())
+                .estimated_impressions(1000)
+                .build()
+                .unwrap()])
             .build()
             .unwrap();
 

@@ -714,13 +714,11 @@ mod tests {
                     .build()
                     .unwrap(),
             ])
-            .eventtrackers(Some(vec![
-                EventTracker::builder()
-                    .event(1)
-                    .methods(vec![1, 2])
-                    .build()
-                    .unwrap(),
-            ]))
+            .eventtrackers(Some(vec![EventTracker::builder()
+                .event(1)
+                .methods(vec![1, 2])
+                .build()
+                .unwrap()]))
             .privacy(Some(1))
             .build()
             .unwrap();
@@ -736,13 +734,11 @@ mod tests {
             .ver("1.2")
             .context(Some(1))
             .plcmttype(Some(1))
-            .assets(vec![
-                Asset::builder()
-                    .id(1)
-                    .title(Some(Title::builder().len(90).build().unwrap()))
-                    .build()
-                    .unwrap(),
-            ])
+            .assets(vec![Asset::builder()
+                .id(1)
+                .title(Some(Title::builder().len(90).build().unwrap()))
+                .build()
+                .unwrap()])
             .build()
             .unwrap();
 

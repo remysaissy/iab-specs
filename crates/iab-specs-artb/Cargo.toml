@@ -7,5 +7,14 @@ homepage.workspace = true
 repository.workspace = true
 authors.workspace = true
 description = "Agentic RTB Framework 1.0 support for the iab-specs ecosystem."
+keywords = ["iab", "artb", "agentic-rtb", "openrtb", "bidstream"]
 
 [dependencies]
+iab-specs-core = { path = "../iab-specs-core", version = "0.4.1" }
+serde = { workspace = true }
+serde_with = { workspace = true }
+serde_repr = { workspace = true }
+derive_builder = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

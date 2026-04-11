@@ -86,20 +86,18 @@ mod tests {
     fn test_rtb_response_creation() {
         let response = RTBResponse::builder()
             .id("req-001".to_string())
-            .mutations(vec![
-                Mutation::builder()
-                    .intent(Intent::ActivateSegments)
-                    .op(Operation::Add)
-                    .path("/user/data/segment".to_string())
-                    .ids(Some(
-                        IDsPayload::builder()
-                            .id(vec!["seg-1".to_string()])
-                            .build()
-                            .unwrap(),
-                    ))
-                    .build()
-                    .unwrap(),
-            ])
+            .mutations(vec![Mutation::builder()
+                .intent(Intent::ActivateSegments)
+                .op(Operation::Add)
+                .path("/user/data/segment".to_string())
+                .ids(Some(
+                    IDsPayload::builder()
+                        .id(vec!["seg-1".to_string()])
+                        .build()
+                        .unwrap(),
+                ))
+                .build()
+                .unwrap()])
             .metadata(Some(
                 Metadata::builder()
                     .api_version("1.0")
@@ -169,14 +167,12 @@ mod tests {
     fn test_rtb_response_serialization() {
         let response = RTBResponse::builder()
             .id("req-004".to_string())
-            .mutations(vec![
-                Mutation::builder()
-                    .intent(Intent::BidShade)
-                    .op(Operation::Replace)
-                    .path("/seatbid/0/bid/1".to_string())
-                    .build()
-                    .unwrap(),
-            ])
+            .mutations(vec![Mutation::builder()
+                .intent(Intent::BidShade)
+                .op(Operation::Replace)
+                .path("/seatbid/0/bid/1".to_string())
+                .build()
+                .unwrap()])
             .build()
             .unwrap();
 
@@ -215,20 +211,18 @@ mod tests {
     fn test_rtb_response_roundtrip() {
         let response = RTBResponse::builder()
             .id("req-006".to_string())
-            .mutations(vec![
-                Mutation::builder()
-                    .intent(Intent::ActivateSegments)
-                    .op(Operation::Add)
-                    .path("/user/data/segment".to_string())
-                    .ids(Some(
-                        IDsPayload::builder()
-                            .id(vec!["seg-1".to_string()])
-                            .build()
-                            .unwrap(),
-                    ))
-                    .build()
-                    .unwrap(),
-            ])
+            .mutations(vec![Mutation::builder()
+                .intent(Intent::ActivateSegments)
+                .op(Operation::Add)
+                .path("/user/data/segment".to_string())
+                .ids(Some(
+                    IDsPayload::builder()
+                        .id(vec!["seg-1".to_string()])
+                        .build()
+                        .unwrap(),
+                ))
+                .build()
+                .unwrap()])
             .metadata(Some(
                 Metadata::builder().api_version("1.0").build().unwrap(),
             ))

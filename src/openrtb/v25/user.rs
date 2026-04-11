@@ -1,5 +1,5 @@
-use super::Data;
 use super::geo::Geo;
+use super::Data;
 use crate::Extension;
 /// OpenRTB 2.5 User Object
 ///

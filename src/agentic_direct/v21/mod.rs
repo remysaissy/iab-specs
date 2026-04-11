@@ -146,14 +146,12 @@ mod integration_tests {
                     .build()
                     .unwrap(),
             ))
-            .contacts(vec![
-                Contact::builder()
-                    .name("Jane Smith")
-                    .email("jane@acme.com")
-                    .role("Media Buyer")
-                    .build()
-                    .unwrap(),
-            ])
+            .contacts(vec![Contact::builder()
+                .name("Jane Smith")
+                .email("jane@acme.com")
+                .role("Media Buyer")
+                .build()
+                .unwrap()])
             .build()
             .unwrap();
 
@@ -331,28 +329,24 @@ mod integration_tests {
                     .build()
                     .unwrap(),
             ))
-            .additional_interfaces(vec![
-                AgentInterface::builder()
-                    .protocol(ProtocolType::Mcp)
-                    .version("1.0")
-                    .transport(TransportType::Sse)
-                    .url("https://agent.adtech.example.com/mcp")
-                    .build()
-                    .unwrap(),
-            ])
-            .security_schemes(vec![
-                SecurityScheme::builder()
-                    .type_(SecuritySchemeType::OAuth2)
-                    .description("OAuth2 client credentials")
-                    .flows(Some(serde_json::json!({
-                        "clientCredentials": {
-                            "tokenUrl": "https://auth.example.com/token",
-                            "scopes": {"negotiate": "Negotiate orders"}
-                        }
-                    })))
-                    .build()
-                    .unwrap(),
-            ])
+            .additional_interfaces(vec![AgentInterface::builder()
+                .protocol(ProtocolType::Mcp)
+                .version("1.0")
+                .transport(TransportType::Sse)
+                .url("https://agent.adtech.example.com/mcp")
+                .build()
+                .unwrap()])
+            .security_schemes(vec![SecurityScheme::builder()
+                .type_(SecuritySchemeType::OAuth2)
+                .description("OAuth2 client credentials")
+                .flows(Some(serde_json::json!({
+                    "clientCredentials": {
+                        "tokenUrl": "https://auth.example.com/token",
+                        "scopes": {"negotiate": "Negotiate orders"}
+                    }
+                })))
+                .build()
+                .unwrap()])
             .build()
             .unwrap();
 
@@ -561,31 +555,27 @@ mod integration_tests {
                 A2AArtifact::builder()
                     .name("negotiation_result.json")
                     .description("Final negotiated terms")
-                    .parts(vec![
-                        A2AArtifactPart::builder()
-                            .type_("application/json")
-                            .content(
-                                serde_json::json!({
-                                    "order_id": "order-001",
-                                    "agreed_cpm": 8.50,
-                                    "impressions": 1000000
-                                })
-                                .to_string(),
-                            )
-                            .build()
-                            .unwrap(),
-                    ])
+                    .parts(vec![A2AArtifactPart::builder()
+                        .type_("application/json")
+                        .content(
+                            serde_json::json!({
+                                "order_id": "order-001",
+                                "agreed_cpm": 8.50,
+                                "impressions": 1000000
+                            })
+                            .to_string(),
+                        )
+                        .build()
+                        .unwrap()])
                     .build()
                     .unwrap(),
                 A2AArtifact::builder()
                     .name("audit_log.txt")
-                    .parts(vec![
-                        A2AArtifactPart::builder()
-                            .type_("text/plain")
-                            .content("Negotiation completed in 3 rounds")
-                            .build()
-                            .unwrap(),
-                    ])
+                    .parts(vec![A2AArtifactPart::builder()
+                        .type_("text/plain")
+                        .content("Negotiation completed in 3 rounds")
+                        .build()
+                        .unwrap()])
                     .build()
                     .unwrap(),
             ])

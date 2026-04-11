@@ -2,7 +2,7 @@ use crate::ads_txt::AdsTxtSystem;
 use crate::slice_up_to;
 use derive_builder::Builder;
 use serde::de::Error;
-use serde_with::{DeserializeFromStr, SerializeDisplay, serde_as};
+use serde_with::{serde_as, DeserializeFromStr, SerializeDisplay};
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
@@ -410,15 +410,13 @@ greenadexchange.com, 12345, DIRECT
     fn serialize_basic() {
         let app_ads = AppAdsTxt::builder()
             .contact(Some("adops@example.com".to_string()))
-            .systems(vec![
-                AdsTxtSystem::builder()
-                    .domain("greenadexchange.com")
-                    .publisher_id("12345")
-                    .relation(SellerRelationType::Direct)
-                    .cert_id(Some("d75815a79".to_string()))
-                    .build()
-                    .unwrap(),
-            ])
+            .systems(vec![AdsTxtSystem::builder()
+                .domain("greenadexchange.com")
+                .publisher_id("12345")
+                .relation(SellerRelationType::Direct)
+                .cert_id(Some("d75815a79".to_string()))
+                .build()
+                .unwrap()])
             .build()
             .unwrap();
 
@@ -433,14 +431,12 @@ greenadexchange.com, 12345, DIRECT
             .contact(Some("adops@example.com".to_string()))
             .subdomain(Some("mobile.example.com".to_string()))
             .inventory_partner_domain(Some("partner.example.com".to_string()))
-            .systems(vec![
-                AdsTxtSystem::builder()
-                    .domain("greenadexchange.com")
-                    .publisher_id("12345")
-                    .relation(SellerRelationType::Direct)
-                    .build()
-                    .unwrap(),
-            ])
+            .systems(vec![AdsTxtSystem::builder()
+                .domain("greenadexchange.com")
+                .publisher_id("12345")
+                .relation(SellerRelationType::Direct)
+                .build()
+                .unwrap()])
             .build()
             .unwrap();
 
@@ -518,12 +514,10 @@ silverssp.com, 9876, RESELLER
         use crate::ads_txt::ManagerDomain;
 
         let ads_txt = crate::ads_txt::AdsTxt::builder()
-            .manager_domains(vec![
-                ManagerDomain::builder()
-                    .domain("manager.example.com")
-                    .build()
-                    .unwrap(),
-            ])
+            .manager_domains(vec![ManagerDomain::builder()
+                .domain("manager.example.com")
+                .build()
+                .unwrap()])
             .build()
             .unwrap();
 
@@ -1053,14 +1047,12 @@ greenadexchange.com, 12345, DIRECT
             .contact(Some("adops@example.com".to_string()))
             .subdomain(Some("mobile.example.com".to_string()))
             .inventory_partner_domain(Some("partner.example.com".to_string()))
-            .systems(vec![
-                AdsTxtSystem::builder()
-                    .domain("greenadexchange.com")
-                    .publisher_id("12345")
-                    .relation(SellerRelationType::Direct)
-                    .build()
-                    .unwrap(),
-            ])
+            .systems(vec![AdsTxtSystem::builder()
+                .domain("greenadexchange.com")
+                .publisher_id("12345")
+                .relation(SellerRelationType::Direct)
+                .build()
+                .unwrap()])
             .build()
             .unwrap();
 

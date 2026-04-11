@@ -149,12 +149,11 @@ mod tests {
             .unwrap();
 
         assert_eq!(deal.wadomain.as_ref().unwrap().len(), 2);
-        assert!(
-            deal.wadomain
-                .as_ref()
-                .unwrap()
-                .contains(&"advertiser1.com".to_string())
-        );
+        assert!(deal
+            .wadomain
+            .as_ref()
+            .unwrap()
+            .contains(&"advertiser1.com".to_string()));
     }
 
     // Spec: Object: Deal — fixed price auction type (at=3) with floor

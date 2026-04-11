@@ -748,14 +748,12 @@ mod tests {
                     .build()
                     .unwrap(),
             )
-            .eventtrackers(Some(vec![
-                EventTrackerResponse::builder()
-                    .event(1)
-                    .method(1)
-                    .url("https://tracker.com/imp".to_string())
-                    .build()
-                    .unwrap(),
-            ]))
+            .eventtrackers(Some(vec![EventTrackerResponse::builder()
+                .event(1)
+                .method(1)
+                .url("https://tracker.com/imp".to_string())
+                .build()
+                .unwrap()]))
             .privacy(Some("https://example.com/privacy".to_string()))
             .build()
             .unwrap();
@@ -772,18 +770,16 @@ mod tests {
     fn test_native_response_roundtrip() {
         let original = NativeResponse::builder()
             .ver("1.2")
-            .assets(vec![
-                AssetResponse::builder()
-                    .id(1)
-                    .title(Some(
-                        TitleResponse::builder()
-                            .text("Test".to_string())
-                            .build()
-                            .unwrap(),
-                    ))
-                    .build()
-                    .unwrap(),
-            ])
+            .assets(vec![AssetResponse::builder()
+                .id(1)
+                .title(Some(
+                    TitleResponse::builder()
+                        .text("Test".to_string())
+                        .build()
+                        .unwrap(),
+                ))
+                .build()
+                .unwrap()])
             .link(
                 Link::builder()
                     .url("https://example.com".to_string())
@@ -1499,15 +1495,13 @@ mod tests {
             )
             .imptrackers(Some(vec!["https://imp.tracker.com/i".to_string()]))
             .jstracker(Some("<script>track();</script>".to_string()))
-            .eventtrackers(Some(vec![
-                EventTrackerResponse::builder()
-                    .event(1)
-                    .method(1)
-                    .url("https://evt.tracker.com/imp")
-                    .customdata(Some("cd=123".to_string()))
-                    .build()
-                    .unwrap(),
-            ]))
+            .eventtrackers(Some(vec![EventTrackerResponse::builder()
+                .event(1)
+                .method(1)
+                .url("https://evt.tracker.com/imp")
+                .customdata(Some("cd=123".to_string()))
+                .build()
+                .unwrap()]))
             .privacy(Some("https://example.com/privacy".to_string()))
             .assetsurl(Some("https://example.com/assets.json".to_string()))
             .dcourl(Some("https://dco.example.com/creative".to_string()))

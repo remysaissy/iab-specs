@@ -482,9 +482,11 @@ mod tests {
             .minbitrate(Some(128))
             .maxbitrate(Some(320))
             .delivery(Some(vec![1, 2]))
-            .companionad(Some(vec![
-                Banner::builder().w(Some(300)).h(Some(250)).build().unwrap(),
-            ]))
+            .companionad(Some(vec![Banner::builder()
+                .w(Some(300))
+                .h(Some(250))
+                .build()
+                .unwrap()]))
             .api(Some(vec![1, 2]))
             .companiontype(Some(vec![1, 2]))
             .maxseq(Some(5))

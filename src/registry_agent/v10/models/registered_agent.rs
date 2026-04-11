@@ -1,7 +1,7 @@
-use crate::Extension;
 use crate::agentic_direct::v21::a2a::AgentCard;
 use crate::registry_agent::v10::enums::{TrustLevel, VerificationStatus};
 use crate::registry_agent::v10::models::registry_source::RegistrySource;
+use crate::Extension;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

@@ -7,5 +7,13 @@ homepage.workspace = true
 repository.workspace = true
 authors.workspace = true
 description = "AdCOM 1.0 enumerations and common objects for the iab-specs ecosystem."
+keywords = ["iab", "adcom", "advertising", "openrtb", "enumerations"]
 
 [dependencies]
+iab-specs-core = { path = "../iab-specs-core", version = "0.4.1" }
+serde = { workspace = true }
+serde_repr = { workspace = true }
+derive_builder = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

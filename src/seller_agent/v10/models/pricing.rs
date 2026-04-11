@@ -1,5 +1,5 @@
-use crate::Extension;
 use crate::seller_agent::v10::enums::PricingTierType;
+use crate::Extension;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
@@ -358,14 +358,12 @@ mod tests {
     #[test]
     fn test_tiered_pricing_clone() {
         let pricing = TieredPricing::builder()
-            .tiers(vec![
-                PricingTier::builder()
-                    .tier_type(PricingTierType::Agency)
-                    .discount_percent(10.0)
-                    .negotiation_enabled(true)
-                    .build()
-                    .unwrap(),
-            ])
+            .tiers(vec![PricingTier::builder()
+                .tier_type(PricingTierType::Agency)
+                .discount_percent(10.0)
+                .negotiation_enabled(true)
+                .build()
+                .unwrap()])
             .build()
             .unwrap();
 

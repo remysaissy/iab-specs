@@ -8,9 +8,9 @@ use serde::{Deserialize, Serialize};
 use super::geo::Geo;
 
 // Import UserAgent from AdCOM when openrtb_26 feature is enabled
-use crate::Extension;
 #[cfg(feature = "openrtb_26")]
 use crate::adcom::context::UserAgent;
+use crate::Extension;
 
 /// Device object representing user's device (OpenRTB 2.5 Section 3.2.18)
 ///

@@ -506,7 +506,7 @@ mod tests {
         assert_eq!(video.skip, Some(1));
         assert_eq!(video.skipmin, 0); // Defaults to 0
         assert_eq!(video.skipafter, 0); // Defaults to 0
-        // Document: skipmin and skipafter default to 0 when not specified
+                                        // Document: skipmin and skipafter default to 0 when not specified
     }
 
     // === Phase 2.2: Mutually Exclusive Field Tests (rqddurs vs minduration/maxduration) ===
@@ -820,9 +820,11 @@ mod tests {
             .playbackend(Some(1))
             .delivery(Some(vec![1, 2]))
             .pos(Some(1))
-            .companionad(Some(vec![
-                Banner::builder().w(Some(300)).h(Some(250)).build().unwrap(),
-            ]))
+            .companionad(Some(vec![Banner::builder()
+                .w(Some(300))
+                .h(Some(250))
+                .build()
+                .unwrap()]))
             .api(Some(vec![1, 2]))
             .companiontype(Some(vec![1, 2]))
             .poddedupe(Some(vec![1]))

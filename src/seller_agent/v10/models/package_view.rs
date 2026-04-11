@@ -283,14 +283,12 @@ mod tests {
             .unwrap();
 
         let pricing = TieredPricing::builder()
-            .tiers(vec![
-                PricingTier::builder()
-                    .tier_type(PricingTierType::Seat)
-                    .discount_percent(5.0)
-                    .negotiation_enabled(true)
-                    .build()
-                    .unwrap(),
-            ])
+            .tiers(vec![PricingTier::builder()
+                .tier_type(PricingTierType::Seat)
+                .discount_percent(5.0)
+                .negotiation_enabled(true)
+                .build()
+                .unwrap()])
             .build()
             .unwrap();
 
@@ -465,14 +463,12 @@ mod tests {
             .unwrap();
 
         let pricing = TieredPricing::builder()
-            .tiers(vec![
-                PricingTier::builder()
-                    .tier_type(PricingTierType::Public)
-                    .discount_percent(0.0)
-                    .negotiation_enabled(false)
-                    .build()
-                    .unwrap(),
-            ])
+            .tiers(vec![PricingTier::builder()
+                .tier_type(PricingTierType::Public)
+                .discount_percent(0.0)
+                .negotiation_enabled(false)
+                .build()
+                .unwrap()])
             .build()
             .unwrap();
 

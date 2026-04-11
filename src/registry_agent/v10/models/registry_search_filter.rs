@@ -1,6 +1,6 @@
-use crate::Extension;
 use crate::agentic_direct::v21::enums::ProtocolType;
 use crate::registry_agent::v10::enums::{AgentType, TrustLevel};
+use crate::Extension;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 

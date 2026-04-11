@@ -1,5 +1,5 @@
-use crate::Extension;
 use crate::openrtb::common::SupplyChain;
+use crate::Extension;
 /// OpenRTB 2.5 Source Object
 ///
 /// This module implements the Source object for inventory source transparency.
