@@ -17,7 +17,7 @@ jobs:
       - run: rustup component add rustfmt
       - uses: Swatinem/rust-cache@v2
       - name: Run format check
-        run: ./format.sh --check
+        run: cargo fmt --all --check
 
   check:
     name: Check
@@ -29,7 +29,7 @@ jobs:
       - run: rustup component add clippy
       - uses: Swatinem/rust-cache@v2
       - name: Run clippy check
-        run: ./check.sh --all-features
+        run: cargo clippy --workspace --all-features -- -D warnings
 
   feature-matrix:
     name: Test Feature Combinations
@@ -37,88 +37,127 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        features:
-          - name: "no features"
-            flags: "--no-default-features"
-          - name: "adcom"
-            flags: "--no-default-features --features adcom"
-          - name: "openrtb_25"
-            flags: "--no-default-features --features openrtb_25"
-          - name: "openrtb_26"
-            flags: "--no-default-features --features openrtb_26"
-          - name: "openrtb_30"
-            flags: "--no-default-features --features openrtb_30"
-          - name: "openrtb_native_12"
-            flags: "--no-default-features --features openrtb_native_12"
-          - name: "ads_txt"
-            flags: "--no-default-features --features ads_txt"
-          - name: "sellers_json"
-            flags: "--no-default-features --features sellers_json"
-          - name: "artb_10"
-            flags: "--no-default-features --features artb_10"
-          - name: "agentic_direct_21"
-            flags: "--no-default-features --features agentic_direct_21"
-          - name: "buyer_agent_10"
-            flags: "--no-default-features --features buyer_agent_10"
-          - name: "seller_agent_10"
-            flags: "--no-default-features --features seller_agent_10"
-          - name: "agentic_audience_10"
-            flags: "--no-default-features --features agentic_audience_10"
-          - name: "registry_agent_10"
-            flags: "--no-default-features --features registry_agent_10"
-          - name: "adcom + ads_txt"
-            flags: "--no-default-features --features adcom,ads_txt"
-          - name: "openrtb_25 + ads_txt"
-            flags: "--no-default-features --features openrtb_25,ads_txt"
-          - name: "openrtb_25 + sellers_json"
-            flags: "--no-default-features --features openrtb_25,sellers_json"
-          - name: "openrtb_30 + ads_txt"
-            flags: "--no-default-features --features openrtb_30,ads_txt"
-          - name: "openrtb_30 + sellers_json"
-            flags: "--no-default-features --features openrtb_30,sellers_json"
-          - name: "openrtb_native_12 + ads_txt"
-            flags: "--no-default-features --features openrtb_native_12,ads_txt"
-          - name: "openrtb_native_12 + sellers_json"
-            flags: "--no-default-features --features openrtb_native_12,sellers_json"
-          - name: "ads_txt + sellers_json"
-            flags: "--no-default-features --features ads_txt,sellers_json"
-          - name: "app_ads_txt"
-            flags: "--no-default-features --features app_ads_txt"
-          - name: "app_ads_txt + sellers_json"
-            flags: "--no-default-features --features app_ads_txt,sellers_json"
-          - name: "artb_10 + ads_txt"
-            flags: "--no-default-features --features artb_10,ads_txt"
-          - name: "artb_10 + sellers_json"
-            flags: "--no-default-features --features artb_10,sellers_json"
-          - name: "agentic_direct_21 + openrtb_25"
-            flags: "--no-default-features --features agentic_direct_21,openrtb_25"
-          - name: "agentic_direct_21 + sellers_json"
-            flags: "--no-default-features --features agentic_direct_21,sellers_json"
-          - name: "buyer_agent_10 + seller_agent_10"
-            flags: "--no-default-features --features buyer_agent_10,seller_agent_10"
-          - name: "buyer_agent_10 + agentic_audience_10"
-            flags: "--no-default-features --features buyer_agent_10,agentic_audience_10"
-          - name: "buyer_agent_10 + registry_agent_10"
-            flags: "--no-default-features --features buyer_agent_10,registry_agent_10"
-          - name: "seller_agent_10 + registry_agent_10"
-            flags: "--no-default-features --features seller_agent_10,registry_agent_10"
-          - name: "agentic_audience_10 + openrtb_30"
-            flags: "--no-default-features --features agentic_audience_10,openrtb_30"
-          - name: "agentic_audience_10 + ads_txt"
-            flags: "--no-default-features --features agentic_audience_10,ads_txt"
-          - name: "registry_agent_10 + sellers_json"
-            flags: "--no-default-features --features registry_agent_10,sellers_json"
-          - name: "all features"
-            flags: "--all-features"
+        include:
+          # ── Per-sub-crate isolation tests ──
+          - name: "iab-specs-core"
+            flags: "-p iab-specs-core"
+          - name: "iab-specs-adcom"
+            flags: "-p iab-specs-adcom"
+          - name: "iab-specs-ads_txt"
+            flags: "-p iab-specs-ads_txt"
+          - name: "iab-specs-app_ads_txt"
+            flags: "-p iab-specs-app_ads_txt"
+          - name: "iab-specs-sellers_json"
+            flags: "-p iab-specs-sellers_json"
+          - name: "iab-specs-openrtb (openrtb_25)"
+            flags: "-p iab-specs-openrtb --features openrtb_25"
+          - name: "iab-specs-openrtb (openrtb_26)"
+            flags: "-p iab-specs-openrtb --features openrtb_26"
+          - name: "iab-specs-openrtb (openrtb_30)"
+            flags: "-p iab-specs-openrtb --features openrtb_30"
+          - name: "iab-specs-openrtb (all features)"
+            flags: "-p iab-specs-openrtb --all-features"
+          - name: "iab-specs-openrtb_native"
+            flags: "-p iab-specs-openrtb_native"
+          - name: "iab-specs-artb"
+            flags: "-p iab-specs-artb"
+          - name: "iab-specs-agentic_direct"
+            flags: "-p iab-specs-agentic_direct"
+          - name: "iab-specs-agentic_audience"
+            flags: "-p iab-specs-agentic_audience"
+          - name: "iab-specs-buyer_agent"
+            flags: "-p iab-specs-buyer_agent"
+          - name: "iab-specs-seller_agent"
+            flags: "-p iab-specs-seller_agent"
+          - name: "iab-specs-registry_agent"
+            flags: "-p iab-specs-registry_agent"
+
+          # ── Per-feature umbrella crate tests ──
+          - name: "umbrella: no features"
+            flags: "-p iab-specs --no-default-features"
+          - name: "umbrella: adcom"
+            flags: "-p iab-specs --no-default-features --features adcom"
+          - name: "umbrella: openrtb_25"
+            flags: "-p iab-specs --no-default-features --features openrtb_25"
+          - name: "umbrella: openrtb_26"
+            flags: "-p iab-specs --no-default-features --features openrtb_26"
+          - name: "umbrella: openrtb_30"
+            flags: "-p iab-specs --no-default-features --features openrtb_30"
+          - name: "umbrella: openrtb_native_12"
+            flags: "-p iab-specs --no-default-features --features openrtb_native_12"
+          - name: "umbrella: ads_txt"
+            flags: "-p iab-specs --no-default-features --features ads_txt"
+          - name: "umbrella: sellers_json"
+            flags: "-p iab-specs --no-default-features --features sellers_json"
+          - name: "umbrella: artb_10"
+            flags: "-p iab-specs --no-default-features --features artb_10"
+          - name: "umbrella: agentic_direct_21"
+            flags: "-p iab-specs --no-default-features --features agentic_direct_21"
+          - name: "umbrella: buyer_agent_10"
+            flags: "-p iab-specs --no-default-features --features buyer_agent_10"
+          - name: "umbrella: seller_agent_10"
+            flags: "-p iab-specs --no-default-features --features seller_agent_10"
+          - name: "umbrella: agentic_audience_10"
+            flags: "-p iab-specs --no-default-features --features agentic_audience_10"
+          - name: "umbrella: registry_agent_10"
+            flags: "-p iab-specs --no-default-features --features registry_agent_10"
+          - name: "umbrella: app_ads_txt"
+            flags: "-p iab-specs --no-default-features --features app_ads_txt"
+
+          # ── Umbrella multi-feature combinations ──
+          - name: "umbrella: adcom + ads_txt"
+            flags: "-p iab-specs --no-default-features --features adcom,ads_txt"
+          - name: "umbrella: openrtb_25 + ads_txt"
+            flags: "-p iab-specs --no-default-features --features openrtb_25,ads_txt"
+          - name: "umbrella: openrtb_25 + sellers_json"
+            flags: "-p iab-specs --no-default-features --features openrtb_25,sellers_json"
+          - name: "umbrella: openrtb_30 + ads_txt"
+            flags: "-p iab-specs --no-default-features --features openrtb_30,ads_txt"
+          - name: "umbrella: openrtb_30 + sellers_json"
+            flags: "-p iab-specs --no-default-features --features openrtb_30,sellers_json"
+          - name: "umbrella: openrtb_native_12 + ads_txt"
+            flags: "-p iab-specs --no-default-features --features openrtb_native_12,ads_txt"
+          - name: "umbrella: openrtb_native_12 + sellers_json"
+            flags: "-p iab-specs --no-default-features --features openrtb_native_12,sellers_json"
+          - name: "umbrella: ads_txt + sellers_json"
+            flags: "-p iab-specs --no-default-features --features ads_txt,sellers_json"
+          - name: "umbrella: app_ads_txt + sellers_json"
+            flags: "-p iab-specs --no-default-features --features app_ads_txt,sellers_json"
+          - name: "umbrella: artb_10 + ads_txt"
+            flags: "-p iab-specs --no-default-features --features artb_10,ads_txt"
+          - name: "umbrella: artb_10 + sellers_json"
+            flags: "-p iab-specs --no-default-features --features artb_10,sellers_json"
+          - name: "umbrella: agentic_direct_21 + openrtb_25"
+            flags: "-p iab-specs --no-default-features --features agentic_direct_21,openrtb_25"
+          - name: "umbrella: agentic_direct_21 + sellers_json"
+            flags: "-p iab-specs --no-default-features --features agentic_direct_21,sellers_json"
+          - name: "umbrella: buyer_agent_10 + seller_agent_10"
+            flags: "-p iab-specs --no-default-features --features buyer_agent_10,seller_agent_10"
+          - name: "umbrella: buyer_agent_10 + agentic_audience_10"
+            flags: "-p iab-specs --no-default-features --features buyer_agent_10,agentic_audience_10"
+          - name: "umbrella: buyer_agent_10 + registry_agent_10"
+            flags: "-p iab-specs --no-default-features --features buyer_agent_10,registry_agent_10"
+          - name: "umbrella: seller_agent_10 + registry_agent_10"
+            flags: "-p iab-specs --no-default-features --features seller_agent_10,registry_agent_10"
+          - name: "umbrella: agentic_audience_10 + openrtb_30"
+            flags: "-p iab-specs --no-default-features --features agentic_audience_10,openrtb_30"
+          - name: "umbrella: agentic_audience_10 + ads_txt"
+            flags: "-p iab-specs --no-default-features --features agentic_audience_10,ads_txt"
+          - name: "umbrella: registry_agent_10 + sellers_json"
+            flags: "-p iab-specs --no-default-features --features registry_agent_10,sellers_json"
+
+          # ── Full workspace test ──
+          - name: "workspace: all features"
+            flags: "--workspace --all-features"
     steps:
       - uses: actions/checkout@v4
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - run: rustup toolchain install stable --profile minimal
       - uses: Swatinem/rust-cache@v2
         with:
-          key: ${{ matrix.features.name }}
-      - name: Test with ${{ matrix.features.name }}
-        run: ./test.sh ${{ matrix.features.flags }}
+          key: ${{ matrix.name }}
+      - name: Test with ${{ matrix.name }}
+        run: cargo test ${{ matrix.flags }}
 
   test:
     name: Test

@@ -1,47 +1,91 @@
-[package]
-name = "iab-specs"
+[workspace]
+resolver = "3"
+members = [
+    "crates/iab-specs-core",
+    "crates/iab-specs-adcom",
+    "crates/iab-specs-ads_txt",
+    "crates/iab-specs-app_ads_txt",
+    "crates/iab-specs-sellers_json",
+    "crates/iab-specs-openrtb",
+    "crates/iab-specs-openrtb_native",
+    "crates/iab-specs-artb",
+    "crates/iab-specs-agentic_direct",
+    "crates/iab-specs-agentic_audience",
+    "crates/iab-specs-buyer_agent",
+    "crates/iab-specs-seller_agent",
+    "crates/iab-specs-registry_agent",
+    ".",
+]
+
+[workspace.package]
 version = "0.4.1"
 edition = "2024"
-description = "Unofficial Rust implementaton of various IAB specifications."
 license = "Apache-2.0"
 homepage = "https://github.com/remysaissy/iab-specs"
 repository = "https://github.com/remysaissy/iab-specs"
 authors = ["Rémy Saissy <remy.saissy@gmail.com>"]
-readme = "README.md"
-keywords = [
-    "iab",
-    "adstxt",
-    "sellersjson",
-    "artb",
-    "openrtb"
-]
 
-[dependencies]
+[workspace.dependencies]
 serde = { version = "1", features = ["serde_derive", "std"] }
-serde_json = { version = "1", features = ["std"], optional = true }
+serde_json = { version = "1", features = ["std"] }
 serde_with = { version = "3", features = ["std"] }
 serde_plain = { version = "1" }
 serde_repr = { version = "0.1" }
 derive_builder = { version = "0.20", features = ["std"] }
-isosphere = { version = "0.2", optional = true }
+isosphere = { version = "0.2" }
 thiserror = { version = "2", features = ["std"] }
 
+[package]
+name = "iab-specs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Unofficial Rust implementation of IAB specifications: OpenRTB 2.5/2.6/3.0, AdCOM, Ads.txt, Sellers.json, ARTB, Agentic Direct, and more. Umbrella crate with feature-gated sub-crate re-exports."
+readme = "README.md"
+keywords = [
+    "iab",
+    "openrtb",
+    "adtech",
+    "programmatic-advertising",
+    "adcom"
+]
+
+[dependencies]
+iab-specs-core = { path = "crates/iab-specs-core", version = "0.4.1" }
+iab-specs-adcom = { path = "crates/iab-specs-adcom", version = "0.4.1", optional = true }
+iab-specs-ads_txt = { path = "crates/iab-specs-ads_txt", version = "0.4.1", optional = true }
+iab-specs-app_ads_txt = { path = "crates/iab-specs-app_ads_txt", version = "0.4.1", optional = true }
+iab-specs-sellers_json = { path = "crates/iab-specs-sellers_json", version = "0.4.1", optional = true }
+iab-specs-artb = { path = "crates/iab-specs-artb", version = "0.4.1", optional = true }
+iab-specs-agentic_direct = { path = "crates/iab-specs-agentic_direct", version = "0.4.1", optional = true }
+iab-specs-agentic_audience = { path = "crates/iab-specs-agentic_audience", version = "0.4.1", optional = true }
+iab-specs-buyer_agent = { path = "crates/iab-specs-buyer_agent", version = "0.4.1", optional = true }
+iab-specs-seller_agent = { path = "crates/iab-specs-seller_agent", version = "0.4.1", optional = true }
+iab-specs-registry_agent = { path = "crates/iab-specs-registry_agent", version = "0.4.1", optional = true }
+iab-specs-openrtb = { path = "crates/iab-specs-openrtb", version = "0.4.1", optional = true }
+iab-specs-openrtb_native = { path = "crates/iab-specs-openrtb_native", version = "0.4.1", optional = true }
+
 [dev-dependencies]
-serde_json = { version = "1", features = ["std"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+derive_builder = { workspace = true }
 
 [features]
 default = []
-ads_txt = ["dep:isosphere"]
-app_ads_txt = ["ads_txt"]
-sellers_json = ["dep:serde_json"]
-adcom = []
-openrtb_25 = ["adcom"]
-openrtb_26 = ["openrtb_25"]
-openrtb_30 = ["adcom"]
-openrtb_native_12 = ["adcom"]
-artb_10 = []
-agentic_direct_21 = ["dep:serde_json"]
-agentic_audience_10 = ["dep:serde_json"]
-buyer_agent_10 = ["agentic_direct_21"]
-registry_agent_10 = ["agentic_direct_21"]
-seller_agent_10 = ["agentic_direct_21"]
+adcom = ["dep:iab-specs-adcom"]
+ads_txt = ["dep:iab-specs-ads_txt"]
+app_ads_txt = ["ads_txt", "dep:iab-specs-app_ads_txt"]
+sellers_json = ["dep:iab-specs-sellers_json"]
+openrtb_25 = ["adcom", "dep:iab-specs-openrtb", "iab-specs-openrtb/openrtb_25"]
+openrtb_26 = ["openrtb_25", "iab-specs-openrtb/openrtb_26"]
+openrtb_30 = ["adcom", "dep:iab-specs-openrtb", "iab-specs-openrtb/openrtb_30"]
+openrtb_native_12 = ["dep:iab-specs-openrtb_native"]
+artb_10 = ["dep:iab-specs-artb"]
+agentic_direct_21 = ["dep:iab-specs-agentic_direct"]
+agentic_audience_10 = ["dep:iab-specs-agentic_audience"]
+buyer_agent_10 = ["agentic_direct_21", "dep:iab-specs-buyer_agent"]
+registry_agent_10 = ["agentic_direct_21", "dep:iab-specs-registry_agent"]
+seller_agent_10 = ["agentic_direct_21", "dep:iab-specs-seller_agent"]

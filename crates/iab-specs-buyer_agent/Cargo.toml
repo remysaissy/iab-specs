@@ -1,0 +1,22 @@
+[package]
+name = "iab-specs-buyer_agent"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Rust implementation of IAB Buyer Agent 1.0 specification. Campaign planning, deal negotiation, booking workflows, and UCP embeddings for demand-side agents. Part of the iab-specs ecosystem."
+keywords = ["iab", "buyer-agent", "dsp", "campaign-planning", "programmatic"]
+
+[dependencies]
+iab-specs-core = { path = "../iab-specs-core", version = "0.4.1", features = ["serde_json"] }
+iab-specs-agentic_direct = { path = "../iab-specs-agentic_direct", version = "0.4.1" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_with = { workspace = true }
+serde_repr = { workspace = true }
+derive_builder = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

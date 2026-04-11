@@ -5,8 +5,8 @@
 //!   - [`openrtb::v25`] - OpenRTB 2.5 specification
 //!   - [`openrtb::v26`] - OpenRTB 2.6 with CTV and DOOH support
 //!   - [`openrtb::v30`] - OpenRTB 3.0 with layered architecture
-//!   - [`openrtb::native`] - OpenRTB Native Ads 1.2 specification
 //!   - [`openrtb::common`] - Common objects shared between versions
+//! - [`openrtb_native`] - OpenRTB Native Ads 1.2 specification
 //! - [`artb`] - Agentic RTB Framework 1.0 specification
 //!   - [`artb::v10`] - ARTB 1.0 with OpenRTB Patch Protocol
 //! - [`ads_txt`] - Ads.txt 1.1 parser and generator
@@ -115,30 +115,30 @@
 //!
 //! For complete documentation and more examples, see the [`Extension`] trait documentation.
 
-#[cfg(feature = "adcom")]
-pub mod adcom;
-#[cfg(feature = "ads_txt")]
-pub mod ads_txt;
-#[cfg(feature = "agentic_audience_10")]
-pub mod agentic_audience;
-#[cfg(feature = "agentic_direct_21")]
-pub mod agentic_direct;
-#[cfg(feature = "app_ads_txt")]
-pub mod app_ads_txt;
-#[cfg(feature = "artb_10")]
-pub mod artb;
-#[cfg(feature = "buyer_agent_10")]
-pub mod buyer_agent;
-mod errors;
-#[cfg(any(feature = "openrtb_25", feature = "openrtb_26", feature = "openrtb_30"))]
-pub mod openrtb;
-#[cfg(feature = "registry_agent_10")]
-pub mod registry_agent;
-#[cfg(feature = "seller_agent_10")]
-pub mod seller_agent;
-#[cfg(feature = "sellers_json")]
-pub mod sellers_json;
-pub(crate) mod utils;
+// Always re-export core
+pub use iab_specs_core::*;
 
-pub use errors::*;
-pub use utils::*;
+#[cfg(feature = "adcom")]
+pub use iab_specs_adcom as adcom;
+#[cfg(feature = "ads_txt")]
+pub use iab_specs_ads_txt as ads_txt;
+#[cfg(feature = "agentic_audience_10")]
+pub use iab_specs_agentic_audience as agentic_audience;
+#[cfg(feature = "agentic_direct_21")]
+pub use iab_specs_agentic_direct as agentic_direct;
+#[cfg(feature = "app_ads_txt")]
+pub use iab_specs_app_ads_txt as app_ads_txt;
+#[cfg(feature = "artb_10")]
+pub use iab_specs_artb as artb;
+#[cfg(feature = "buyer_agent_10")]
+pub use iab_specs_buyer_agent as buyer_agent;
+#[cfg(any(feature = "openrtb_25", feature = "openrtb_26", feature = "openrtb_30"))]
+pub use iab_specs_openrtb as openrtb;
+#[cfg(feature = "openrtb_native_12")]
+pub use iab_specs_openrtb_native as openrtb_native;
+#[cfg(feature = "registry_agent_10")]
+pub use iab_specs_registry_agent as registry_agent;
+#[cfg(feature = "seller_agent_10")]
+pub use iab_specs_seller_agent as seller_agent;
+#[cfg(feature = "sellers_json")]
+pub use iab_specs_sellers_json as sellers_json;

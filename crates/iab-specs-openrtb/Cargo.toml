@@ -1,0 +1,27 @@
+[package]
+name = "iab-specs-openrtb"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Rust implementation of IAB OpenRTB 2.5, 2.6, and 3.0 specifications. Real-time bidding protocol with support for CTV, DOOH, and layered architecture. Part of the iab-specs ecosystem."
+keywords = ["iab", "openrtb", "rtb", "programmatic-advertising", "bidding"]
+
+[dependencies]
+iab-specs-core = { path = "../iab-specs-core", version = "0.4.1" }
+iab-specs-adcom = { path = "../iab-specs-adcom", version = "0.4.1" }
+serde = { workspace = true }
+serde_with = { workspace = true }
+serde_repr = { workspace = true }
+derive_builder = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+
+[features]
+default = []
+openrtb_25 = []
+openrtb_26 = ["openrtb_25"]
+openrtb_30 = []

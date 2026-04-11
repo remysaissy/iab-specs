@@ -1,0 +1,21 @@
+[package]
+name = "iab-specs-ads_txt"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Ads.txt 1.1 support for the iab-specs ecosystem."
+keywords = ["iab", "adstxt", "ads-txt", "advertising", "publishers"]
+
+[dependencies]
+iab-specs-core = { path = "../iab-specs-core", version = "0.4.1" }
+serde = { workspace = true }
+serde_plain = { workspace = true }
+serde_with = { workspace = true }
+derive_builder = { workspace = true }
+isosphere = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

@@ -133,11 +133,23 @@ If you prefer to set up manually:
 - Docker (required if using act)
 
 ### Building the Project
+
+This project is a Cargo workspace. You can build/test the entire workspace or target individual crates:
+
 ```bash
-# Build the library
+# Build the entire workspace
+cargo build --workspace --all-features
+
+# Build only the umbrella crate
 cargo build --all-features
 
-# Run tests
+# Run tests across all workspace crates
+cargo test --workspace --all-features
+
+# Run tests for a specific sub-crate
+cargo test -p iab-specs-openrtb --all-features
+
+# Run tests for the umbrella crate only
 cargo test --all-features
 
 # Build documentation
