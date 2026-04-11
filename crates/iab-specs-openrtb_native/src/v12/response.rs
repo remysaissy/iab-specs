@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::openrtb::native::v12::{NativeResponse, AssetResponse, Link, TitleResponse};
+/// use iab_specs_openrtb_native::v12::{NativeResponse, AssetResponse, Link, TitleResponse};
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let response = NativeResponse::builder()
@@ -117,7 +117,7 @@ impl NativeResponse {
 /// # Example
 ///
 /// ```
-/// use iab_specs::openrtb::native::v12::{AssetResponse, ImageResponse};
+/// use iab_specs_openrtb_native::v12::{AssetResponse, ImageResponse};
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let asset = AssetResponse::builder()
@@ -196,7 +196,7 @@ impl AssetResponse {
 /// # Example
 ///
 /// ```
-/// use iab_specs::openrtb::native::v12::TitleResponse;
+/// use iab_specs_openrtb_native::v12::TitleResponse;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let title = TitleResponse::builder()
@@ -244,7 +244,7 @@ impl TitleResponse {
 /// # Example
 ///
 /// ```
-/// use iab_specs::openrtb::native::v12::ImageResponse;
+/// use iab_specs_openrtb_native::v12::ImageResponse;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let image = ImageResponse::builder()
@@ -298,7 +298,7 @@ impl ImageResponse {
 /// # Example
 ///
 /// ```
-/// use iab_specs::openrtb::native::v12::VideoResponse;
+/// use iab_specs_openrtb_native::v12::VideoResponse;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let video = VideoResponse::builder()
@@ -340,7 +340,7 @@ impl VideoResponse {
 /// # Example
 ///
 /// ```
-/// use iab_specs::openrtb::native::v12::DataResponse;
+/// use iab_specs_openrtb_native::v12::DataResponse;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let data = DataResponse::builder()
@@ -415,7 +415,7 @@ impl DataResponse {
 /// # Example
 ///
 /// ```
-/// use iab_specs::openrtb::native::v12::Link;
+/// use iab_specs_openrtb_native::v12::Link;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let link = Link::builder()
@@ -474,7 +474,7 @@ impl Link {
 /// # Example
 ///
 /// ```
-/// use iab_specs::openrtb::native::v12::EventTrackerResponse;
+/// use iab_specs_openrtb_native::v12::EventTrackerResponse;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let tracker = EventTrackerResponse::builder()

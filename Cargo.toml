@@ -61,6 +61,7 @@ iab-specs-sellers_json = { path = "crates/iab-specs-sellers_json", version = "0.
 iab-specs-artb = { path = "crates/iab-specs-artb", version = "0.4.1", optional = true }
 iab-specs-agentic_direct = { path = "crates/iab-specs-agentic_direct", version = "0.4.1", optional = true }
 iab-specs-agentic_audience = { path = "crates/iab-specs-agentic_audience", version = "0.4.1", optional = true }
+iab-specs-openrtb_native = { path = "crates/iab-specs-openrtb_native", version = "0.4.1", optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true, optional = true }
 serde_with = { workspace = true }
@@ -82,7 +83,7 @@ sellers_json = ["dep:iab-specs-sellers_json"]
 openrtb_25 = ["adcom"]
 openrtb_26 = ["openrtb_25"]
 openrtb_30 = ["adcom"]
-openrtb_native_12 = ["adcom"]
+openrtb_native_12 = ["dep:iab-specs-openrtb_native"]
 artb_10 = ["dep:iab-specs-artb"]
 agentic_direct_21 = ["dep:iab-specs-agentic_direct"]
 agentic_audience_10 = ["dep:iab-specs-agentic_audience"]

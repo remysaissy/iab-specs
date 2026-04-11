@@ -29,7 +29,7 @@
 //! ## Creating a Native Ad Request
 //!
 //! ```rust
-//! use iab_specs::openrtb::native::v12::{NativeRequest, Asset, Title, Image, Data};
+//! use iab_specs_openrtb_native::v12::{NativeRequest, Asset, Title, Image, Data};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let request = NativeRequest::builder()
@@ -74,7 +74,7 @@
 //! ## Parsing a Native Ad Response
 //!
 //! ```rust
-//! use iab_specs::openrtb::native::v12::{
+//! use iab_specs_openrtb_native::v12::{
 //!     NativeResponse, AssetResponse, Link, TitleResponse, ImageResponse, DataResponse
 //! };
 //!
@@ -128,7 +128,7 @@
 //!
 //! ```rust,ignore
 //! use iab_specs::openrtb::v25::{BidRequest, Imp, Native};
-//! use iab_specs::openrtb::native::v12::NativeRequest;
+//! use iab_specs_openrtb_native::v12::NativeRequest;
 //!
 //! // Create native request
 //! let native_req = NativeRequest::builder()
@@ -214,9 +214,7 @@
 //! Use `serde_json::Value` or custom types as explicit type parameters for typed extensions:
 //!
 //! ```rust
-//! #[cfg(feature = "openrtb_native_12")]
-//! {
-//! use iab_specs::openrtb::native::v12::NativeRequestBuilder;
+//! use iab_specs_openrtb_native::v12::NativeRequestBuilder;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let request = NativeRequestBuilder::<serde_json::Value>::default()
@@ -229,7 +227,6 @@
 //!     .build()?;
 //! # Ok(())
 //! # }
-//! }
 //! ```
 //!
 //! # Specification Reference
@@ -241,12 +238,12 @@
 //!
 //! This module uses enumerations from the AdCOM specification:
 //!
-//! - [`DisplayContextType`](crate::adcom::enums::DisplayContextType) - Context types (content, social, product)
-//! - [`DisplayPlacementType`](crate::adcom::enums::DisplayPlacementType) - Placement types (feed, sidebar, etc.)
-//! - [`NativeDataAssetType`](crate::adcom::enums::NativeDataAssetType) - Data asset types
-//! - [`NativeImageAssetType`](crate::adcom::enums::NativeImageAssetType) - Image asset types
-//! - [`EventType`](crate::adcom::enums::EventType) - Event types for tracking
-//! - [`EventTrackingMethod`](crate::adcom::enums::EventTrackingMethod) - Tracking methods
+//! - `DisplayContextType` - Context types (content, social, product)
+//! - `DisplayPlacementType` - Placement types (feed, sidebar, etc.)
+//! - `NativeDataAssetType` - Data asset types
+//! - `NativeImageAssetType` - Image asset types
+//! - `EventType` - Event types for tracking
+//! - `EventTrackingMethod` - Tracking methods
 
 pub mod request;
 pub mod response;

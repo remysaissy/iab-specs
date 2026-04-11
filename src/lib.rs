@@ -5,8 +5,8 @@
 //!   - [`openrtb::v25`] - OpenRTB 2.5 specification
 //!   - [`openrtb::v26`] - OpenRTB 2.6 with CTV and DOOH support
 //!   - [`openrtb::v30`] - OpenRTB 3.0 with layered architecture
-//!   - [`openrtb::native`] - OpenRTB Native Ads 1.2 specification
 //!   - [`openrtb::common`] - Common objects shared between versions
+//! - [`openrtb_native`] - OpenRTB Native Ads 1.2 specification
 //! - [`artb`] - Agentic RTB Framework 1.0 specification
 //!   - [`artb::v10`] - ARTB 1.0 with OpenRTB Patch Protocol
 //! - [`ads_txt`] - Ads.txt 1.1 parser and generator
@@ -132,6 +132,8 @@ pub mod buyer_agent;
 mod errors;
 #[cfg(any(feature = "openrtb_25", feature = "openrtb_26", feature = "openrtb_30"))]
 pub mod openrtb;
+#[cfg(feature = "openrtb_native_12")]
+pub use iab_specs_openrtb_native as openrtb_native;
 #[cfg(feature = "registry_agent_10")]
 pub mod registry_agent;
 #[cfg(feature = "seller_agent_10")]

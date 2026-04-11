@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::openrtb::native::v12::{NativeRequest, Asset, Title};
+/// use iab_specs_openrtb_native::v12::{NativeRequest, Asset, Title};
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let request = NativeRequest::builder()
@@ -138,7 +138,7 @@ impl NativeRequest {
 /// # Example
 ///
 /// ```
-/// use iab_specs::openrtb::native::v12::{Asset, Image};
+/// use iab_specs_openrtb_native::v12::{Asset, Image};
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let asset = Asset::builder()
@@ -213,7 +213,7 @@ impl Asset {
 /// # Example
 ///
 /// ```
-/// use iab_specs::openrtb::native::v12::Title;
+/// use iab_specs_openrtb_native::v12::Title;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let title = Title::builder()
@@ -256,7 +256,7 @@ impl Title {
 /// # Example
 ///
 /// ```
-/// use iab_specs::openrtb::native::v12::Image;
+/// use iab_specs_openrtb_native::v12::Image;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let image = Image::builder()
@@ -346,7 +346,7 @@ impl Image {
 /// # Example
 ///
 /// ```
-/// use iab_specs::openrtb::native::v12::Video;
+/// use iab_specs_openrtb_native::v12::Video;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let video = Video::builder()
@@ -407,7 +407,7 @@ impl Video {
 /// # Example
 ///
 /// ```
-/// use iab_specs::openrtb::native::v12::Data;
+/// use iab_specs_openrtb_native::v12::Data;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let data = Data::builder()
@@ -469,7 +469,7 @@ impl Data {
 /// # Example
 ///
 /// ```
-/// use iab_specs::openrtb::native::v12::EventTracker;
+/// use iab_specs_openrtb_native::v12::EventTracker;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let tracker = EventTracker::builder()
