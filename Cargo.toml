@@ -43,14 +43,14 @@ license.workspace = true
 homepage.workspace = true
 repository.workspace = true
 authors.workspace = true
-description = "Unofficial Rust implementaton of various IAB specifications."
+description = "Unofficial Rust implementation of IAB specifications: OpenRTB 2.5/2.6/3.0, AdCOM, Ads.txt, Sellers.json, ARTB, Agentic Direct, and more. Umbrella crate with feature-gated sub-crate re-exports."
 readme = "README.md"
 keywords = [
     "iab",
-    "adstxt",
-    "sellersjson",
-    "artb",
-    "openrtb"
+    "openrtb",
+    "adtech",
+    "programmatic-advertising",
+    "adcom"
 ]
 
 [dependencies]
