@@ -1,4 +1,4 @@
-use crate::registry_agent::v10::models::registered_agent::RegisteredAgent;
+use crate::v10::models::registered_agent::RegisteredAgent;
 use crate::Extension;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
@@ -41,8 +41,8 @@ impl RegistrySearchResult {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::agentic_direct::v21::a2a::AgentCard;
-    use crate::registry_agent::v10::enums::{TrustLevel, VerificationStatus};
+    use crate::v10::enums::{TrustLevel, VerificationStatus};
+    use iab_specs_agentic_direct::v21::a2a::AgentCard;
 
     fn sample_agent() -> RegisteredAgent {
         RegisteredAgent::builder()

@@ -1,8 +1,8 @@
-use crate::agentic_direct::v21::a2a::AgentCard;
-use crate::registry_agent::v10::enums::{TrustLevel, VerificationStatus};
-use crate::registry_agent::v10::models::registry_source::RegistrySource;
+use crate::v10::enums::{TrustLevel, VerificationStatus};
+use crate::v10::models::registry_source::RegistrySource;
 use crate::Extension;
 use derive_builder::Builder;
+use iab_specs_agentic_direct::v21::a2a::AgentCard;
 use serde::{Deserialize, Serialize};
 
 /// A registered agent in the registry.

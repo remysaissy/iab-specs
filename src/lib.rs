@@ -135,7 +135,7 @@ pub use iab_specs_openrtb as openrtb;
 #[cfg(feature = "openrtb_native_12")]
 pub use iab_specs_openrtb_native as openrtb_native;
 #[cfg(feature = "registry_agent_10")]
-pub mod registry_agent;
+pub use iab_specs_registry_agent as registry_agent;
 #[cfg(feature = "seller_agent_10")]
 pub use iab_specs_seller_agent as seller_agent;
 #[cfg(feature = "sellers_json")]

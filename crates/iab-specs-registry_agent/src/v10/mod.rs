@@ -6,7 +6,7 @@
 //! # Architecture
 //!
 //! The Registry Agent is a thin specification — its unique data models are minimal.
-//! Most types are re-exported from [`crate::agentic_direct::v21`] for convenience.
+//! Most types are re-exported from [`iab_specs_agentic_direct::v21`] for convenience.
 //!
 //! ## Unique Types
 //!
@@ -17,7 +17,7 @@
 //!
 //! ## Re-exported Types
 //!
-//! All types from [`crate::agentic_direct::v21`] are re-exported for convenience,
+//! All types from [`iab_specs_agentic_direct::v21`] are re-exported for convenience,
 //! including [`AgentCard`], [`Skill`], [`JsonRpcRequest`], [`Order`], etc.
 //!
 //! # Quick Start
@@ -25,9 +25,7 @@
 //! ## Agent Registration
 //!
 //! ```rust
-//! #[cfg(feature = "registry_agent_10")]
-//! {
-//! use iab_specs::registry_agent::v10::{
+//! use iab_specs_registry_agent::v10::{
 //!     RegisteredAgent, RegistrySource,
 //!     TrustLevel, VerificationStatus,
 //!     AgentCard, Skill, SkillInputMode,
@@ -63,18 +61,15 @@
 //!
 //! // Serialize to JSON
 //! let json = serde_json::to_string_pretty(&registered)?;
-//! assert!(json.contains("\"trust_level\":\"registered\""));
+//! assert!(json.contains("\"trust_level\": \"registered\""));
 //! # Ok(())
 //! # }
-//! }
 //! ```
 //!
 //! ## Trust Lifecycle
 //!
 //! ```rust
-//! #[cfg(feature = "registry_agent_10")]
-//! {
-//! use iab_specs::registry_agent::v10::{TrustLevel, can_transition_trust, valid_trust_transitions_from};
+//! use iab_specs_registry_agent::v10::{TrustLevel, can_transition_trust, valid_trust_transitions_from};
 //!
 //! // Trust escalation path
 //! assert!(can_transition_trust(&TrustLevel::Unknown, &TrustLevel::Registered));
@@ -87,15 +82,12 @@
 //!
 //! // Blocked is terminal
 //! assert!(valid_trust_transitions_from(&TrustLevel::Blocked).is_empty());
-//! }
 //! ```
 //!
 //! ## Search Filtering
 //!
 //! ```rust
-//! #[cfg(feature = "registry_agent_10")]
-//! {
-//! use iab_specs::registry_agent::v10::{
+//! use iab_specs_registry_agent::v10::{
 //!     RegistrySearchFilter, AgentType, TrustLevel,
 //! };
 //!
@@ -111,7 +103,6 @@
 //! assert!(json.contains("\"query\":\"optimization\""));
 //! # Ok(())
 //! # }
-//! }
 //! ```
 //!
 //! # Specification Reference
@@ -134,25 +125,25 @@ pub use state_machines::*;
 
 // Re-export shared types from agentic_direct for convenience
 #[allow(unused_imports)]
-pub use crate::agentic_direct::v21::a2a::*;
+pub use iab_specs_agentic_direct::v21::a2a::*;
 #[allow(unused_imports)]
-pub use crate::agentic_direct::v21::entities::*;
+pub use iab_specs_agentic_direct::v21::entities::*;
 #[allow(unused_imports)]
-pub use crate::agentic_direct::v21::enums::*;
+pub use iab_specs_agentic_direct::v21::enums::*;
 #[allow(unused_imports)]
-pub use crate::agentic_direct::v21::jsonrpc::*;
+pub use iab_specs_agentic_direct::v21::jsonrpc::*;
 
 #[cfg(test)]
 mod integration_tests {
-    use crate::registry_agent::v10::enums::{AgentType, TrustLevel, VerificationStatus};
-    use crate::registry_agent::v10::models::{
+    use crate::v10::enums::{AgentType, TrustLevel, VerificationStatus};
+    use crate::v10::models::{
         AgentTrustInfo, RegisteredAgent, RegistrySearchFilter, RegistrySearchResult, RegistrySource,
     };
-    use crate::registry_agent::v10::state_machines::{
+    use crate::v10::state_machines::{
         can_transition_trust, valid_trust_transitions_from, TrustTransition,
     };
 
-    use crate::agentic_direct::v21::a2a::AgentCard;
+    use iab_specs_agentic_direct::v21::a2a::AgentCard;
 
     #[test]
     fn test_agent_registration_workflow() {

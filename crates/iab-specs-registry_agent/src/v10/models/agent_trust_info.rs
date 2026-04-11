@@ -1,4 +1,4 @@
-use crate::registry_agent::v10::enums::TrustLevel;
+use crate::v10::enums::TrustLevel;
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
