@@ -141,4 +141,5 @@ pub mod sellers_json;
 pub(crate) mod utils;
 
 pub use errors::*;
+pub use iab_specs_core::slice_up_to;
 pub use utils::*;
