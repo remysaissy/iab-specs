@@ -18,9 +18,7 @@
 //! ## Creating an Order
 //!
 //! ```rust
-//! #[cfg(feature = "agentic_direct_21")]
-//! {
-//! use iab_specs::agentic_direct::v21::{Order, OrderStatus, can_transition_order};
+//! use iab_specs_agentic_direct::v21::{Order, OrderStatus, can_transition_order};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let order = Order::builder()
@@ -35,15 +33,12 @@
 //! assert!(can_transition_order(&OrderStatus::Draft, &OrderStatus::PendingReview));
 //! # Ok(())
 //! # }
-//! }
 //! ```
 //!
 //! ## Creating an Agent Card
 //!
 //! ```rust
-//! #[cfg(feature = "agentic_direct_21")]
-//! {
-//! use iab_specs::agentic_direct::v21::{
+//! use iab_specs_agentic_direct::v21::{
 //!     AgentCard, Skill, SkillInputMode, AgentCapabilities,
 //! };
 //!
@@ -72,15 +67,12 @@
 //! assert!(json.contains("protocolVersion"));
 //! # Ok(())
 //! # }
-//! }
 //! ```
 //!
 //! ## Sending a JSON-RPC Request
 //!
 //! ```rust
-//! #[cfg(feature = "agentic_direct_21")]
-//! {
-//! use iab_specs::agentic_direct::v21::{JsonRpcRequest, JsonRpcResponse, JsonRpcId};
+//! use iab_specs_agentic_direct::v21::{JsonRpcRequest, JsonRpcResponse, JsonRpcId};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let request = JsonRpcRequest::builder()
@@ -99,7 +91,6 @@
 //! assert_eq!(request.id.unwrap(), response.id);
 //! # Ok(())
 //! # }
-//! }
 //! ```
 //!
 //! # Extension Support

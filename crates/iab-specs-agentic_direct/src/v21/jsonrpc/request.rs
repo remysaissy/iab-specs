@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::agentic_direct::v21::jsonrpc::{JsonRpcRequest, JsonRpcId};
+/// use iab_specs_agentic_direct::v21::jsonrpc::{JsonRpcRequest, JsonRpcId};
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let request = JsonRpcRequest::builder()

@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::agentic_direct::v21::jsonrpc::{JsonRpcResponse, JsonRpcId};
+/// use iab_specs_agentic_direct::v21::jsonrpc::{JsonRpcResponse, JsonRpcId};
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let response = JsonRpcResponse::builder()
@@ -62,7 +62,7 @@ impl JsonRpcResponse {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::agentic_direct::v21::jsonrpc::error::{INTERNAL_ERROR, METHOD_NOT_FOUND};
+    use crate::v21::jsonrpc::error::{INTERNAL_ERROR, METHOD_NOT_FOUND};
 
     #[test]
     fn test_success_response_creation() {

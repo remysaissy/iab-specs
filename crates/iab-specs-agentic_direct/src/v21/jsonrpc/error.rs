@@ -18,7 +18,7 @@ pub const INTERNAL_ERROR: i32 = -32603;
 /// # Example
 ///
 /// ```
-/// use iab_specs::agentic_direct::v21::jsonrpc::{JsonRpcError, METHOD_NOT_FOUND};
+/// use iab_specs_agentic_direct::v21::jsonrpc::{JsonRpcError, METHOD_NOT_FOUND};
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let error = JsonRpcError::builder()

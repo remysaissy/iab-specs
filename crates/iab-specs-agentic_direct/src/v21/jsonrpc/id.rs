@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::agentic_direct::v21::jsonrpc::JsonRpcId;
+/// use iab_specs_agentic_direct::v21::jsonrpc::JsonRpcId;
 ///
 /// let string_id = JsonRpcId::String("req-1".into());
 /// let number_id = JsonRpcId::Number(42);

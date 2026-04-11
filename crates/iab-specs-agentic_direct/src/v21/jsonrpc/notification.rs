@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use iab_specs::agentic_direct::v21::jsonrpc::JsonRpcNotification;
+/// use iab_specs_agentic_direct::v21::jsonrpc::JsonRpcNotification;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let notif = JsonRpcNotification::builder()
