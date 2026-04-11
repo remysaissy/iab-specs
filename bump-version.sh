@@ -126,14 +126,21 @@ update_cargo_version() {
     print_info "Updated $cargo_file [workspace.package] to version $new_version"
 }
 
+# Get the cargo target directory from cargo metadata
+get_target_dir() {
+    cargo metadata --format-version 1 --no-deps 2>/dev/null | grep -o '"target_directory":"[^"]*"' | sed 's/"target_directory":"//;s/"$//'
+}
+
 # Update inter-crate dependency versions in all workspace Cargo.toml files
 update_inter_crate_versions() {
     local old_version=$1
     local new_version=$2
+    local target_dir
+    target_dir=$(get_target_dir)
 
     print_info "Updating inter-crate dependency versions..."
 
-    # Find all Cargo.toml files in the workspace (excluding target directory)
+    # Find all Cargo.toml files in the workspace (excluding the actual target directory)
     while IFS= read -r cargo_file; do
         if [[ "$OSTYPE" == "darwin"* ]]; then
             # macOS
@@ -142,7 +149,7 @@ update_inter_crate_versions() {
             # Linux
             sed -i '/iab-specs-/ s/version = "'"$old_version"'"/version = "'"$new_version"'"/' "$cargo_file"
         fi
-    done < <(find . -name "Cargo.toml" -not -path "*/target/*")
+    done < <(find . -name "Cargo.toml" -not -path "${target_dir}/*")
 
     print_info "Updated inter-crate dependency versions to $new_version"
 }
@@ -273,8 +280,10 @@ main() {
 
     # Stage files
     print_info "Staging updated files..."
-    find . -name "Cargo.toml" -not -path "*/target/*" -exec git add {} +
-    git add Cargo.lock CHANGELOG.md
+    local target_dir
+    target_dir=$(get_target_dir)
+    find . -name "Cargo.toml" -not -path "${target_dir}/*" -exec git add {} +
+    git add -f Cargo.lock CHANGELOG.md
 
     echo ""
     print_info "Version bump complete!"
