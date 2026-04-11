@@ -112,7 +112,7 @@ main() {
 
     # Run tests
     print_info "Running tests..."
-    cargo test $cargo_flags
+    cargo test --workspace $cargo_flags
 
     echo ""
     print_success "Tests complete!"

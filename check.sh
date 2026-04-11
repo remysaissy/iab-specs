@@ -143,9 +143,9 @@ main() {
     # Run clippy
     print_info "Running clippy..."
     if [ "$deny_warnings" = true ]; then
-        cargo clippy $cargo_flags -- -D warnings
+        cargo clippy --workspace $cargo_flags -- -D warnings
     else
-        cargo clippy $cargo_flags
+        cargo clippy --workspace $cargo_flags
     fi
 
     print_success "Clippy check complete!"
