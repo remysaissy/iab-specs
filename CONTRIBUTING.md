@@ -11,7 +11,7 @@ You can use this document to figure out how and where to start.
 - If you need to create an issue:
     - Make sure to clearly describe it.
     - Including steps to reproduce when it is a bug.
-    - Include the version of LOrm used.
+    - Include the version of iab-specs used.
 
 ## Signing Your Commits
 
@@ -270,6 +270,98 @@ This repository enforces the following policies via GitHub branch protection and
 - **Vigilant mode**: Repository maintainers use GitHub's vigilant mode, which marks all unsigned commits as "Unverified."
 
 If you're a first-time contributor and need help setting up commit signing, feel free to open an issue — we're happy to help.
+
+## Release Process (Maintainers)
+
+The project follows a `X.Y.Z-dev → X.Y.Z` release cycle. The `-dev` suffix in
+`Cargo.toml` signals ongoing development; it is never published to crates.io.
+
+### Requirements
+
+```bash
+cargo install git-cliff   # changelog generation
+brew install gh           # GitHub CLI
+cargo login               # crates.io authentication
+```
+
+### Typical lifecycle
+
+```
+main branch: 0.5.1-dev  →  (feature work)  →  0.5.1-dev  →  release PR  →  0.5.2  →  0.5.2-dev  →  …
+```
+
+#### 1. During development
+
+All feature/fix commits land on `main`. The version stays `0.5.1-dev` throughout.
+
+#### 2. Prepare the release PR
+
+When ready to ship, run `bump-version.sh --release` from `main`:
+
+```bash
+# Auto-derive next version from conventional commits:
+./bump-version.sh --release
+
+# Or force a specific bump type:
+./bump-version.sh --release --minor
+./bump-version.sh --release --major
+./bump-version.sh --release --revision
+```
+
+This script will:
+1. Strip `-dev`, compute the next version (via `git-cliff --bumped-version` or explicit flag)
+2. Create a `release/vX.Y.Z` branch
+3. Update all `Cargo.toml` files and `Cargo.lock`
+4. Generate `CHANGELOG.md` with `git-cliff`
+5. Commit (signed), push the branch, and open a PR
+
+Review and merge the PR. **Do not squash-merge** — the commit history is used by git-cliff.
+
+#### 3. Create the GitHub release and publish
+
+After the PR is merged and you are on `main`:
+
+```bash
+git checkout main && git pull
+./release.sh
+```
+
+This script will:
+1. Create a GitHub release and tag (`vX.Y.Z`) from `CHANGELOG.md`
+2. Fetch the tag locally
+3. Publish all workspace crates to crates.io in topological dependency order
+
+#### 4. Start the next development cycle
+
+```bash
+./bump-version.sh --post-release
+git commit -m 'chore: begin development on next release'
+git push
+```
+
+This adds the `-dev` suffix back to the version (e.g. `0.5.2` → `0.5.2-dev`).
+
+### Mid-cycle re-plan
+
+If the scope of the next release changes significantly mid-cycle, you can re-plan the target version while keeping the `-dev` suffix:
+
+```bash
+./bump-version.sh --minor    # 0.5.1-dev → 0.6.0-dev
+./bump-version.sh --major    # 0.5.1-dev → 1.0.0-dev
+./bump-version.sh --revision # 0.5.1-dev → 0.5.2-dev
+git commit -m 'chore: re-plan next release as 0.6.0-dev'
+git push
+```
+
+### Dry run
+
+All version commands support `--dry-run` to preview actions without modifying files:
+
+```bash
+./bump-version.sh --release --dry-run
+./bump-version.sh --post-release --dry-run
+./release.sh --dry-run
+```
 
 ## Code of Conduct
 

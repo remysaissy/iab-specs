@@ -10,7 +10,7 @@ description = "Rust implementation of IAB OpenRTB Native Ads 1.2 specification. 
 keywords = ["iab", "openrtb-native", "native-ads", "advertising", "openrtb"]
 
 [dependencies]
-iab-specs-core = { path = "../iab-specs-core", version = "0.5.1" }
+iab-specs-core = { path = "../iab-specs-core", version = "0.5.1-dev" }
 serde = { workspace = true }
 serde_with = { workspace = true }
 serde_repr = { workspace = true }
